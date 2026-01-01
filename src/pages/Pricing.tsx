@@ -43,19 +43,17 @@ const Pricing = () => {
             <ProductCard
               name="Jarvis"
               tagline="AI System Assistant for power users"
-              price="₹799"
+              price={799}
               features={jarvisFeatures}
               variant="jarvis"
-              paymentLink="https://rzp.io/l/jarvis-ai"
               delay={0.1}
             />
             <ProductCard
               name="MYRA"
               tagline="AI Personal Voice Assistant for daily life"
-              price="₹799"
+              price={799}
               features={myraFeatures}
               variant="myra"
-              paymentLink="https://rzp.io/l/myra-ai"
               delay={0.2}
             />
           </div>

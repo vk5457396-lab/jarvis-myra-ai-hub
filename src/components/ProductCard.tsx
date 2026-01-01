@@ -1,14 +1,14 @@
 import { motion } from "framer-motion";
 import { Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRazorpay } from "@/hooks/useRazorpay";
 
 interface ProductCardProps {
   name: string;
   tagline: string;
-  price: string;
+  price: number;
   features: string[];
   variant: "jarvis" | "myra";
-  paymentLink: string;
   delay?: number;
 }
 
@@ -18,11 +18,17 @@ const ProductCard = ({
   price,
   features,
   variant,
-  paymentLink,
   delay = 0,
 }: ProductCardProps) => {
   const isJarvis = variant === "jarvis";
+  const { initiatePayment } = useRazorpay();
 
+  const handleBuyClick = () => {
+    initiatePayment({
+      amount: price,
+      productName: name,
+    });
+  };
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -66,7 +72,7 @@ const ProductCard = ({
       {/* Price */}
       <div className="flex items-baseline gap-2 mb-8">
         <span className="font-display text-5xl font-bold text-foreground">
-          {price}
+          ₹{price}
         </span>
         <span className="text-muted-foreground">/ one-time</span>
       </div>
@@ -98,15 +104,14 @@ const ProductCard = ({
       </ul>
 
       {/* Buy Button */}
-      <a href={paymentLink} target="_blank" rel="noopener noreferrer">
-        <Button
-          variant={isJarvis ? "neonCyan" : "neonPurple"}
-          size="xl"
-          className="w-full"
-        >
-          Buy {name} Now
-        </Button>
-      </a>
+      <Button
+        variant={isJarvis ? "neonCyan" : "neonPurple"}
+        size="xl"
+        className="w-full"
+        onClick={handleBuyClick}
+      >
+        Buy {name} Now
+      </Button>
     </motion.div>
   );
 };
