@@ -112,10 +112,28 @@ const Footer = () => {
           </div>
         </div>
 
+        {/* Policy Links */}
+        <div className="mt-8 pt-6 border-t border-white/10">
+          <div className="flex flex-wrap justify-center gap-4 md:gap-8">
+            <Link to="/privacy-policy" className="text-muted-foreground hover:text-primary transition-colors text-sm">
+              Privacy Policy
+            </Link>
+            <Link to="/terms-and-conditions" className="text-muted-foreground hover:text-primary transition-colors text-sm">
+              Terms & Conditions
+            </Link>
+            <Link to="/refund-policy" className="text-muted-foreground hover:text-primary transition-colors text-sm">
+              Refund Policy
+            </Link>
+            <Link to="/shipping-policy" className="text-muted-foreground hover:text-primary transition-colors text-sm">
+              Shipping & Delivery
+            </Link>
+          </div>
+        </div>
+
         {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="mt-6 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-muted-foreground text-sm">
-            © 2024 AI Assistants. All rights reserved.
+            © 2026 AI Assistants. All rights reserved.
           </p>
           <p className="text-muted-foreground text-sm flex items-center gap-1">
             Made with <Heart size={14} className="text-destructive animate-pulse" /> for the future
