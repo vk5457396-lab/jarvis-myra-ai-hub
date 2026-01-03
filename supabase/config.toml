@@ -1,4 +1,7 @@
 project_id = "bsgsrfuunponyqdykafv"
 
+[functions.send-contact-email]
+verify_jwt = false
+
 [functions.create-razorpay-order]
 verify_jwt = false
