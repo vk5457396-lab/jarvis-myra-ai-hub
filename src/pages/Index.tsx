@@ -108,6 +108,36 @@ const Index = () => {
               delay={0.2}
             />
           </div>
+
+          {/* Setup Video */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-16 max-w-4xl mx-auto"
+          >
+            <div className="text-center mb-8">
+              <h3 className="font-display text-2xl md:text-3xl font-bold mb-2">
+                <span className="gradient-text">Watch Setup Guide</span>
+              </h3>
+              <p className="text-muted-foreground">
+                Learn how to set up Jarvis AI Assistant in minutes
+              </p>
+            </div>
+            <div className="glass-card rounded-2xl overflow-hidden p-2">
+              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                <iframe
+                  className="absolute top-0 left-0 w-full h-full rounded-xl"
+                  src="https://www.youtube.com/embed/cDaGBD_5AvA"
+                  title="Jarvis AI Voice Assistant Setup Guide"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                ></iframe>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
