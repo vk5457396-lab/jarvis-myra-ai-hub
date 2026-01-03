@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import BundleCard from "@/components/BundleCard";
 import { jarvisFeatures, myraFeatures } from "@/data/features";
 import { Check, Shield, CreditCard, Zap } from "lucide-react";
 
@@ -36,9 +37,40 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* Pricing Cards */}
+      {/* Bundle Deal - Featured */}
+      <section className="py-8 md:py-12">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-8"
+          >
+            <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
+              🎁 Special <span className="gradient-text">Bundle Offer</span>
+            </h2>
+            <p className="text-muted-foreground">Get both assistants and save ₹199!</p>
+          </motion.div>
+          <div className="max-w-md mx-auto">
+            <BundleCard />
+          </div>
+        </div>
+      </section>
+
+      {/* Individual Pricing Cards */}
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-8"
+          >
+            <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
+              Or Choose <span className="gradient-text">Individual</span>
+            </h2>
+            <p className="text-muted-foreground">Pick the assistant that fits your needs</p>
+          </motion.div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
             <ProductCard
               name="Jarvis"
