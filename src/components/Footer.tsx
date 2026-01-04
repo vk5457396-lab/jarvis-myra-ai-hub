@@ -121,9 +121,6 @@ const Footer = () => {
             <Link to="/terms-and-conditions" className="text-muted-foreground hover:text-primary transition-colors text-sm">
               Terms & Conditions
             </Link>
-            <Link to="/refund-policy" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-              Refund Policy
-            </Link>
             <Link to="/shipping-policy" className="text-muted-foreground hover:text-primary transition-colors text-sm">
               Shipping & Delivery
             </Link>
