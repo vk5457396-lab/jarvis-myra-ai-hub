@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, MessageCircle, Send, MapPin, Phone, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabaseClient } from "@/integrations/supabase/getClient";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -23,7 +23,13 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('send-contact-email', {
+      const supabase = await getSupabaseClient();
+      if (!supabase) {
+        toast.error("Site configuration missing. Please redeploy with environment variables.");
+        return;
+      }
+
+      const { error } = await supabase.functions.invoke("send-contact-email", {
         body: formData,
       });
 

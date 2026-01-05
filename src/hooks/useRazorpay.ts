@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabaseClient } from "@/integrations/supabase/getClient";
 
 declare global {
   interface Window {
@@ -53,19 +53,23 @@ export const useRazorpay = () => {
 
         toast.loading("Initializing payment...", { id: "payment-init" });
 
-        // Create order via edge function
-        const { data, error } = await supabase.functions.invoke(
-          "create-razorpay-order",
-          {
-            body: {
-              amount,
-              product_name: productName,
-              customer_name: customerName,
-              customer_email: customerEmail,
-              customer_phone: customerPhone,
-            },
-          }
-        );
+        const supabase = await getSupabaseClient();
+        if (!supabase) {
+          toast.dismiss("payment-init");
+          toast.error("Site configuration missing. Please redeploy with environment variables.");
+          return;
+        }
+
+        // Create order via backend function
+        const { data, error } = await supabase.functions.invoke("create-razorpay-order", {
+          body: {
+            amount,
+            product_name: productName,
+            customer_name: customerName,
+            customer_email: customerEmail,
+            customer_phone: customerPhone,
+          },
+        });
 
         toast.dismiss("payment-init");
 
