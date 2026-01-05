@@ -10,8 +10,9 @@ export async function getSupabaseClient(): Promise<SupabaseClient<Database> | nu
   try {
     const mod = await import("@/integrations/supabase/client");
     return mod.supabase as unknown as SupabaseClient<Database>;
-  } catch (e) {
-    console.error("Supabase client failed to initialize (missing env vars?)", e);
+  } catch {
+    // Missing build-time env vars in some deployments (e.g. Netlify) can break client init.
+    // Callers should handle null (we can fall back to direct backend-function calls).
     return null;
   }
 }
