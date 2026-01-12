@@ -109,32 +109,61 @@ const Index = () => {
             />
           </div>
 
-          {/* Setup Video */}
+          {/* Setup Videos */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-16 max-w-4xl mx-auto"
+            className="mt-16"
           >
             <div className="text-center mb-8">
               <h3 className="font-display text-2xl md:text-3xl font-bold mb-2">
-                <span className="gradient-text">Watch Setup Guide</span>
+                <span className="gradient-text">Watch Setup Guides</span>
               </h3>
               <p className="text-muted-foreground">
-                Learn how to set up Jarvis AI Assistant in minutes
+                Learn how to set up your AI Assistant in minutes
               </p>
             </div>
-            <div className="glass-card rounded-2xl overflow-hidden p-2">
-              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                <iframe
-                  className="absolute top-0 left-0 w-full h-full rounded-xl"
-                  src="https://www.youtube.com/embed/cDaGBD_5AvA"
-                  title="Jarvis AI Voice Assistant Setup Guide"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
-                ></iframe>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+              {/* Jarvis Setup Video */}
+              <div>
+                <h4 className="font-display text-xl font-bold mb-4 text-center">
+                  <span className="text-primary text-glow-cyan">Jarvis</span> Setup Guide
+                </h4>
+                <div className="glass-card rounded-2xl overflow-hidden p-2">
+                  <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                    <iframe
+                      className="absolute top-0 left-0 w-full h-full rounded-xl"
+                      src="https://www.youtube.com/embed/cDaGBD_5AvA"
+                      title="Jarvis AI Voice Assistant Setup Guide"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      allowFullScreen
+                    ></iframe>
+                  </div>
+                </div>
+              </div>
+
+              {/* MYRA Setup Video */}
+              <div>
+                <h4 className="font-display text-xl font-bold mb-4 text-center">
+                  <span className="text-secondary text-glow-purple">MYRA</span> Setup Guide
+                </h4>
+                <div className="glass-card rounded-2xl overflow-hidden p-2">
+                  <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                    <iframe
+                      className="absolute top-0 left-0 w-full h-full rounded-xl"
+                      src="https://www.youtube.com/embed/xw1IQJGzWI8"
+                      title="MYRA AI Voice Assistant Setup Guide"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      allowFullScreen
+                    ></iframe>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
