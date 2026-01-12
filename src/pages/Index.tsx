@@ -4,6 +4,7 @@ import HeroSection from "@/components/HeroSection";
 import FeatureCard from "@/components/FeatureCard";
 import ProductCard from "@/components/ProductCard";
 import Footer from "@/components/Footer";
+import VideoThumbnail from "@/components/VideoThumbnail";
 import { features, jarvisFeatures, myraFeatures } from "@/data/features";
 import { ChevronRight, Shield, Zap, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -121,7 +122,7 @@ const Index = () => {
                 <span className="gradient-text">Watch Setup Guides</span>
               </h3>
               <p className="text-muted-foreground">
-                Learn how to set up your AI Assistant in minutes
+                Click to watch step-by-step tutorials
               </p>
             </div>
             
@@ -131,19 +132,11 @@ const Index = () => {
                 <h4 className="font-display text-xl font-bold mb-4 text-center">
                   <span className="text-primary text-glow-cyan">Jarvis</span> Setup Guide
                 </h4>
-                <div className="glass-card rounded-2xl overflow-hidden p-2">
-                  <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                    <iframe
-                      className="absolute top-0 left-0 w-full h-full rounded-xl"
-                      src="https://www.youtube.com/embed/cDaGBD_5AvA"
-                      title="Jarvis AI Voice Assistant Setup Guide"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      referrerPolicy="strict-origin-when-cross-origin"
-                      allowFullScreen
-                    ></iframe>
-                  </div>
-                </div>
+                <VideoThumbnail
+                  videoId="cDaGBD_5AvA"
+                  title="Jarvis AI Voice Assistant Setup Guide"
+                  variant="jarvis"
+                />
               </div>
 
               {/* MYRA Setup Video */}
@@ -151,20 +144,21 @@ const Index = () => {
                 <h4 className="font-display text-xl font-bold mb-4 text-center">
                   <span className="text-secondary text-glow-purple">MYRA</span> Setup Guide
                 </h4>
-                <div className="glass-card rounded-2xl overflow-hidden p-2">
-                  <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                    <iframe
-                      className="absolute top-0 left-0 w-full h-full rounded-xl"
-                      src="https://www.youtube.com/embed/xw1IQJGzWI8"
-                      title="MYRA AI Voice Assistant Setup Guide"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      referrerPolicy="strict-origin-when-cross-origin"
-                      allowFullScreen
-                    ></iframe>
-                  </div>
-                </div>
+                <VideoThumbnail
+                  videoId="xw1IQJGzWI8"
+                  title="MYRA AI Voice Assistant Setup Guide"
+                  variant="myra"
+                />
               </div>
+            </div>
+
+            <div className="text-center mt-8">
+              <Link to="/demos">
+                <Button variant="outline" size="lg" className="group">
+                  <span>View All Tutorials</span>
+                  <ChevronRight className="group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
             </div>
           </motion.div>
         </div>
