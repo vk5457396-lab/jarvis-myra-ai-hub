@@ -3,8 +3,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import BundleCard from "@/components/BundleCard";
+import SourceCodeCard from "@/components/SourceCodeCard";
 import { jarvisFeatures, myraFeatures } from "@/data/features";
-import { Check, Shield, CreditCard, Zap } from "lucide-react";
+import { Check, Shield, CreditCard, Zap, Code } from "lucide-react";
 
 const Pricing = () => {
   return (
@@ -88,6 +89,31 @@ const Pricing = () => {
               variant="myra"
               delay={0.2}
             />
+          </div>
+        </div>
+      </section>
+
+      {/* Source Code Section */}
+      <section className="py-16 md:py-24 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-yellow-500/5 to-transparent" />
+        <div className="container mx-auto px-4 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-8"
+          >
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-yellow-400 font-display text-sm tracking-wider mb-6">
+              <Code size={16} />
+              FOR DEVELOPERS
+            </span>
+            <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
+              Want to <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">Build Your Own?</span>
+            </h2>
+            <p className="text-muted-foreground">Get the complete source code and create your custom AI assistant</p>
+          </motion.div>
+          <div className="max-w-lg mx-auto">
+            <SourceCodeCard />
           </div>
         </div>
       </section>
