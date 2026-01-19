@@ -6,10 +6,8 @@ import BundleCard from "@/components/BundleCard";
 import SourceCodeCard from "@/components/SourceCodeCard";
 import { jarvisFeatures, myraFeatures } from "@/data/features";
 import { Check, Shield, CreditCard, Zap, Code } from "lucide-react";
-
 const Pricing = () => {
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Navbar />
 
       {/* Hero */}
@@ -19,12 +17,15 @@ const Pricing = () => {
         <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-secondary/10 rounded-full blur-3xl" />
 
         <div className="container mx-auto px-4 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center max-w-3xl mx-auto"
-          >
+          <motion.div initial={{
+          opacity: 0,
+          y: 20
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          duration: 0.5
+        }} className="text-center max-w-3xl mx-auto">
             <span className="inline-block px-4 py-2 rounded-full glass text-secondary font-display text-sm tracking-wider mb-6">
               SIMPLE PRICING
             </span>
@@ -41,12 +42,15 @@ const Pricing = () => {
       {/* Bundle Deal - Featured */}
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-8"
-          >
+          <motion.div initial={{
+          opacity: 0,
+          y: 20
+        }} whileInView={{
+          opacity: 1,
+          y: 0
+        }} viewport={{
+          once: true
+        }} className="text-center mb-8">
             <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
               🎁 Special <span className="gradient-text">Bundle Offer</span>
             </h2>
@@ -61,34 +65,23 @@ const Pricing = () => {
       {/* Individual Pricing Cards */}
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-8"
-          >
+          <motion.div initial={{
+          opacity: 0,
+          y: 20
+        }} whileInView={{
+          opacity: 1,
+          y: 0
+        }} viewport={{
+          once: true
+        }} className="text-center mb-8">
             <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
               Or Choose <span className="gradient-text">Individual</span>
             </h2>
             <p className="text-muted-foreground">Pick the assistant that fits your needs</p>
           </motion.div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            <ProductCard
-              name="Jarvis"
-              tagline="AI System Assistant for power users"
-              price={799}
-              features={jarvisFeatures}
-              variant="jarvis"
-              delay={0.1}
-            />
-            <ProductCard
-              name="MYRA"
-              tagline="AI Personal Voice Assistant for daily life"
-              price={799}
-              features={myraFeatures}
-              variant="myra"
-              delay={0.2}
-            />
+            <ProductCard name="Jarvis" tagline="AI System Assistant for power users" price={799} features={jarvisFeatures} variant="jarvis" delay={0.1} />
+            <ProductCard name="MYRA" tagline="AI Personal Voice Assistant for daily life" price={799} features={myraFeatures} variant="myra" delay={0.2} />
           </div>
         </div>
       </section>
@@ -97,12 +90,15 @@ const Pricing = () => {
       <section className="py-16 md:py-24 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-yellow-500/5 to-transparent" />
         <div className="container mx-auto px-4 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-8"
-          >
+          <motion.div initial={{
+          opacity: 0,
+          y: 20
+        }} whileInView={{
+          opacity: 1,
+          y: 0
+        }} viewport={{
+          once: true
+        }} className="text-center mb-8">
             <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-yellow-400 font-display text-sm tracking-wider mb-6">
               <Code size={16} />
               FOR DEVELOPERS
@@ -119,12 +115,15 @@ const Pricing = () => {
           </div>
 
           {/* Individual Source Code Cards */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-8"
-          >
+          <motion.div initial={{
+          opacity: 0,
+          y: 20
+        }} whileInView={{
+          opacity: 1,
+          y: 0
+        }} viewport={{
+          once: true
+        }} className="text-center mb-8">
             <h3 className="font-display text-xl md:text-2xl font-bold mb-2">
               Or Buy <span className="gradient-text">Individual</span> Source Code
             </h3>
@@ -139,12 +138,15 @@ const Pricing = () => {
       {/* What's Included */}
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
+          <motion.div initial={{
+          opacity: 0,
+          y: 20
+        }} whileInView={{
+          opacity: 1,
+          y: 0
+        }} viewport={{
+          once: true
+        }} className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
               What's <span className="gradient-text">Included</span>
             </h2>
@@ -152,87 +154,49 @@ const Pricing = () => {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
-            {[
-              { icon: Check, title: "Lifetime License", desc: "One-time payment, forever access" },
-              { icon: Zap, title: "Instant Download", desc: "Get started within minutes" },
-              { icon: Shield, title: "Free Updates", desc: "All future updates included" },
-              { icon: CreditCard, title: "Secure Payment", desc: "100% safe Razorpay checkout" },
-            ].map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="glass-card rounded-xl p-6 text-center"
-              >
+            {[{
+            icon: Check,
+            title: "Lifetime License",
+            desc: "One-time payment, forever access"
+          }, {
+            icon: Zap,
+            title: "Instant Download",
+            desc: "Get started within minutes"
+          }, {
+            icon: Shield,
+            title: "Free Updates",
+            desc: "All future updates included"
+          }, {
+            icon: CreditCard,
+            title: "Secure Payment",
+            desc: "100% safe Razorpay checkout"
+          }].map((item, index) => <motion.div key={index} initial={{
+            opacity: 0,
+            y: 20
+          }} whileInView={{
+            opacity: 1,
+            y: 0
+          }} viewport={{
+            once: true
+          }} transition={{
+            delay: index * 0.1
+          }} className="glass-card rounded-xl p-6 text-center">
                 <div className="w-12 h-12 rounded-lg bg-gradient-neon flex items-center justify-center mx-auto mb-4">
                   <item.icon className="w-6 h-6 text-background" />
                 </div>
                 <h3 className="font-display text-lg mb-2">{item.title}</h3>
                 <p className="text-muted-foreground text-sm">{item.desc}</p>
-              </motion.div>
-            ))}
+              </motion.div>)}
           </div>
         </div>
       </section>
 
       {/* FAQ */}
       <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              Frequently Asked <span className="gradient-text">Questions</span>
-            </h2>
-          </motion.div>
-
-          <div className="max-w-3xl mx-auto space-y-4">
-            {[
-              {
-                q: "Is this a one-time payment?",
-                a: "Yes! You pay ₹799 once and get lifetime access to your chosen AI assistant with all future updates included.",
-              },
-              {
-                q: "How do I download after payment?",
-                a: "After successful payment, you'll receive a download link via email along with activation instructions.",
-              },
-              {
-                q: "Can I use both Jarvis and MYRA?",
-                a: "Yes! You can purchase both assistants separately and use them on your PC.",
-              },
-              {
-                q: "What payment methods are accepted?",
-                a: "We accept all major payment methods through Razorpay including UPI, Credit/Debit cards, Net Banking, and Wallets.",
-              },
-              {
-                q: "Is there a refund policy?",
-                a: "We offer a 7-day money-back guarantee if the product doesn't meet your expectations.",
-              },
-            ].map((faq, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
-                className="glass-card rounded-xl p-6"
-              >
-                <h3 className="font-display text-lg text-primary mb-2">{faq.q}</h3>
-                <p className="text-muted-foreground">{faq.a}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+        
       </section>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Pricing;
