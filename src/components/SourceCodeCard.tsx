@@ -3,26 +3,83 @@ import { Button } from "@/components/ui/button";
 import { useRazorpay } from "@/hooks/useRazorpay";
 import { Code, FileCode, GitBranch, Layers, Settings, Star } from "lucide-react";
 
-const SourceCodeCard = () => {
+interface SourceCodeCardProps {
+  variant: "jarvis" | "myra" | "bundle";
+}
+
+const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
   const { initiatePayment } = useRazorpay();
+
+  const config = {
+    jarvis: {
+      name: "Jarvis",
+      productName: "Jarvis Source Code",
+      price: 3499,
+      originalPrice: 4499,
+      savings: 1000,
+      gradient: "from-primary to-cyan-400",
+      bgGradient: "from-primary/10 via-cyan-500/5 to-blue-500/10",
+      glowColor: "primary",
+      badgeText: "JARVIS CODE",
+      features: [
+        "Complete Jarvis Source Code",
+        "Python & Automation Scripts",
+        "Full Documentation",
+        "Customization Guide",
+        "Future Code Updates",
+        "Developer Support",
+      ],
+    },
+    myra: {
+      name: "MYRA",
+      productName: "MYRA Source Code",
+      price: 3499,
+      originalPrice: 4499,
+      savings: 1000,
+      gradient: "from-secondary to-purple-400",
+      bgGradient: "from-secondary/10 via-purple-500/5 to-pink-500/10",
+      glowColor: "secondary",
+      badgeText: "MYRA CODE",
+      features: [
+        "Complete MYRA Source Code",
+        "Python & Automation Scripts",
+        "Full Documentation",
+        "Customization Guide",
+        "Future Code Updates",
+        "Developer Support",
+      ],
+    },
+    bundle: {
+      name: "Jarvis + MYRA",
+      productName: "Jarvis + MYRA Source Code Bundle",
+      price: 4999,
+      originalPrice: 6998,
+      savings: 1999,
+      gradient: "from-yellow-500 to-orange-500",
+      bgGradient: "from-yellow-500/10 via-orange-500/5 to-red-500/10",
+      glowColor: "yellow-500",
+      badgeText: "BEST VALUE",
+      features: [
+        "Complete Jarvis Source Code",
+        "Complete MYRA Source Code",
+        "Python & Automation Scripts",
+        "Full Documentation",
+        "Customization Guide",
+        "Future Code Updates",
+        "Developer Support",
+        "Commercial License",
+      ],
+    },
+  };
+
+  const currentConfig = config[variant];
 
   const handleBuyClick = () => {
     initiatePayment({
-      amount: 3499,
-      productName: "Jarvis + MYRA Source Code",
+      amount: currentConfig.price,
+      productName: currentConfig.productName,
     });
   };
-
-  const sourceCodeFeatures = [
-    "Complete Jarvis Source Code",
-    "Complete MYRA Source Code",
-    "Python & Automation Scripts",
-    "Full Documentation",
-    "Customization Guide",
-    "Future Code Updates",
-    "Developer Support",
-    "Commercial License",
-  ];
 
   return (
     <motion.div
@@ -30,75 +87,74 @@ const SourceCodeCard = () => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       whileHover={{ y: -5 }}
-      className="relative glass-card rounded-3xl p-8 border-2 border-yellow-500/50 overflow-hidden"
+      className={`relative glass-card rounded-3xl p-6 md:p-8 overflow-hidden h-full ${
+        variant === "bundle" ? "border-2 border-yellow-500/50" : "border border-white/10"
+      }`}
     >
       {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 via-orange-500/5 to-red-500/10" />
-      <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-500/20 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-40 h-40 bg-orange-500/20 rounded-full blur-3xl" />
+      <div className={`absolute inset-0 bg-gradient-to-br ${currentConfig.bgGradient}`} />
+      <div className={`absolute top-0 right-0 w-32 h-32 bg-${currentConfig.glowColor}/20 rounded-full blur-3xl`} />
+      <div className={`absolute bottom-0 left-0 w-32 h-32 bg-${currentConfig.glowColor}/20 rounded-full blur-3xl`} />
 
-      {/* Developer Badge */}
+      {/* Badge */}
       <div className="absolute -top-1 -right-1">
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-500 blur-sm" />
-          <div className="relative bg-gradient-to-r from-yellow-500 to-orange-500 text-background px-4 py-1.5 rounded-bl-xl rounded-tr-2xl font-display text-sm font-bold flex items-center gap-1">
-            <Code size={14} />
-            FOR DEVELOPERS
+          <div className={`absolute inset-0 bg-gradient-to-r ${currentConfig.gradient} blur-sm`} />
+          <div className={`relative bg-gradient-to-r ${currentConfig.gradient} text-background px-3 py-1 rounded-bl-xl rounded-tr-2xl font-display text-xs font-bold flex items-center gap-1`}>
+            <Code size={12} />
+            {currentConfig.badgeText}
           </div>
         </div>
       </div>
 
       <div className="relative z-10">
         {/* Icon */}
-        <div className="flex justify-center mb-6">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg shadow-yellow-500/30">
-            <FileCode className="w-10 h-10 text-background" />
+        <div className="flex justify-center mb-4">
+          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${currentConfig.gradient} flex items-center justify-center shadow-lg`}>
+            <FileCode className="w-8 h-8 text-background" />
           </div>
         </div>
 
         {/* Title */}
-        <div className="text-center mb-6">
-          <h3 className="font-display text-2xl md:text-3xl font-bold mb-2">
-            Source Code Bundle
+        <div className="text-center mb-4">
+          <h3 className="font-display text-xl md:text-2xl font-bold mb-1">
+            {currentConfig.name}
           </h3>
-          <p className="text-muted-foreground">
-            Get full access to Jarvis & MYRA source code
+          <p className="text-muted-foreground text-sm">
+            Source Code
           </p>
         </div>
 
         {/* Price */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-4">
           <div className="flex items-baseline justify-center gap-2">
-            <span className="text-muted-foreground line-through text-lg">₹4999</span>
-            <span className="font-display text-5xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-              ₹3499
+            <span className="text-muted-foreground line-through text-sm">₹{currentConfig.originalPrice}</span>
+            <span className={`font-display text-4xl font-bold bg-gradient-to-r ${currentConfig.gradient} bg-clip-text text-transparent`}>
+              ₹{currentConfig.price}
             </span>
           </div>
-          <p className="text-sm text-green-400 mt-1 font-medium">
-            Save ₹1500 - Limited Time Offer!
+          <p className="text-xs text-green-400 mt-1 font-medium">
+            Save ₹{currentConfig.savings}!
           </p>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-8">
-          {sourceCodeFeatures.map((feature, index) => (
+        {/* Features */}
+        <div className="space-y-2 mb-6">
+          {currentConfig.features.map((feature, index) => (
             <div
               key={index}
               className="flex items-center gap-2 text-sm"
             >
-              <div className="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
-                <Star className="w-3 h-3 text-yellow-400" />
+              <div className={`w-4 h-4 rounded-full bg-gradient-to-r ${currentConfig.gradient} flex items-center justify-center flex-shrink-0`}>
+                <Star className="w-2.5 h-2.5 text-background" />
               </div>
-              <span className="text-foreground/90">{feature}</span>
+              <span className="text-foreground/90 text-xs md:text-sm">{feature}</span>
             </div>
           ))}
         </div>
 
         {/* What You Can Do */}
-        <div className="glass rounded-xl p-4 mb-6">
-          <p className="text-sm text-center text-muted-foreground mb-3">
-            <span className="text-yellow-400 font-semibold">Build Your Own AI Assistant</span>
-          </p>
+        <div className="glass rounded-xl p-3 mb-4">
           <div className="flex flex-wrap justify-center gap-2">
             {[
               { icon: Settings, label: "Customize" },
@@ -107,9 +163,10 @@ const SourceCodeCard = () => {
             ].map((item, index) => (
               <div
                 key={index}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-500/10 text-xs text-yellow-400"
+                className={`flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r ${currentConfig.gradient} bg-opacity-10 text-xs`}
+                style={{ background: `linear-gradient(to right, ${variant === 'jarvis' ? 'rgba(0,212,255,0.1)' : variant === 'myra' ? 'rgba(168,85,247,0.1)' : 'rgba(234,179,8,0.1)'}, transparent)` }}
               >
-                <item.icon size={12} />
+                <item.icon size={10} />
                 {item.label}
               </div>
             ))}
@@ -119,14 +176,14 @@ const SourceCodeCard = () => {
         {/* Buy Button */}
         <Button
           onClick={handleBuyClick}
-          className="w-full h-14 text-lg font-display font-bold bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-background shadow-lg shadow-yellow-500/25 hover:shadow-yellow-500/40 transition-all duration-300"
+          className={`w-full h-12 text-base font-display font-bold bg-gradient-to-r ${currentConfig.gradient} hover:opacity-90 text-background shadow-lg transition-all duration-300`}
         >
-          <Code className="mr-2" />
-          Get Source Code Now
+          <Code className="mr-2 w-4 h-4" />
+          Get Source Code
         </Button>
 
-        <p className="text-center text-xs text-muted-foreground mt-4">
-          Instant delivery • Lifetime access • Commercial license
+        <p className="text-center text-xs text-muted-foreground mt-3">
+          Instant delivery • Lifetime access
         </p>
       </div>
     </motion.div>
