@@ -1,14 +1,15 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useRazorpay } from "@/hooks/useRazorpay";
 import { Code, FileCode, GitBranch, Layers, Settings, Star } from "lucide-react";
+import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 
 interface SourceCodeCardProps {
   variant: "jarvis" | "myra" | "bundle";
 }
 
 const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
-  const { initiatePayment } = useRazorpay();
+  const [showPaymentSelector, setShowPaymentSelector] = useState(false);
 
   const config = {
     jarvis: {
@@ -75,10 +76,7 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
   const currentConfig = config[variant];
 
   const handleBuyClick = () => {
-    initiatePayment({
-      amount: currentConfig.price,
-      productName: currentConfig.productName,
-    });
+    setShowPaymentSelector(true);
   };
 
   return (
@@ -186,6 +184,14 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
           Instant delivery • Lifetime access
         </p>
       </div>
+
+      {/* Payment Gateway Selector */}
+      <PaymentGatewaySelector
+        isOpen={showPaymentSelector}
+        onClose={() => setShowPaymentSelector(false)}
+        amount={currentConfig.price}
+        productName={currentConfig.productName}
+      />
     </motion.div>
   );
 };

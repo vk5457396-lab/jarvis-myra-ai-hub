@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRazorpay } from "@/hooks/useRazorpay";
+import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 
 interface ProductCardProps {
   name: string;
@@ -21,13 +22,10 @@ const ProductCard = ({
   delay = 0,
 }: ProductCardProps) => {
   const isJarvis = variant === "jarvis";
-  const { initiatePayment } = useRazorpay();
+  const [showPaymentSelector, setShowPaymentSelector] = useState(false);
 
   const handleBuyClick = () => {
-    initiatePayment({
-      amount: price,
-      productName: name,
-    });
+    setShowPaymentSelector(true);
   };
   return (
     <motion.div
@@ -112,6 +110,14 @@ const ProductCard = ({
       >
         Buy {name} Now
       </Button>
+
+      {/* Payment Gateway Selector */}
+      <PaymentGatewaySelector
+        isOpen={showPaymentSelector}
+        onClose={() => setShowPaymentSelector(false)}
+        amount={price}
+        productName={name}
+      />
     </motion.div>
   );
 };

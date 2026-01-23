@@ -1,17 +1,14 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Sparkles, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRazorpay } from "@/hooks/useRazorpay";
-import { jarvisFeatures, myraFeatures } from "@/data/features";
+import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 
 const BundleCard = () => {
-  const { initiatePayment } = useRazorpay();
+  const [showPaymentSelector, setShowPaymentSelector] = useState(false);
 
   const handleBuyClick = () => {
-    initiatePayment({
-      amount: 1399,
-      productName: "Jarvis + MYRA Bundle",
-    });
+    setShowPaymentSelector(true);
   };
 
   const bundleFeatures = [
@@ -105,6 +102,14 @@ const BundleCard = () => {
         <Sparkles size={18} className="mr-2" />
         Get Bundle Now
       </Button>
+
+      {/* Payment Gateway Selector */}
+      <PaymentGatewaySelector
+        isOpen={showPaymentSelector}
+        onClose={() => setShowPaymentSelector(false)}
+        amount={1399}
+        productName="Jarvis + MYRA Bundle"
+      />
     </motion.div>
   );
 };
