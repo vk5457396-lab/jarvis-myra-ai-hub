@@ -7,13 +7,21 @@ import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 const BundleCard = () => {
   const [showPaymentSelector, setShowPaymentSelector] = useState(false);
 
+  // Dynamic pricing: Jarvis becomes ₹899 from Feb 1, 2025
+  const isAfterFeb1 = new Date() >= new Date('2025-02-01');
+  const jarvisPrice = isAfterFeb1 ? 899 : 799;
+  const myraPrice = 799;
+  const bundlePrice = isAfterFeb1 ? 1499 : 1399;
+  const originalPrice = jarvisPrice + myraPrice;
+  const savings = originalPrice - bundlePrice;
+
   const handleBuyClick = () => {
     setShowPaymentSelector(true);
   };
 
   const bundleFeatures = [
     "Both Jarvis & MYRA included",
-    "Save ₹199 on bundle",
+    `Save ₹${savings} on bundle`,
     "All Jarvis features",
     "All MYRA features",
     "Priority support",
@@ -62,14 +70,14 @@ const BundleCard = () => {
       {/* Price */}
       <div className="flex items-baseline gap-2 mb-2">
         <span className="font-display text-5xl font-bold text-foreground">
-          ₹1,399
+          ₹{bundlePrice.toLocaleString('en-IN')}
         </span>
         <span className="text-muted-foreground">/ one-time</span>
       </div>
       <div className="flex items-center gap-2 mb-8">
-        <span className="text-muted-foreground line-through">₹1,598</span>
+        <span className="text-muted-foreground line-through">₹{originalPrice.toLocaleString('en-IN')}</span>
         <span className="text-xs font-display px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
-          SAVE ₹199
+          SAVE ₹{savings}
         </span>
       </div>
 
@@ -107,7 +115,7 @@ const BundleCard = () => {
       <PaymentGatewaySelector
         isOpen={showPaymentSelector}
         onClose={() => setShowPaymentSelector(false)}
-        amount={1399}
+        amount={bundlePrice}
         productName="Jarvis + MYRA Bundle"
       />
     </motion.div>
