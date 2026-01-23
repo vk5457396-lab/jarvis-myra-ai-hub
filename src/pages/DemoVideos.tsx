@@ -18,6 +18,11 @@ const myraVideos = [
     title: "MYRA Complete Setup Guide",
     description: "Complete walkthrough for setting up MYRA Personal Assistant.",
   },
+  {
+    id: "coUcGoNQb24",
+    title: "MYRA EXE Setup Video",
+    description: "Step-by-step guide for MYRA EXE installation and setup.",
+  },
 ];
 
 const DemoVideos = () => {

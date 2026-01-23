@@ -80,7 +80,7 @@ const Pricing = () => {
             <p className="text-muted-foreground">Pick the assistant that fits your needs</p>
           </motion.div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            <ProductCard name="Jarvis" tagline="AI System Assistant for power users" price={799} features={jarvisFeatures} variant="jarvis" delay={0.1} />
+            <ProductCard name="Jarvis" tagline="AI System Assistant for power users" price={new Date() >= new Date('2025-02-01') ? 899 : 799} features={jarvisFeatures} variant="jarvis" delay={0.1} />
             <ProductCard name="MYRA" tagline="AI Personal Voice Assistant for daily life" price={799} features={myraFeatures} variant="myra" delay={0.2} />
           </div>
         </div>
