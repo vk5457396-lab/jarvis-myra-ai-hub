@@ -2,10 +2,15 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FeatureCard from "@/components/FeatureCard";
+import MyraFeaturesShowcase from "@/components/MyraFeaturesShowcase";
 import { features } from "@/data/features";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
+
+// Dynamic MYRA name based on date
+const isMyra2 = new Date() >= new Date('2025-02-01');
+const myraName = isMyra2 ? "MYRA 2.0" : "MYRA";
 
 const Features = () => {
   return (
@@ -66,7 +71,7 @@ const Features = () => {
             className="text-center mb-12"
           >
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              <span className="text-primary">Jarvis</span> vs <span className="text-secondary">MYRA</span>
+              <span className="text-primary">Jarvis</span> vs <span className="text-secondary">{myraName}</span>
             </h2>
             <p className="text-muted-foreground">Choose the perfect assistant for your needs</p>
           </motion.div>
@@ -102,7 +107,7 @@ const Features = () => {
               </ul>
             </motion.div>
 
-            {/* MYRA */}
+            {/* {myraName} */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -110,7 +115,7 @@ const Features = () => {
               className="glass-card rounded-2xl p-8 border border-secondary/30"
             >
               <h3 className="font-display text-2xl text-secondary text-glow-purple mb-4">
-                MYRA
+                {myraName}
               </h3>
               <p className="text-muted-foreground mb-6">
                 Perfect for everyday users who want a personal AI companion.
@@ -148,6 +153,9 @@ const Features = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* MYRA Features Showcase */}
+      <MyraFeaturesShowcase />
 
       <Footer />
     </div>

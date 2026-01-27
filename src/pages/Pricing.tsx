@@ -4,8 +4,13 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import BundleCard from "@/components/BundleCard";
 import SourceCodeCard from "@/components/SourceCodeCard";
+import PriceCountdown from "@/components/PriceCountdown";
 import { jarvisFeatures, myraFeatures } from "@/data/features";
 import { Check, Shield, CreditCard, Zap, Code } from "lucide-react";
+
+// Dynamic product name based on date
+const isMyra2 = new Date() >= new Date('2025-02-01');
+const myraName = isMyra2 ? "MYRA 2.0" : "MYRA";
 const Pricing = () => {
   return <div className="min-h-screen bg-background">
       <Navbar />
@@ -39,6 +44,15 @@ const Pricing = () => {
         </div>
       </section>
 
+      {/* Countdown Timer */}
+      <section className="py-4">
+        <div className="container mx-auto px-4">
+          <div className="max-w-xl mx-auto">
+            <PriceCountdown />
+          </div>
+        </div>
+      </section>
+
       {/* Bundle Deal - Featured */}
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4">
@@ -54,7 +68,7 @@ const Pricing = () => {
             <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
               🎁 Special <span className="gradient-text">Bundle Offer</span>
             </h2>
-            <p className="text-muted-foreground">Get both assistants and save ₹199!</p>
+            <p className="text-muted-foreground">Get both assistants and save!</p>
           </motion.div>
           <div className="max-w-md mx-auto">
             <BundleCard />
@@ -81,7 +95,7 @@ const Pricing = () => {
           </motion.div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
             <ProductCard name="Jarvis" tagline="AI System Assistant for power users" price={new Date() >= new Date('2025-02-01') ? 899 : 799} features={jarvisFeatures} variant="jarvis" delay={0.1} />
-            <ProductCard name="MYRA" tagline="AI Personal Voice Assistant for daily life" price={799} features={myraFeatures} variant="myra" delay={0.2} />
+            <ProductCard name={myraName} tagline="AI Personal Voice Assistant for daily life" price={799} features={myraFeatures} variant="myra" delay={0.2} />
           </div>
         </div>
       </section>

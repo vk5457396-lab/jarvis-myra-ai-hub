@@ -8,22 +8,24 @@ const BundleCard = () => {
   const [showPaymentSelector, setShowPaymentSelector] = useState(false);
 
   // Dynamic pricing: Jarvis becomes ₹899 from Feb 1, 2025
+  // MYRA becomes MYRA 2.0 from Feb 1, 2025
   const isAfterFeb1 = new Date() >= new Date('2025-02-01');
   const jarvisPrice = isAfterFeb1 ? 899 : 799;
   const myraPrice = 799;
   const bundlePrice = isAfterFeb1 ? 1499 : 1399;
   const originalPrice = jarvisPrice + myraPrice;
   const savings = originalPrice - bundlePrice;
+  const myraName = isAfterFeb1 ? "MYRA 2.0" : "MYRA";
 
   const handleBuyClick = () => {
     setShowPaymentSelector(true);
   };
 
   const bundleFeatures = [
-    "Both Jarvis & MYRA included",
+    `Both Jarvis & ${myraName} included`,
     `Save ₹${savings} on bundle`,
     "All Jarvis features",
-    "All MYRA features",
+    `All ${myraName} features`,
     "Priority support",
     "Free lifetime updates",
   ];
@@ -61,7 +63,7 @@ const BundleCard = () => {
 
       {/* Name & Tagline */}
       <h3 className="font-display text-3xl font-bold mb-2 bg-gradient-neon bg-clip-text text-transparent">
-        Jarvis + MYRA
+        Jarvis + {myraName}
       </h3>
       <p className="text-muted-foreground mb-6">
         Get both AI assistants at a discounted price
@@ -116,7 +118,7 @@ const BundleCard = () => {
         isOpen={showPaymentSelector}
         onClose={() => setShowPaymentSelector(false)}
         amount={bundlePrice}
-        productName="Jarvis + MYRA Bundle"
+        productName={`Jarvis + ${myraName} Bundle`}
       />
     </motion.div>
   );
