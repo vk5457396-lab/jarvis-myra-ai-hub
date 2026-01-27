@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, MessageCircle, Send, MapPin, Phone, Loader2 } from "lucide-react";
+import { Mail, MessageCircle, Send, MapPin, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { invokeBackendFunction } from "@/integrations/backend/invokeFunction";
 
@@ -88,7 +88,7 @@ const Contact = () => {
 
               <div className="space-y-6">
                 <motion.a
-                  href="mailto:support@aiassistants.com"
+                  href="mailto:codeninjavik@gmail.com"
                   whileHover={{ x: 5 }}
                   className="flex items-center gap-4 p-4 glass-card rounded-xl group"
                 >
@@ -97,7 +97,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="font-display text-sm text-muted-foreground">Email</h3>
-                    <p className="text-foreground">support@aiassistants.com</p>
+                    <p className="text-foreground">codeninjavik@gmail.com</p>
                   </div>
                 </motion.a>
 
@@ -117,18 +117,21 @@ const Contact = () => {
                   </div>
                 </motion.a>
 
-                <motion.div
+                <motion.a
+                  href="https://t.me/codeninjavik"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   whileHover={{ x: 5 }}
-                  className="flex items-center gap-4 p-4 glass-card rounded-xl"
+                  className="flex items-center gap-4 p-4 glass-card rounded-xl group"
                 >
-                  <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
-                    <Phone className="w-6 h-6 text-primary" />
+                  <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
+                    <Send className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-display text-sm text-muted-foreground">Phone</h3>
-                    <p className="text-foreground">+91 99999 99999</p>
+                    <h3 className="font-display text-sm text-muted-foreground">Telegram</h3>
+                    <p className="text-foreground">@codeninjavik</p>
                   </div>
-                </motion.div>
+                </motion.a>
 
                 <motion.div
                   whileHover={{ x: 5 }}

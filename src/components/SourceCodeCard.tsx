@@ -10,6 +10,10 @@ interface SourceCodeCardProps {
 
 const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
   const [showPaymentSelector, setShowPaymentSelector] = useState(false);
+  
+  // MYRA becomes MYRA 2.0 from Feb 1, 2025
+  const isAfterFeb1 = new Date() >= new Date('2025-02-01');
+  const myraName = isAfterFeb1 ? "MYRA 2.0" : "MYRA";
 
   const config = {
     jarvis: {
@@ -32,17 +36,17 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
       ],
     },
     myra: {
-      name: "MYRA",
-      productName: "MYRA Source Code",
+      name: myraName,
+      productName: `${myraName} Source Code`,
       price: 3499,
       originalPrice: 4499,
       savings: 1000,
       gradient: "from-secondary to-purple-400",
       bgGradient: "from-secondary/10 via-purple-500/5 to-pink-500/10",
       glowColor: "secondary",
-      badgeText: "MYRA CODE",
+      badgeText: `${myraName.toUpperCase()} CODE`,
       features: [
-        "Complete MYRA Source Code",
+        `Complete ${myraName} Source Code`,
         "Python & Automation Scripts",
         "Full Documentation",
         "Customization Guide",
@@ -51,8 +55,8 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
       ],
     },
     bundle: {
-      name: "Jarvis + MYRA",
-      productName: "Jarvis + MYRA Source Code Bundle",
+      name: `Jarvis + ${myraName}`,
+      productName: `Jarvis + ${myraName} Source Code Bundle`,
       price: 4999,
       originalPrice: 6998,
       savings: 1999,
@@ -62,7 +66,7 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
       badgeText: "BEST VALUE",
       features: [
         "Complete Jarvis Source Code",
-        "Complete MYRA Source Code",
+        `Complete ${myraName} Source Code`,
         "Python & Automation Scripts",
         "Full Documentation",
         "Customization Guide",
