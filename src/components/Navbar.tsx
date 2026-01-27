@@ -35,7 +35,7 @@ const Navbar = () => {
               whileHover={{ scale: 1.1, rotate: 5 }}
             />
             <span className="font-display text-xl md:text-2xl gradient-text font-bold hidden sm:block">
-              AI ASSISTANTS
+              codeninjavik
             </span>
           </Link>
 

@@ -20,7 +20,7 @@ const Footer = () => {
                 className="w-10 h-10 rounded-full border border-primary/50"
               />
               <span className="font-display text-xl gradient-text font-bold">
-                AI ASSISTANTS
+                codeninjavik
               </span>
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed">
@@ -130,7 +130,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="mt-6 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-muted-foreground text-sm">
-            © 2026 AI Assistants. All rights reserved.
+            © 2026 codeninjavik. All rights reserved.
           </p>
           <p className="text-muted-foreground text-sm flex items-center gap-1">
             Made with <Heart size={14} className="text-destructive animate-pulse" /> for the future
