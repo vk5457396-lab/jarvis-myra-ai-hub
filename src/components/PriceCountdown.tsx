@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Clock, TrendingUp } from "lucide-react";
 
 const PriceCountdown = () => {
-  const targetDate = new Date('2025-02-01T00:00:00');
+  const targetDate = new Date('2026-02-01T00:00:00');
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,

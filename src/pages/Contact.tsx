@@ -118,7 +118,7 @@ const Contact = () => {
                 </motion.a>
 
                 <motion.a
-                  href="https://t.me/codeninjavik"
+                  href="https://t.me/codeninjavik1"
                   target="_blank"
                   rel="noopener noreferrer"
                   whileHover={{ x: 5 }}
@@ -129,7 +129,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="font-display text-sm text-muted-foreground">Telegram</h3>
-                    <p className="text-foreground">@codeninjavik</p>
+                    <p className="text-foreground">@codeninjavik1</p>
                   </div>
                 </motion.a>
 
