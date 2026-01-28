@@ -11,8 +11,8 @@ import { Check, Shield, CreditCard, Zap, Code } from "lucide-react";
 // Dynamic product name and pricing based on date
 const isAfterFeb1 = new Date() >= new Date('2026-02-01');
 const myraName = isAfterFeb1 ? "MYRA 2.0" : "MYRA";
-const jarvisPrice = isAfterFeb1 ? 899 : 799;
-const myraPrice = isAfterFeb1 ? 899 : 799;
+const jarvisPrice = 899; // Jarvis is always ₹899
+const myraPrice = isAfterFeb1 ? 899 : 799; // MYRA increases on Feb 1st
 const Pricing = () => {
   return <div className="min-h-screen bg-background">
       <Navbar />
