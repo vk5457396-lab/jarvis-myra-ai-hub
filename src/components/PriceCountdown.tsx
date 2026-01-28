@@ -55,7 +55,7 @@ const PriceCountdown = () => {
             Price Increase Alert!
           </h3>
           <p className="text-sm text-muted-foreground">
-            Jarvis price goes from ₹799 → ₹899 on Feb 1st
+            Jarvis & MYRA prices go from ₹799 → ₹899 on Feb 1st
           </p>
         </div>
       </div>
@@ -93,7 +93,7 @@ const PriceCountdown = () => {
 
       <p className="text-center text-sm text-muted-foreground mt-4 flex items-center justify-center gap-2">
         <Clock className="w-4 h-4" />
-        Buy Jarvis at ₹799 before time runs out!
+        Buy Jarvis & MYRA at ₹799 before time runs out!
       </p>
     </motion.div>
   );

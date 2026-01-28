@@ -10,6 +10,12 @@ import { ChevronRight, Shield, Zap, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
+// Dynamic pricing and naming based on date
+const isAfterFeb1 = new Date() >= new Date('2026-02-01');
+const myraName = isAfterFeb1 ? "MYRA 2.0" : "MYRA";
+const jarvisPrice = isAfterFeb1 ? 899 : 799;
+const myraPrice = isAfterFeb1 ? 899 : 799;
+
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
@@ -84,7 +90,7 @@ const Index = () => {
               CHOOSE YOUR ASSISTANT
             </span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-              Meet <span className="text-primary text-glow-cyan">Jarvis</span> & <span className="text-secondary text-glow-purple">MYRA</span>
+              Meet <span className="text-primary text-glow-cyan">Jarvis</span> & <span className="text-secondary text-glow-purple">{myraName}</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Two powerful AI assistants designed for different needs. Choose the one that fits your lifestyle.
@@ -95,15 +101,15 @@ const Index = () => {
             <ProductCard
               name="Jarvis"
               tagline="AI System Assistant for power users"
-              price={799}
+              price={jarvisPrice}
               features={jarvisFeatures}
               variant="jarvis"
               delay={0.1}
             />
             <ProductCard
-              name="MYRA"
+              name={myraName}
               tagline="AI Personal Voice Assistant for daily life"
-              price={799}
+              price={myraPrice}
               features={myraFeatures}
               variant="myra"
               delay={0.2}
@@ -142,11 +148,11 @@ const Index = () => {
               {/* MYRA Setup Video */}
               <div>
                 <h4 className="font-display text-xl font-bold mb-4 text-center">
-                  <span className="text-secondary text-glow-purple">MYRA</span> Setup Guide
+                  <span className="text-secondary text-glow-purple">{myraName}</span> Setup Guide
                 </h4>
                 <VideoThumbnail
                   videoId="xw1IQJGzWI8"
-                  title="MYRA AI Voice Assistant Setup Guide"
+                  title={`${myraName} AI Voice Assistant Setup Guide`}
                   variant="myra"
                 />
               </div>

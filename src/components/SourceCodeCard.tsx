@@ -11,8 +11,8 @@ interface SourceCodeCardProps {
 const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
   const [showPaymentSelector, setShowPaymentSelector] = useState(false);
   
-  // MYRA becomes MYRA 2.0 from Feb 1, 2025
-  const isAfterFeb1 = new Date() >= new Date('2025-02-01');
+  // MYRA becomes MYRA 2.0 from Feb 1, 2026
+  const isAfterFeb1 = new Date() >= new Date('2026-02-01');
   const myraName = isAfterFeb1 ? "MYRA 2.0" : "MYRA";
 
   const config = {

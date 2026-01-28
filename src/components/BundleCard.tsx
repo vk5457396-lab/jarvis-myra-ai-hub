@@ -9,10 +9,10 @@ const BundleCard = () => {
 
   // Dynamic pricing: Jarvis becomes ₹899 from Feb 1, 2025
   // MYRA becomes MYRA 2.0 from Feb 1, 2025
-  const isAfterFeb1 = new Date() >= new Date('2025-02-01');
+  const isAfterFeb1 = new Date() >= new Date('2026-02-01');
   const jarvisPrice = isAfterFeb1 ? 899 : 799;
-  const myraPrice = 799;
-  const bundlePrice = isAfterFeb1 ? 1499 : 1399;
+  const myraPrice = isAfterFeb1 ? 899 : 799;
+  const bundlePrice = isAfterFeb1 ? 1599 : 1399;
   const originalPrice = jarvisPrice + myraPrice;
   const savings = originalPrice - bundlePrice;
   const myraName = isAfterFeb1 ? "MYRA 2.0" : "MYRA";

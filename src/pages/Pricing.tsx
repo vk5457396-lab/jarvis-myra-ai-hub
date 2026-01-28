@@ -8,9 +8,11 @@ import PriceCountdown from "@/components/PriceCountdown";
 import { jarvisFeatures, myraFeatures } from "@/data/features";
 import { Check, Shield, CreditCard, Zap, Code } from "lucide-react";
 
-// Dynamic product name based on date
-const isMyra2 = new Date() >= new Date('2025-02-01');
-const myraName = isMyra2 ? "MYRA 2.0" : "MYRA";
+// Dynamic product name and pricing based on date
+const isAfterFeb1 = new Date() >= new Date('2026-02-01');
+const myraName = isAfterFeb1 ? "MYRA 2.0" : "MYRA";
+const jarvisPrice = isAfterFeb1 ? 899 : 799;
+const myraPrice = isAfterFeb1 ? 899 : 799;
 const Pricing = () => {
   return <div className="min-h-screen bg-background">
       <Navbar />
@@ -94,8 +96,8 @@ const Pricing = () => {
             <p className="text-muted-foreground">Pick the assistant that fits your needs</p>
           </motion.div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            <ProductCard name="Jarvis" tagline="AI System Assistant for power users" price={new Date() >= new Date('2025-02-01') ? 899 : 799} features={jarvisFeatures} variant="jarvis" delay={0.1} />
-            <ProductCard name={myraName} tagline="AI Personal Voice Assistant for daily life" price={799} features={myraFeatures} variant="myra" delay={0.2} />
+            <ProductCard name="Jarvis" tagline="AI System Assistant for power users" price={jarvisPrice} features={jarvisFeatures} variant="jarvis" delay={0.1} />
+            <ProductCard name={myraName} tagline="AI Personal Voice Assistant for daily life" price={myraPrice} features={myraFeatures} variant="myra" delay={0.2} />
           </div>
         </div>
       </section>
