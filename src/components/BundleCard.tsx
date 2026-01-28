@@ -7,12 +7,13 @@ import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 const BundleCard = () => {
   const [showPaymentSelector, setShowPaymentSelector] = useState(false);
 
-  // Dynamic pricing: Jarvis becomes ₹899 from Feb 1, 2025
-  // MYRA becomes MYRA 2.0 from Feb 1, 2025
+  // Dynamic pricing: MYRA becomes ₹899 from Feb 1, 2026
+  // MYRA becomes MYRA 2.0 from Feb 1, 2026
+  // Jarvis is always ₹899
   const isAfterFeb1 = new Date() >= new Date('2026-02-01');
-  const jarvisPrice = isAfterFeb1 ? 899 : 799;
-  const myraPrice = isAfterFeb1 ? 899 : 799;
-  const bundlePrice = isAfterFeb1 ? 1599 : 1399;
+  const jarvisPrice = 899; // Jarvis is always ₹899
+  const myraPrice = isAfterFeb1 ? 899 : 799; // MYRA increases on Feb 1st
+  const bundlePrice = isAfterFeb1 ? 1599 : 1499;
   const originalPrice = jarvisPrice + myraPrice;
   const savings = originalPrice - bundlePrice;
   const myraName = isAfterFeb1 ? "MYRA 2.0" : "MYRA";
