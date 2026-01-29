@@ -16,19 +16,24 @@ const jarvisPrice = 899; // Jarvis is always ₹899
 const myraPrice = isAfterFeb1 ? 899 : 799; // MYRA increases on Feb 1st
 
 const Pricing = () => {
-  const [isOutsideIndia, setIsOutsideIndia] = useState(false);
+  const [isOutsideIndia, setIsOutsideIndia] = useState(true); // Temporarily true for testing
 
   useEffect(() => {
     const checkLocation = async () => {
       try {
         const response = await fetch('https://ipapi.co/json/');
         const data = await response.json();
+        console.log('Location data:', data);
+        console.log('Country code:', data.country_code);
         // Show banner only if user is NOT in India
         if (data.country_code && data.country_code !== 'IN') {
+          console.log('User is outside India, showing banner');
           setIsOutsideIndia(true);
+        } else {
+          console.log('User is in India, hiding banner');
         }
       } catch (error) {
-        console.log('Could not detect location');
+        console.log('Could not detect location:', error);
       }
     };
     checkLocation();
