@@ -23,6 +23,11 @@ const myraVideos = [
     title: "MYRA EXE Setup Video",
     description: "Step-by-step guide for MYRA EXE installation and setup.",
   },
+  {
+    id: "6VK8oCE-Vok",
+    title: "MYRA 2.0 Setup Guide",
+    description: "Latest setup tutorial for the new MYRA 2.0 version with enhanced features.",
+  },
 ];
 
 const DemoVideos = () => {
