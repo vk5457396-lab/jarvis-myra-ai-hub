@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import BackgroundVideo from "@/components/BackgroundVideo";
 import Index from "./pages/Index";
 import Features from "./pages/Features";
 import DemoVideos from "./pages/DemoVideos";
@@ -22,6 +23,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <BackgroundVideo />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
