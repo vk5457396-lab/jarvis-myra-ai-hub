@@ -14,7 +14,7 @@ const myraName = isMyra2 ? "MYRA 2.0" : "MYRA";
 
 const Features = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Hero */}

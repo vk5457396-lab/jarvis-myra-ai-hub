@@ -17,7 +17,7 @@ const ThankYou = () => {
   const telegramLink = `https://t.me/${telegramUsername}?text=${telegramMessage}`;
 
   return (
-    <div className="min-h-screen bg-background overflow-hidden">
+    <div className="min-h-screen overflow-hidden">
       <Navbar />
 
       {/* Background Effects */}
