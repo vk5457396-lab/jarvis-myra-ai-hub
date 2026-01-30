@@ -34,7 +34,7 @@ const Pricing = () => {
     checkLocation();
   }, []);
 
-  return <div className="min-h-screen bg-background">
+  return <div className="min-h-screen">
       <Navbar />
 
       {/* Hero */}

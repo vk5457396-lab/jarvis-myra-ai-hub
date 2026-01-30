@@ -18,13 +18,14 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
           clearInterval(timer);
           setTimeout(() => {
             setIsVisible(false);
-            setTimeout(onLoadingComplete, 500);
-          }, 300);
+            setTimeout(onLoadingComplete, 400);
+          }, 200);
           return 100;
         }
-        return prev + Math.random() * 15 + 5;
+        // Faster progress - complete in ~2 seconds
+        return prev + Math.random() * 25 + 10;
       });
-    }, 150);
+    }, 100);
 
     return () => clearInterval(timer);
   }, [onLoadingComplete]);
@@ -35,7 +36,7 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.4 }}
           className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background"
           style={{
             background: "radial-gradient(ellipse at 50% 50%, hsl(240 20% 8%) 0%, hsl(240 20% 2%) 100%)"
@@ -79,8 +80,8 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="relative z-10 mb-8"
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="relative z-10 mb-4"
           >
             {/* Logo glow effect */}
             <motion.div
@@ -102,7 +103,7 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
                 <motion.img
                   src={logo}
                   alt="Logo"
-                  className="w-24 h-24 md:w-32 md:h-32 object-contain"
+                  className="w-20 h-20 md:w-28 md:h-28 object-contain"
                   animate={{
                     filter: [
                       "drop-shadow(0 0 10px hsl(185 100% 50% / 0.5))",
@@ -120,21 +121,31 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
             </motion.div>
           </motion.div>
 
+          {/* Brand Name */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+            className="z-10 mb-6 text-center"
+          >
+            <h1 className="text-3xl md:text-4xl font-bold gradient-text text-glow-cyan tracking-wider">
+              CODENINJAVIK
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">AI Solutions Hub</p>
+          </motion.div>
+
           {/* Loading text */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="z-10 text-center mb-6"
+            transition={{ delay: 0.3, duration: 0.4 }}
+            className="z-10 text-center mb-4"
           >
-            <h2 className="text-xl md:text-2xl font-bold gradient-text mb-2">
-              Initializing System
-            </h2>
             <div className="flex items-center gap-1 justify-center">
-              <span className="text-muted-foreground text-sm">Loading</span>
+              <span className="text-muted-foreground text-sm">Initializing</span>
               <motion.span
                 animate={{ opacity: [1, 0, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
+                transition={{ duration: 0.8, repeat: Infinity }}
                 className="text-primary"
               >
                 ...
@@ -145,25 +156,25 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
           {/* Progress bar */}
           <motion.div
             initial={{ opacity: 0, width: 0 }}
-            animate={{ opacity: 1, width: "280px" }}
-            transition={{ delay: 0.5, duration: 0.5 }}
+            animate={{ opacity: 1, width: "240px" }}
+            transition={{ delay: 0.4, duration: 0.4 }}
             className="z-10"
           >
             <Progress 
               value={Math.min(progress, 100)} 
-              className="h-2 bg-muted/50"
+              className="h-1.5 bg-muted/50"
             />
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center text-primary text-sm mt-2 font-mono"
+              className="text-center text-primary text-xs mt-2 font-mono"
             >
               {Math.min(Math.round(progress), 100)}%
             </motion.p>
           </motion.div>
 
           {/* Floating particles */}
-          {[...Array(6)].map((_, i) => (
+          {[...Array(4)].map((_, i) => (
             <motion.div
               key={i}
               className="absolute w-1 h-1 bg-primary rounded-full"
@@ -173,18 +184,18 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
                 opacity: 0,
               }}
               animate={{
-                y: [0, -100, 0],
+                y: [0, -80, 0],
                 opacity: [0, 1, 0],
               }}
               transition={{
-                duration: 3 + Math.random() * 2,
+                duration: 2 + Math.random() * 2,
                 repeat: Infinity,
-                delay: i * 0.5,
+                delay: i * 0.4,
                 ease: "easeInOut",
               }}
               style={{
-                left: `${20 + i * 12}%`,
-                top: `${40 + Math.random() * 20}%`,
+                left: `${25 + i * 15}%`,
+                top: `${45 + Math.random() * 15}%`,
               }}
             />
           ))}

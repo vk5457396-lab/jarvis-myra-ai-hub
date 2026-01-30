@@ -32,7 +32,7 @@ const myraVideos = [
 
 const DemoVideos = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <Navbar />
       
       {/* Hero Section */}

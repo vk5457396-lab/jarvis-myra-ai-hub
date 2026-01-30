@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 circuit-pattern opacity-20" />
       <div className="absolute top-1/3 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />

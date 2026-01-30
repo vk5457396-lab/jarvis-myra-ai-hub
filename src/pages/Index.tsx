@@ -18,7 +18,7 @@ const myraPrice = isAfterFeb1 ? 899 : 799; // MYRA increases on Feb 1st
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <Navbar />
       
       {/* Hero Section */}
