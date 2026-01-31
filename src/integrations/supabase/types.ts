@@ -14,7 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      purchases: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          payment_id: string
+          product_name: string
+          product_type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          payment_id: string
+          product_name: string
+          product_type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          payment_id?: string
+          product_name?: string
+          product_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
