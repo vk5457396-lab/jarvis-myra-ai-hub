@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Sparkles, Gift } from "lucide-react";
+import { Check, Sparkles, Gift, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
+import { usePurchaseCounts } from "@/hooks/usePurchaseCounts";
 
 const BundleCard = () => {
   const [showPaymentSelector, setShowPaymentSelector] = useState(false);
+  const { data: purchaseCounts } = usePurchaseCounts();
 
   // Dynamic pricing: MYRA becomes ₹899 from Feb 1, 2026
   // MYRA becomes MYRA 2.0 from Feb 1, 2026
@@ -17,6 +19,8 @@ const BundleCard = () => {
   const originalPrice = jarvisPrice + myraPrice;
   const savings = originalPrice - bundlePrice;
   const myraName = isAfterFeb1 ? "MYRA 2.0" : "MYRA";
+  
+  const bundleSoldCount = purchaseCounts?.bundle || 0;
 
   const handleBuyClick = () => {
     setShowPaymentSelector(true);
@@ -66,9 +70,17 @@ const BundleCard = () => {
       <h3 className="font-display text-3xl font-bold mb-2 bg-gradient-neon bg-clip-text text-transparent">
         Jarvis + {myraName}
       </h3>
-      <p className="text-muted-foreground mb-6">
+      <p className="text-muted-foreground mb-4">
         Get both AI assistants at a discounted price
       </p>
+
+      {/* Sales Counter */}
+      {bundleSoldCount > 0 && (
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-display mb-4 bg-gradient-to-r from-primary/10 to-secondary/10 text-foreground border border-primary/20">
+          <Users size={14} className="text-primary" />
+          <span>{bundleSoldCount}+ bundles sold</span>
+        </div>
+      )}
 
       {/* Price */}
       <div className="flex items-baseline gap-2 mb-2">

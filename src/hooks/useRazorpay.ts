@@ -84,9 +84,32 @@ export const useRazorpay = () => {
           name: "AI Voice Assistant",
           description: `Purchase ${productName}`,
           order_id: data.order_id,
-          handler: function (response: any) {
+          handler: async function (response: any) {
             // Payment successful
             console.log("Payment successful:", response);
+            
+            // Determine product type for database
+            let productType = 'bundle';
+            const lowerName = productName.toLowerCase();
+            if (lowerName.includes('jarvis') && !lowerName.includes('myra') && !lowerName.includes('bundle')) {
+              productType = lowerName.includes('source') ? 'jarvis_source' : 'jarvis';
+            } else if (lowerName.includes('myra') && !lowerName.includes('jarvis') && !lowerName.includes('bundle')) {
+              productType = lowerName.includes('source') ? 'myra_source' : 'myra';
+            } else if (lowerName.includes('bundle') || (lowerName.includes('jarvis') && lowerName.includes('myra'))) {
+              productType = lowerName.includes('source') ? 'bundle_source' : 'bundle';
+            }
+
+            // Send Telegram notification (fire and forget)
+            invokeBackendFunction("send-telegram-notification", {
+              payment_id: response.razorpay_payment_id,
+              product_name: productName,
+              product_type: productType,
+              amount,
+              customer_name: customerName,
+              customer_email: customerEmail,
+              customer_phone: customerPhone,
+            }).catch((err) => console.error("Telegram notification error:", err));
+
             navigate(
               `/thank-you?product=${encodeURIComponent(productName)}&payment_id=${response.razorpay_payment_id}`
             );

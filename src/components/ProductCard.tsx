@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
+import { usePurchaseCounts } from "@/hooks/usePurchaseCounts";
 
 interface ProductCardProps {
   name: string;
@@ -23,6 +24,9 @@ const ProductCard = ({
 }: ProductCardProps) => {
   const isJarvis = variant === "jarvis";
   const [showPaymentSelector, setShowPaymentSelector] = useState(false);
+  const { data: purchaseCounts } = usePurchaseCounts();
+  
+  const soldCount = isJarvis ? purchaseCounts?.jarvis || 0 : purchaseCounts?.myra || 0;
 
   const handleBuyClick = () => {
     setShowPaymentSelector(true);
@@ -65,7 +69,19 @@ const ProductCard = ({
       >
         {name}
       </h3>
-      <p className="text-muted-foreground mb-6">{tagline}</p>
+      <p className="text-muted-foreground mb-4">{tagline}</p>
+
+      {/* Sales Counter */}
+      {soldCount > 0 && (
+        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-display mb-4 ${
+          isJarvis 
+            ? "bg-primary/10 text-primary border border-primary/20" 
+            : "bg-secondary/10 text-secondary border border-secondary/20"
+        }`}>
+          <Users size={14} />
+          <span>{soldCount}+ users already purchased</span>
+        </div>
+      )}
 
       {/* Price */}
       <div className="flex items-baseline gap-2 mb-8">
