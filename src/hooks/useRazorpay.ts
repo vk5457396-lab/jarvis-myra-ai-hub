@@ -110,8 +110,9 @@ export const useRazorpay = () => {
               customer_phone: customerPhone,
             }).catch((err) => console.error("Telegram notification error:", err));
 
+            // Navigate with all details for Thank You page
             navigate(
-              `/thank-you?product=${encodeURIComponent(productName)}&payment_id=${response.razorpay_payment_id}`
+              `/thank-you?product=${encodeURIComponent(productName)}&payment_id=${response.razorpay_payment_id}&amount=${amount}&phone=${encodeURIComponent(customerPhone || '')}`
             );
           },
           prefill: {

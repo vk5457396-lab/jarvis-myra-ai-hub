@@ -5,7 +5,7 @@ import FeatureCard from "@/components/FeatureCard";
 import ProductCard from "@/components/ProductCard";
 import Footer from "@/components/Footer";
 import VideoThumbnail from "@/components/VideoThumbnail";
-import SalesSummary from "@/components/SalesSummary";
+import ApiResourcesSection from "@/components/ApiResourcesSection";
 import { features, jarvisFeatures, myraFeatures } from "@/data/features";
 import { ChevronRight, Shield, Zap, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -210,6 +210,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* API Resources Section */}
+      <ApiResourcesSection />
 
       {/* CTA Section */}
       <section className="py-20 md:py-32">
