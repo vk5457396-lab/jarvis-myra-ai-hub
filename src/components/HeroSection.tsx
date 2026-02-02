@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ChevronRight, Mic, Cpu, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SalesSummary from "@/components/SalesSummary";
 import logo from "@/assets/logo.png";
 
 const HeroSection = () => {
@@ -102,25 +103,14 @@ const HeroSection = () => {
               </Link>
             </motion.div>
 
-            {/* Stats */}
+            {/* Sales Summary */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
-              className="flex flex-wrap gap-8 mt-12 justify-center lg:justify-start"
+              className="mt-12 max-w-md mx-auto lg:mx-0"
             >
-              {[
-                { label: "Voice Commands", value: "100+" },
-                { label: "Happy Users", value: "1000+" },
-                { label: "Uptime", value: "99.9%" },
-              ].map((stat, index) => (
-                <div key={index} className="text-center">
-                  <div className="font-display text-2xl md:text-3xl font-bold gradient-text">
-                    {stat.value}
-                  </div>
-                  <div className="text-muted-foreground text-sm">{stat.label}</div>
-                </div>
-              ))}
+              <SalesSummary />
             </motion.div>
           </div>
 

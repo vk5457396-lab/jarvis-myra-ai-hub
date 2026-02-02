@@ -5,6 +5,7 @@ import FeatureCard from "@/components/FeatureCard";
 import ProductCard from "@/components/ProductCard";
 import Footer from "@/components/Footer";
 import VideoThumbnail from "@/components/VideoThumbnail";
+import SalesSummary from "@/components/SalesSummary";
 import { features, jarvisFeatures, myraFeatures } from "@/data/features";
 import { ChevronRight, Shield, Zap, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
