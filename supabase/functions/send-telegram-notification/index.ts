@@ -56,22 +56,48 @@ serve(async (req) => {
       console.log('Purchase saved to database');
     }
 
-    // Send Telegram notification
-    const message = `
-🎉 *New Purchase Alert!*
+    // Format amount with currency
+    const formattedAmount = new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(amount);
 
-📦 *Product:* ${product_name}
-💰 *Amount:* ₹${amount}
-🆔 *Payment ID:* \`${payment_id}\`
+    // Get current time in IST
+    const istTime = new Date().toLocaleString('en-IN', { 
+      timeZone: 'Asia/Kolkata',
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    });
 
-👤 *Customer Details:*
-• Name: ${customer_name || 'Not provided'}
-• Email: ${customer_email || 'Not provided'}
-• Phone: ${customer_phone || 'Not provided'}
+    // Create admin notification message with enhanced formatting
+    const adminMessage = `
+🎉 *NEW PURCHASE ALERT!* 🎉
 
-⏰ *Time:* ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+━━━━━━━━━━━━━━━━━━━━━━
+📦 *Product Details*
+━━━━━━━━━━━━━━━━━━━━━━
+• Product: *${product_name}*
+• Type: \`${product_type || 'standard'}\`
+• Amount: *${formattedAmount}*
+• Payment ID: \`${payment_id}\`
+
+━━━━━━━━━━━━━━━━━━━━━━
+👤 *Customer Information*
+━━━━━━━━━━━━━━━━━━━━━━
+• Name: ${customer_name || '❌ Not provided'}
+• Email: ${customer_email || '❌ Not provided'}
+• Phone: ${customer_phone || '❌ Not provided'}
+
+━━━━━━━━━━━━━━━━━━━━━━
+⏰ *Transaction Time*
+━━━━━━━━━━━━━━━━━━━━━━
+${istTime} (IST)
+
+✅ Payment verified and recorded in database
     `.trim();
 
+    // Send admin notification
     const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     
     const telegramResponse = await fetch(telegramUrl, {
@@ -81,7 +107,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         chat_id: TELEGRAM_CHAT_ID,
-        text: message,
+        text: adminMessage,
         parse_mode: 'Markdown',
       }),
     });
@@ -93,10 +119,28 @@ serve(async (req) => {
       throw new Error(`Telegram error: ${telegramResult.description}`);
     }
 
-    console.log('Telegram notification sent successfully');
+    console.log('Admin Telegram notification sent successfully');
+
+    // Generate verification deep link for user
+    // This creates a link that when clicked by user, will message the bot
+    const verificationMessage = encodeURIComponent(
+      `🔐 Payment Verification Request\n\n` +
+      `Payment ID: ${payment_id}\n` +
+      `Product: ${product_name}\n` +
+      `Amount: ${formattedAmount}\n` +
+      `Phone: ${customer_phone || 'N/A'}\n\n` +
+      `Please verify my payment and activate my product.`
+    );
+    
+    // Create Telegram deep link for user to contact admin
+    const telegramDeepLink = `https://t.me/codeninjavik1?text=${verificationMessage}`;
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Notification sent' }),
+      JSON.stringify({ 
+        success: true, 
+        message: 'Notification sent',
+        telegramLink: telegramDeepLink,
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
