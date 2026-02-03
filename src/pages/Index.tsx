@@ -6,6 +6,7 @@ import ProductCard from "@/components/ProductCard";
 import Footer from "@/components/Footer";
 import VideoThumbnail from "@/components/VideoThumbnail";
 import ApiResourcesSection from "@/components/ApiResourcesSection";
+import WebsiteServiceCard from "@/components/WebsiteServiceCard";
 import { features, jarvisFeatures, myraFeatures } from "@/data/features";
 import { ChevronRight, Shield, Zap, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -213,6 +214,13 @@ const Index = () => {
 
       {/* API Resources Section */}
       <ApiResourcesSection />
+
+      {/* Website Service Promotion */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <WebsiteServiceCard />
+        </div>
+      </section>
 
       {/* CTA Section */}
       <section className="py-20 md:py-32">

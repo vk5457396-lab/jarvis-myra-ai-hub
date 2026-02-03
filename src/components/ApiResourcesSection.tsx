@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ExternalLink, Key, Sparkles, Video, Bot, Code } from "lucide-react";
+import { ExternalLink, Key, Sparkles, Video, Bot, Code, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const apiResources = [
@@ -7,11 +7,21 @@ const apiResources = [
     name: "Google Gemini API",
     description: "Get your free Gemini API key for AI-powered features",
     icon: Sparkles,
-    url: "https://aistudio.google.com/app/apikey",
+    url: "https://aistudio.google.com/apikey",
     buttonText: "Get Gemini API",
     color: "text-blue-400",
     bgColor: "from-blue-500/20 to-blue-500/5",
     borderColor: "border-blue-500/30",
+  },
+  {
+    name: "Mem0 API",
+    description: "Memory layer for AI applications and agents",
+    icon: Brain,
+    url: "https://app.mem0.ai/",
+    buttonText: "Get Mem0 API",
+    color: "text-pink-400",
+    bgColor: "from-pink-500/20 to-pink-500/5",
+    borderColor: "border-pink-500/30",
   },
   {
     name: "LiveKit API",
@@ -29,9 +39,9 @@ const apiResources = [
     icon: Bot,
     url: "https://platform.openai.com/api-keys",
     buttonText: "Get OpenAI API",
-    color: "text-green-400",
-    bgColor: "from-green-500/20 to-green-500/5",
-    borderColor: "border-green-500/30",
+    color: "text-emerald-400",
+    bgColor: "from-emerald-500/20 to-emerald-500/5",
+    borderColor: "border-emerald-500/30",
   },
   {
     name: "ElevenLabs API",
@@ -67,7 +77,7 @@ const ApiResourcesSection = () => {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
           {apiResources.map((resource, index) => (
             <motion.div
               key={index}
@@ -89,7 +99,7 @@ const ApiResourcesSection = () => {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className={`w-full group border-white/20 hover:border-white/40`}
+                  className={`w-full group border-border/50 hover:border-border`}
                 >
                   <span>{resource.buttonText}</span>
                   <ExternalLink className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
