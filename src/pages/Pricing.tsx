@@ -82,92 +82,90 @@ const Pricing = () => {
         amount={selectedProduct.amount}
       />
 
-      {/* International Payment Support - Only for users outside India */}
-      {isOutsideIndia && (
-        <section className="py-6">
-          <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="max-w-5xl mx-auto"
-            >
-              <div className="glass-card rounded-xl p-4 md:p-6 border border-amber-500/30 bg-gradient-to-r from-amber-500/5 to-orange-500/5">
-                <div className="flex flex-col gap-4">
-                  {/* Header */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                      <Wallet className="w-6 h-6 text-amber-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-base md:text-lg font-display font-semibold text-foreground mb-1">
-                        International Payment via <span className="text-amber-400">Binance</span>
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Pay with crypto (USDT) • Fast & Secure • Global Support
-                      </p>
+      {/* International Payment Support - Always visible for crypto payments */}
+      <section className="py-6">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-5xl mx-auto"
+          >
+            <div className="glass-card rounded-xl p-4 md:p-6 border border-amber-500/30 bg-gradient-to-r from-amber-500/5 to-orange-500/5">
+              <div className="flex flex-col gap-4">
+                {/* Header */}
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                    <Wallet className="w-6 h-6 text-amber-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-base md:text-lg font-display font-semibold text-foreground mb-1">
+                      Crypto Payment via <span className="text-amber-400">Binance</span>
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Pay with USDT • International & Indian Users • Fast & Secure
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Product Buttons */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Regular Products */}
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Products</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => openBinancePayment("Jarvis + MYRA Bundle", 1499)}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-amber-500/30"
+                      >
+                        Bundle ~$18
+                      </button>
+                      <button
+                        onClick={() => openBinancePayment("Jarvis AI", jarvisPrice)}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-primary/30"
+                      >
+                        Jarvis ~$11
+                      </button>
+                      <button
+                        onClick={() => openBinancePayment(myraName, myraPrice)}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary/10 hover:bg-secondary/20 text-secondary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-secondary/30"
+                      >
+                        {myraName} ~$10
+                      </button>
                     </div>
                   </div>
                   
-                  {/* Product Buttons */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Regular Products */}
-                    <div className="space-y-2">
-                      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Products</p>
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() => openBinancePayment("Jarvis + MYRA Bundle", 1499)}
-                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-amber-500/30"
-                        >
-                          Bundle ~$18
-                        </button>
-                        <button
-                          onClick={() => openBinancePayment("Jarvis AI", jarvisPrice)}
-                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-primary/30"
-                        >
-                          Jarvis ~$11
-                        </button>
-                        <button
-                          onClick={() => openBinancePayment(myraName, myraPrice)}
-                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary/10 hover:bg-secondary/20 text-secondary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-secondary/30"
-                        >
-                          {myraName} ~$10
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* Source Code */}
-                    <div className="space-y-2">
-                      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
-                        <Code size={12} /> Source Code
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() => openBinancePayment("Source Code Bundle (Jarvis + MYRA)", 4999)}
-                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-yellow-500/30"
-                        >
-                          Bundle ~$60
-                        </button>
-                        <button
-                          onClick={() => openBinancePayment("Jarvis Source Code", 3499)}
-                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-primary/30"
-                        >
-                          Jarvis ~$42
-                        </button>
-                        <button
-                          onClick={() => openBinancePayment(`${myraName} Source Code`, 3499)}
-                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary/10 hover:bg-secondary/20 text-secondary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-secondary/30"
-                        >
-                          {myraName} ~$42
-                        </button>
-                      </div>
+                  {/* Source Code */}
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1">
+                      <Code size={12} /> Source Code
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => openBinancePayment("Source Code Bundle (Jarvis + MYRA)", 4999)}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-yellow-500/30"
+                      >
+                        Bundle ~$60
+                      </button>
+                      <button
+                        onClick={() => openBinancePayment("Jarvis Source Code", 3499)}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-primary/30"
+                      >
+                        Jarvis ~$42
+                      </button>
+                      <button
+                        onClick={() => openBinancePayment(`${myraName} Source Code`, 3499)}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary/10 hover:bg-secondary/20 text-secondary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-secondary/30"
+                      >
+                        {myraName} ~$42
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
-            </motion.div>
-          </div>
-        </section>
-      )}
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
       {/* Countdown Timer */}
       <section className="py-4">
