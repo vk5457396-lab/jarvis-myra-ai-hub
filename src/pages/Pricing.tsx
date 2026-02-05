@@ -7,6 +7,7 @@ import BundleCard from "@/components/BundleCard";
 import SourceCodeCard from "@/components/SourceCodeCard";
 import PriceCountdown from "@/components/PriceCountdown";
 import BinancePaymentModal from "@/components/BinancePaymentModal";
+import MobileAppComingSoon from "@/components/MobileAppComingSoon";
 import { jarvisFeatures, myraFeatures } from "@/data/features";
 import { Check, Shield, CreditCard, Zap, Code, Wallet } from "lucide-react";
 
@@ -219,6 +220,15 @@ const Pricing = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
             <ProductCard name="Jarvis" tagline="AI System Assistant for power users" price={jarvisPrice} features={jarvisFeatures} variant="jarvis" delay={0.1} />
             <ProductCard name={myraName} tagline="AI Personal Voice Assistant for daily life" price={myraPrice} features={myraFeatures} variant="myra" delay={0.2} />
+          </div>
+        </div>
+      </section>
+
+      {/* Mobile App Coming Soon */}
+      <section className="py-8 md:py-12">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <MobileAppComingSoon />
           </div>
         </div>
       </section>
