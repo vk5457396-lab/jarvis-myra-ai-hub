@@ -142,19 +142,19 @@ const Pricing = () => {
                     </p>
                     <div className="flex flex-wrap gap-2">
                       <button
-                        onClick={() => openBinancePayment("Source Code Bundle (Jarvis + MYRA)", 14999)}
+                        onClick={() => openBinancePayment("Source Code Bundle (Jarvis + MYRA)", 4999)}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-yellow-500/30"
                       >
                         Bundle ~$180
                       </button>
                       <button
-                        onClick={() => openBinancePayment("Jarvis Source Code", 9999)}
+                        onClick={() => openBinancePayment("Jarvis Source Code", 3499)}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-primary/30"
                       >
                         Jarvis ~$120
                       </button>
                       <button
-                        onClick={() => openBinancePayment(`${myraName} Source Code`, 9999)}
+                        onClick={() => openBinancePayment(`${myraName} Source Code`, 3499)}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary/10 hover:bg-secondary/20 text-secondary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-secondary/30"
                       >
                         {myraName} ~$120
