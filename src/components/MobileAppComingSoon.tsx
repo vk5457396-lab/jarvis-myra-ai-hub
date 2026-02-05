@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Smartphone, Heart, Music, Youtube, MessageCircle, Sparkles, Bell } from "lucide-react";
+import { Smartphone, Heart, Music, Youtube, MessageCircle, Sparkles, Bell, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const MobileAppComingSoon = () => {
@@ -8,6 +8,7 @@ const MobileAppComingSoon = () => {
     { icon: Music, text: "Spotify Music Control", color: "text-green-400" },
     { icon: Youtube, text: "YouTube Playback", color: "text-red-400" },
     { icon: MessageCircle, text: "WhatsApp Messaging", color: "text-emerald-400" },
+    { icon: Mail, text: "Email Automation", color: "text-blue-400" },
     { icon: Sparkles, text: "All Tasks Automation", color: "text-yellow-400" },
   ];
 
