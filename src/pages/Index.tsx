@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import VideoThumbnail from "@/components/VideoThumbnail";
 import ApiResourcesSection from "@/components/ApiResourcesSection";
 import WebsiteServiceCard from "@/components/WebsiteServiceCard";
+import MobileAppComingSoon from "@/components/MobileAppComingSoon";
 import { features, jarvisFeatures, myraFeatures } from "@/data/features";
 import { ChevronRight, Shield, Zap, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -214,6 +215,13 @@ const Index = () => {
 
       {/* API Resources Section */}
       <ApiResourcesSection />
+
+      {/* Mobile App Coming Soon */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <MobileAppComingSoon />
+        </div>
+      </section>
 
       {/* Website Service Promotion */}
       <section className="py-16 md:py-24">
