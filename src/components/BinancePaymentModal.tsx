@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Copy, Check, Wallet, ArrowRight, QrCode } from "lucide-react";
+import { X, Send, Copy, Check, Wallet, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import binanceQR from "@/assets/binance-qr.png";
 
 interface BinancePaymentModalProps {
   isOpen: boolean;
@@ -13,12 +14,12 @@ interface BinancePaymentModalProps {
   amount: number;
 }
 
-const BINANCE_PAY_ID = "373628182"; // Your Binance Pay ID
+const BINANCE_PAY_ID = "373628182";
 
 const BinancePaymentModal = ({ isOpen, onClose, productName, amount }: BinancePaymentModalProps) => {
   const [transactionId, setTransactionId] = useState("");
   const [copied, setCopied] = useState(false);
-  const [step, setStep] = useState<"info" | "confirm">("info");
+  const [step, setStep] = useState<"qr" | "confirm">("qr");
 
   const copyPayId = () => {
     navigator.clipboard.writeText(BINANCE_PAY_ID);
@@ -43,7 +44,15 @@ const BinancePaymentModal = ({ isOpen, onClose, productName, amount }: BinancePa
 
     window.open(`https://t.me/codeninjavik1?text=${message}`, "_blank");
     onClose();
+    setStep("qr");
+    setTransactionId("");
     toast.success("Redirecting to Telegram...");
+  };
+
+  const handleClose = () => {
+    onClose();
+    setStep("qr");
+    setTransactionId("");
   };
 
   if (!isOpen) return null;
@@ -55,20 +64,20 @@ const BinancePaymentModal = ({ isOpen, onClose, productName, amount }: BinancePa
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md"
-        onClick={onClose}
+        onClick={handleClose}
       >
         <motion.div
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="relative w-full max-w-md glass-card rounded-2xl p-6 border border-amber-500/30"
+          className="relative w-full max-w-md glass-card rounded-2xl p-6 border border-amber-500/30 max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close Button */}
           <button
-            onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/10 transition-colors"
+            onClick={handleClose}
+            className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/10 transition-colors z-10"
           >
             <X className="w-5 h-5 text-muted-foreground" />
           </button>
@@ -82,11 +91,11 @@ const BinancePaymentModal = ({ isOpen, onClose, productName, amount }: BinancePa
               <h2 className="font-display text-xl font-bold text-foreground">
                 Binance Payment
               </h2>
-              <p className="text-sm text-muted-foreground">For International Users</p>
+              <p className="text-sm text-muted-foreground">Scan QR to Pay</p>
             </div>
           </div>
 
-          {step === "info" ? (
+          {step === "qr" ? (
             <>
               {/* Product Info */}
               <div className="glass rounded-xl p-4 mb-4 border border-primary/20">
@@ -97,24 +106,40 @@ const BinancePaymentModal = ({ isOpen, onClose, productName, amount }: BinancePa
                 <div className="flex justify-between items-center mt-2">
                   <span className="text-muted-foreground">Amount:</span>
                   <span className="font-display text-foreground">
-                    <span className="text-amber-400">${(amount / 83).toFixed(2)}</span>
+                    <span className="text-amber-400 text-lg font-bold">${(amount / 83).toFixed(2)} USDT</span>
                     <span className="text-muted-foreground text-sm ml-2">(~₹{amount})</span>
                   </span>
                 </div>
               </div>
 
-              {/* Binance Pay ID */}
+              {/* QR Code Section */}
+              <div className="flex flex-col items-center mb-4">
+                <div className="relative p-4 bg-white rounded-2xl shadow-lg shadow-amber-500/20">
+                  <img 
+                    src={binanceQR} 
+                    alt="Binance Pay QR Code" 
+                    className="w-48 h-48 object-contain"
+                  />
+                  {/* Binance Logo Overlay Effect */}
+                  <div className="absolute inset-0 rounded-2xl ring-2 ring-amber-500/30 pointer-events-none" />
+                </div>
+                <p className="text-sm text-muted-foreground mt-3 text-center">
+                  Scan with <span className="text-amber-400 font-semibold">Binance App</span> to pay
+                </p>
+              </div>
+
+              {/* Pay ID Section */}
               <div className="mb-4">
-                <Label className="text-sm text-muted-foreground mb-2 block">
-                  Send payment to this Binance Pay ID:
+                <Label className="text-sm text-muted-foreground mb-2 block text-center">
+                  Or send to Pay ID:
                 </Label>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 glass rounded-lg p-3 font-mono text-lg text-amber-400 tracking-wider">
+                <div className="flex items-center gap-2 justify-center">
+                  <div className="glass rounded-lg px-4 py-2 font-mono text-lg text-amber-400 tracking-wider">
                     {BINANCE_PAY_ID}
                   </div>
                   <button
                     onClick={copyPayId}
-                    className="p-3 rounded-lg glass hover:bg-white/10 transition-colors"
+                    className="p-2 rounded-lg glass hover:bg-white/10 transition-colors"
                   >
                     {copied ? (
                       <Check className="w-5 h-5 text-green-500" />
@@ -127,18 +152,11 @@ const BinancePaymentModal = ({ isOpen, onClose, productName, amount }: BinancePa
 
               {/* Instructions */}
               <div className="glass rounded-xl p-4 mb-6 bg-amber-500/5 border border-amber-500/20">
-                <div className="flex items-start gap-3">
-                  <QrCode className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-muted-foreground">
-                    <p className="font-medium text-foreground mb-1">How to pay:</p>
-                    <ol className="list-decimal list-inside space-y-1">
-                      <li>Open Binance App → Pay → Send</li>
-                      <li>Enter Pay ID: <span className="text-amber-400">{BINANCE_PAY_ID}</span></li>
-                      <li>Send <span className="text-primary">${(amount / 83).toFixed(2)} USDT</span></li>
-                      <li>Copy your Transaction ID</li>
-                    </ol>
-                  </div>
-                </div>
+                <p className="text-sm text-muted-foreground text-center">
+                  <span className="font-semibold text-foreground">Steps:</span> Open Binance → Pay → Scan QR → 
+                  Send <span className="text-amber-400 font-semibold">${(amount / 83).toFixed(2)} USDT</span> → 
+                  Copy Transaction ID
+                </p>
               </div>
 
               <Button
@@ -198,7 +216,7 @@ const BinancePaymentModal = ({ isOpen, onClose, productName, amount }: BinancePa
                   variant="ghost"
                   size="lg"
                   className="flex-1"
-                  onClick={() => setStep("info")}
+                  onClick={() => setStep("qr")}
                 >
                   Back
                 </Button>
@@ -217,7 +235,7 @@ const BinancePaymentModal = ({ isOpen, onClose, productName, amount }: BinancePa
 
           {/* Footer Note */}
           <p className="text-xs text-center text-muted-foreground mt-4">
-            Payment will be verified manually. Activation within 1 hour.
+            Payment verified manually. Activation within 1 hour.
           </p>
         </motion.div>
       </motion.div>
