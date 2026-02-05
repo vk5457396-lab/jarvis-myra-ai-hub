@@ -44,6 +44,12 @@ const MobileAppComingSoon = () => {
               <br />
               <span className="text-foreground">Mobile App</span>
             </h3>
+            <div className="flex items-baseline gap-2 mb-4 justify-center lg:justify-start">
+              <span className="text-muted-foreground line-through text-lg">₹2499</span>
+              <span className="font-display text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-400 to-rose-500 bg-clip-text text-transparent">
+                ₹1599
+              </span>
+            </div>
             <p className="text-muted-foreground mb-6 text-lg">
               Your personal AI companion with a human-like voice. Control music, send messages, and automate your daily tasks - all through natural conversation.
             </p>
@@ -65,18 +71,17 @@ const MobileAppComingSoon = () => {
               ))}
             </div>
 
-            {/* Notify Button */}
+            {/* Pre-Order Button */}
             <Button 
-              variant="outline" 
-              size="xl" 
-              className="gap-2 group border-pink-500/50 text-pink-400 hover:bg-pink-500/10 hover:border-pink-400"
+              size="lg" 
+              className="gap-2 group bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-display font-bold px-8 py-6 text-lg shadow-lg shadow-pink-500/25"
               onClick={() => {
-                const message = encodeURIComponent("🎀 AI Girlfriend App Notification\n\nHi! I'm interested in the AI Girlfriend Mobile App. Please notify me when it launches!");
+                const message = encodeURIComponent("🎀 AI Girlfriend App Pre-Order\n\nHi! I'm interested in pre-ordering the AI Girlfriend Mobile App for ₹1599.\n\nFeatures I'm excited about:\n• Human-like voice interaction\n• Spotify & YouTube control\n• WhatsApp messaging\n• Email Automation\n• Task automation");
                 window.open(`https://t.me/codeninjavik1?text=${message}`, "_blank");
               }}
             >
               <Bell size={20} className="group-hover:animate-bounce" />
-              Notify Me on Launch
+              Pre-Order Now • ₹1599
             </Button>
           </div>
 
