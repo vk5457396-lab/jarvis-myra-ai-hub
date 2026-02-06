@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://cnvik.in/sitemap.xml
+Sitemap: https://www.codeninjavik.in/sitemap.xml
