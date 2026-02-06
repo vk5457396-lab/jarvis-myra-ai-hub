@@ -83,6 +83,15 @@ const MobileAppComingSoon = () => {
               <Bell size={20} className="group-hover:animate-bounce" />
               Pre-Order Now • ₹1599
             </Button>
+
+            {/* Source Code Coming Soon */}
+            <div className="mt-4 flex items-center gap-2 justify-center lg:justify-start">
+              <div className="glass rounded-lg px-4 py-2 border border-cyan-500/30 inline-flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Source Code:</span>
+                <span className="font-display font-bold text-cyan-400">₹8999</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 font-medium">COMING SOON</span>
+              </div>
+            </div>
           </div>
 
           {/* Right - Phone Mockup */}
