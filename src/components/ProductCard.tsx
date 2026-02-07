@@ -83,6 +83,27 @@ const ProductCard = ({
         </div>
       )}
 
+      {/* Includes Badge */}
+      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg mb-4 ${
+        isJarvis 
+          ? "bg-gradient-to-r from-primary/20 to-cyan-500/10 border border-primary/30" 
+          : "bg-gradient-to-r from-secondary/20 to-purple-500/10 border border-secondary/30"
+      }`}>
+        <div className={`w-6 h-6 rounded flex items-center justify-center ${
+          isJarvis ? "bg-primary/30" : "bg-secondary/30"
+        }`}>
+          <span className="text-xs">📦</span>
+        </div>
+        <div className="flex-1">
+          <p className="text-xs font-medium text-foreground">
+            {isJarvis ? "Includes: Old Source Code" : "Includes: .exe File"}
+          </p>
+          <p className="text-[10px] text-muted-foreground">
+            {isJarvis ? "Learn & customize the original codebase" : "Ready-to-run executable for Windows"}
+          </p>
+        </div>
+      </div>
+
       {/* Price */}
       <div className="flex items-baseline gap-2 mb-8">
         <span className="font-display text-5xl font-bold text-foreground">
