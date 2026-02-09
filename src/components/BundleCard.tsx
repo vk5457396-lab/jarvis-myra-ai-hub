@@ -4,21 +4,18 @@ import { Check, Sparkles, Gift, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 import { usePurchaseCounts } from "@/hooks/usePurchaseCounts";
+import { getMyraPrice, getMyraName, getBundlePrice } from "@/utils/flashSale";
 
 const BundleCard = () => {
   const [showPaymentSelector, setShowPaymentSelector] = useState(false);
   const { data: purchaseCounts } = usePurchaseCounts();
 
-  // Dynamic pricing: MYRA becomes ₹899 from Feb 1, 2026
-  // MYRA becomes MYRA 2.0 from Feb 1, 2026
-  // Jarvis is always ₹899
-  const isAfterFeb1 = new Date() >= new Date('2026-02-01');
-  const jarvisPrice = 899; // Jarvis is always ₹899
-  const myraPrice = isAfterFeb1 ? 899 : 799; // MYRA increases on Feb 1st
-  const bundlePrice = isAfterFeb1 ? 1599 : 1499;
+  const jarvisPrice = 899;
+  const myraPrice = getMyraPrice();
+  const bundlePrice = getBundlePrice();
   const originalPrice = jarvisPrice + myraPrice;
   const savings = originalPrice - bundlePrice;
-  const myraName = isAfterFeb1 ? "MYRA 2.0" : "MYRA";
+  const myraName = getMyraName();
   
   const bundleSoldCount = purchaseCounts?.bundle || 0;
 
