@@ -5,17 +5,17 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import BundleCard from "@/components/BundleCard";
 import SourceCodeCard from "@/components/SourceCodeCard";
-import PriceCountdown from "@/components/PriceCountdown";
+import FlashSaleBanner from "@/components/FlashSaleBanner";
 import BinancePaymentModal from "@/components/BinancePaymentModal";
 import MobileAppComingSoon from "@/components/MobileAppComingSoon";
 import { jarvisFeatures, myraFeatures } from "@/data/features";
 import { Check, Shield, CreditCard, Zap, Code, Wallet } from "lucide-react";
 
-// Dynamic product name and pricing based on date
-const isAfterFeb1 = new Date() >= new Date('2026-02-01');
-const myraName = isAfterFeb1 ? "MYRA 2.0" : "MYRA";
-const jarvisPrice = 899; // Jarvis is always ₹899
-const myraPrice = isAfterFeb1 ? 899 : 799; // MYRA increases on Feb 1st
+import { getMyraPrice, getMyraName } from "@/utils/flashSale";
+
+const jarvisPrice = 899;
+const myraPrice = getMyraPrice();
+const myraName = getMyraName();
 
 const Pricing = () => {
   const [isOutsideIndia, setIsOutsideIndia] = useState(false);
@@ -168,11 +168,11 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* Countdown Timer */}
+      {/* Flash Sale Banner */}
       <section className="py-4">
         <div className="container mx-auto px-4">
           <div className="max-w-xl mx-auto">
-            <PriceCountdown />
+            <FlashSaleBanner />
           </div>
         </div>
       </section>
