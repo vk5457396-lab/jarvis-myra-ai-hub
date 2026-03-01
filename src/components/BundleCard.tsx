@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 import { usePurchaseCounts } from "@/hooks/usePurchaseCounts";
 import { getMyraPrice, getMyraName, getBundlePrice } from "@/utils/flashSale";
+import { useCurrency } from "@/hooks/useCurrency";
 
 const BundleCard = () => {
   const [showPaymentSelector, setShowPaymentSelector] = useState(false);
   const { data: purchaseCounts } = usePurchaseCounts();
+  const { formatPrice, isIndia, currency } = useCurrency();
 
   const jarvisPrice = 899;
   const myraPrice = getMyraPrice();
@@ -25,7 +27,7 @@ const BundleCard = () => {
 
   const bundleFeatures = [
     `Both Jarvis & ${myraName} included`,
-    `Save ₹${savings} on bundle`,
+    `Save ${formatPrice(savings)} on bundle`,
     "All Jarvis features",
     `All ${myraName} features`,
     "Priority support",
@@ -82,16 +84,22 @@ const BundleCard = () => {
       {/* Price */}
       <div className="flex items-baseline gap-2 mb-2">
         <span className="font-display text-5xl font-bold text-foreground">
-          ₹{bundlePrice.toLocaleString('en-IN')}
+          {formatPrice(bundlePrice)}
         </span>
         <span className="text-muted-foreground">/ one-time</span>
       </div>
-      <div className="flex items-center gap-2 mb-8">
-        <span className="text-muted-foreground line-through">₹{originalPrice.toLocaleString('en-IN')}</span>
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-muted-foreground line-through">{formatPrice(originalPrice)}</span>
         <span className="text-xs font-display px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
-          SAVE ₹{savings}
+          SAVE {formatPrice(savings)}
         </span>
       </div>
+      {!isIndia && (
+        <p className="text-xs text-muted-foreground mb-6">
+          {currency.flag} Showing in {currency.code}
+        </p>
+      )}
+      {isIndia && <div className="mb-6" />}
 
       {/* Features */}
       <ul className="space-y-3 mb-8">

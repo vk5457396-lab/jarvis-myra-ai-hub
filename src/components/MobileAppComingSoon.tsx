@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
-import { Check, Sparkles, Heart, Music, Youtube, MessageCircle, Mail, Smartphone } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCurrency } from "@/hooks/useCurrency";
 
 const MobileAppComingSoon = () => {
+  const { formatPrice, isIndia, currency } = useCurrency();
+
   const features = [
     "Human-like Girlfriend Voice",
     "Spotify Music Control",
@@ -52,11 +55,17 @@ const MobileAppComingSoon = () => {
       </div>
 
       {/* Price */}
-      <div className="flex items-baseline gap-2 mb-8">
-        <span className="text-muted-foreground line-through text-lg">₹2499</span>
-        <span className="font-display text-5xl font-bold text-foreground">₹1599</span>
+      <div className="flex items-baseline gap-2 mb-2">
+        <span className="text-muted-foreground line-through text-lg">{formatPrice(2499)}</span>
+        <span className="font-display text-5xl font-bold text-foreground">{formatPrice(1599)}</span>
         <span className="text-muted-foreground">/ one-time</span>
       </div>
+      {!isIndia && (
+        <p className="text-xs text-muted-foreground mb-6">
+          {currency.flag} Showing in {currency.code}
+        </p>
+      )}
+      {isIndia && <div className="mb-6" />}
 
       {/* Features */}
       <ul className="space-y-3 mb-8">
@@ -90,7 +99,7 @@ const MobileAppComingSoon = () => {
       <div className="mt-4 flex items-center gap-2 justify-center">
         <div className="glass rounded-lg px-4 py-2 border border-cyan-500/30 inline-flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Source Code:</span>
-          <span className="font-display font-bold text-cyan-400">₹8999</span>
+          <span className="font-display font-bold text-cyan-400">{formatPrice(8999)}</span>
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 font-medium">COMING SOON</span>
         </div>
       </div>

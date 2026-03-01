@@ -10,6 +10,7 @@ import BinancePaymentModal from "@/components/BinancePaymentModal";
 import MobileAppComingSoon from "@/components/MobileAppComingSoon";
 import { jarvisFeatures, myraFeatures } from "@/data/features";
 import { Check, Shield, CreditCard, Zap, Code, Wallet } from "lucide-react";
+import { useCurrency } from "@/hooks/useCurrency";
 
 import { getMyraPrice, getMyraName } from "@/utils/flashSale";
 
@@ -21,6 +22,7 @@ const Pricing = () => {
   const [isOutsideIndia, setIsOutsideIndia] = useState(false);
   const [showBinanceModal, setShowBinanceModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState({ name: "", amount: 0 });
+  const { formatPrice, isIndia, currency } = useCurrency();
 
   useEffect(() => {
     const checkLocation = async () => {
@@ -118,19 +120,19 @@ const Pricing = () => {
                         onClick={() => openBinancePayment("Jarvis + MYRA Bundle", 1499)}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-amber-500/30"
                       >
-                        Bundle ~$18
+                        Bundle {formatPrice(1499)}
                       </button>
                       <button
                         onClick={() => openBinancePayment("Jarvis AI", jarvisPrice)}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-primary/30"
                       >
-                        Jarvis ~$11
+                        Jarvis {formatPrice(jarvisPrice)}
                       </button>
                       <button
                         onClick={() => openBinancePayment(myraName, myraPrice)}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary/10 hover:bg-secondary/20 text-secondary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-secondary/30"
                       >
-                        {myraName} ~$10
+                        {myraName} {formatPrice(myraPrice)}
                       </button>
                     </div>
                   </div>
@@ -145,19 +147,19 @@ const Pricing = () => {
                         onClick={() => openBinancePayment("Source Code Bundle (Jarvis + MYRA)", 4999)}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-yellow-500/30"
                       >
-                        Bundle ~$60
+                        Bundle {formatPrice(4999)}
                       </button>
                       <button
                         onClick={() => openBinancePayment("Jarvis Source Code", 3499)}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-primary/30"
                       >
-                        Jarvis ~$42
+                        Jarvis {formatPrice(3499)}
                       </button>
                       <button
                         onClick={() => openBinancePayment(`${myraName} Source Code`, 3499)}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary/10 hover:bg-secondary/20 text-secondary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-secondary/30"
                       >
-                        {myraName} ~$42
+                        {myraName} {formatPrice(3499)}
                       </button>
                     </div>
                   </div>
