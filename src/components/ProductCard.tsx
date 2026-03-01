@@ -4,6 +4,7 @@ import { Check, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 import { usePurchaseCounts } from "@/hooks/usePurchaseCounts";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface ProductCardProps {
   name: string;
@@ -25,6 +26,7 @@ const ProductCard = ({
   const isJarvis = variant === "jarvis";
   const [showPaymentSelector, setShowPaymentSelector] = useState(false);
   const { data: purchaseCounts } = usePurchaseCounts();
+  const { formatPrice, isIndia, currency } = useCurrency();
   
   const soldCount = isJarvis ? purchaseCounts?.jarvis || 0 : purchaseCounts?.myra || 0;
 
@@ -105,12 +107,18 @@ const ProductCard = ({
       </div>
 
       {/* Price */}
-      <div className="flex items-baseline gap-2 mb-8">
+      <div className="flex items-baseline gap-2 mb-2">
         <span className="font-display text-5xl font-bold text-foreground">
-          ₹{price}
+          {formatPrice(price)}
         </span>
         <span className="text-muted-foreground">/ one-time</span>
       </div>
+      {!isIndia && (
+        <p className="text-xs text-muted-foreground mb-6">
+          {currency.flag} Showing in {currency.code}
+        </p>
+      )}
+      {isIndia && <div className="mb-6" />}
 
       {/* Features */}
       <ul className="space-y-3 mb-8">

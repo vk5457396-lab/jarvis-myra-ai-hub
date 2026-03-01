@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Code, FileCode, GitBranch, Layers, Settings, Star } from "lucide-react";
 import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface SourceCodeCardProps {
   variant: "jarvis" | "myra" | "bundle";
@@ -10,8 +11,8 @@ interface SourceCodeCardProps {
 
 const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
   const [showPaymentSelector, setShowPaymentSelector] = useState(false);
+  const { formatPrice, isIndia, currency } = useCurrency();
   
-  // MYRA becomes MYRA 2.0 from Feb 1, 2026
   const isAfterFeb1 = new Date() >= new Date('2026-02-01');
   const myraName = isAfterFeb1 ? "MYRA 2.0" : "MYRA";
 
@@ -130,14 +131,19 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
         {/* Price */}
         <div className="text-center mb-4">
           <div className="flex items-baseline justify-center gap-2">
-            <span className="text-muted-foreground line-through text-sm">₹{currentConfig.originalPrice}</span>
+            <span className="text-muted-foreground line-through text-sm">{formatPrice(currentConfig.originalPrice)}</span>
             <span className={`font-display text-4xl font-bold bg-gradient-to-r ${currentConfig.gradient} bg-clip-text text-transparent`}>
-              ₹{currentConfig.price}
+              {formatPrice(currentConfig.price)}
             </span>
           </div>
           <p className="text-xs text-green-400 mt-1 font-medium">
-            Save ₹{currentConfig.savings}!
+            Save {formatPrice(currentConfig.savings)}!
           </p>
+          {!isIndia && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {currency.flag} {currency.code}
+            </p>
+          )}
         </div>
 
         {/* Features */}
