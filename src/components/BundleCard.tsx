@@ -6,11 +6,12 @@ import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 import { usePurchaseCounts } from "@/hooks/usePurchaseCounts";
 import { getMyraPrice, getMyraName, getBundlePrice } from "@/utils/flashSale";
 import { useCurrency } from "@/hooks/useCurrency";
+import CurrencySelector from "@/components/CurrencySelector";
 
 const BundleCard = () => {
   const [showPaymentSelector, setShowPaymentSelector] = useState(false);
   const { data: purchaseCounts } = usePurchaseCounts();
-  const { formatPrice, isIndia, currency } = useCurrency();
+  const { formatPrice, isIndia, currency, countryCode, setSelectedCountry } = useCurrency();
 
   const jarvisPrice = 899;
   const myraPrice = getMyraPrice();
@@ -94,12 +95,14 @@ const BundleCard = () => {
           SAVE {formatPrice(savings)}
         </span>
       </div>
-      {!isIndia && (
-        <p className="text-xs text-muted-foreground mb-6">
-          {currency.flag} Showing in {currency.code}
-        </p>
-      )}
-      {isIndia && <div className="mb-6" />}
+
+      {/* Currency Selector */}
+      <CurrencySelector
+        currentCode={countryCode}
+        onSelect={setSelectedCountry}
+        currency={currency}
+      />
+      <div className="mb-4" />
 
       {/* Features */}
       <ul className="space-y-3 mb-8">

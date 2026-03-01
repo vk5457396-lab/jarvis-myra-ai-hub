@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Code, FileCode, GitBranch, Layers, Settings, Star } from "lucide-react";
 import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 import { useCurrency } from "@/hooks/useCurrency";
+import CurrencySelector from "@/components/CurrencySelector";
 
 interface SourceCodeCardProps {
   variant: "jarvis" | "myra" | "bundle";
@@ -11,7 +12,7 @@ interface SourceCodeCardProps {
 
 const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
   const [showPaymentSelector, setShowPaymentSelector] = useState(false);
-  const { formatPrice, isIndia, currency } = useCurrency();
+  const { formatPrice, isIndia, currency, countryCode, setSelectedCountry } = useCurrency();
   
   const isAfterFeb1 = new Date() >= new Date('2026-02-01');
   const myraName = isAfterFeb1 ? "MYRA 2.0" : "MYRA";
@@ -20,9 +21,9 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
     jarvis: {
       name: "Jarvis",
       productName: "Jarvis Source Code",
-      price: 3499,
-      originalPrice: 4999,
-      savings: 1500,
+      price: isIndia ? 4500 : 3499,
+      originalPrice: isIndia ? 5999 : 4999,
+      savings: isIndia ? 1499 : 1500,
       gradient: "from-primary to-cyan-400",
       bgGradient: "from-primary/10 via-cyan-500/5 to-blue-500/10",
       glowColor: "primary",
@@ -39,9 +40,9 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
     myra: {
       name: myraName,
       productName: `${myraName} Source Code`,
-      price: 3499,
-      originalPrice: 4999,
-      savings: 1500,
+      price: isIndia ? 4500 : 3499,
+      originalPrice: isIndia ? 5999 : 4999,
+      savings: isIndia ? 1499 : 1500,
       gradient: "from-secondary to-purple-400",
       bgGradient: "from-secondary/10 via-purple-500/5 to-pink-500/10",
       glowColor: "secondary",
@@ -58,9 +59,9 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
     bundle: {
       name: `Jarvis + ${myraName}`,
       productName: `Jarvis + ${myraName} Source Code Bundle`,
-      price: 4999,
-      originalPrice: 6998,
-      savings: 1999,
+      price: isIndia ? 6999 : 4999,
+      originalPrice: isIndia ? 9000 : 6998,
+      savings: isIndia ? 2001 : 1999,
       gradient: "from-yellow-500 to-orange-500",
       bgGradient: "from-yellow-500/10 via-orange-500/5 to-red-500/10",
       glowColor: "yellow-500",
@@ -139,11 +140,11 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
           <p className="text-xs text-green-400 mt-1 font-medium">
             Save {formatPrice(currentConfig.savings)}!
           </p>
-          {!isIndia && (
-            <p className="text-xs text-muted-foreground mt-1">
-              {currency.flag} {currency.code}
-            </p>
-          )}
+          <CurrencySelector
+            currentCode={countryCode}
+            onSelect={setSelectedCountry}
+            currency={currency}
+          />
         </div>
 
         {/* Features */}

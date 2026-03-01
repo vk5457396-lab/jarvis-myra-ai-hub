@@ -2,9 +2,10 @@ import { motion } from "framer-motion";
 import { Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/hooks/useCurrency";
+import CurrencySelector from "@/components/CurrencySelector";
 
 const MobileAppComingSoon = () => {
-  const { formatPrice, isIndia, currency } = useCurrency();
+  const { formatPrice, isIndia, currency, countryCode, setSelectedCountry } = useCurrency();
 
   const features = [
     "Human-like Girlfriend Voice",
@@ -60,12 +61,12 @@ const MobileAppComingSoon = () => {
         <span className="font-display text-5xl font-bold text-foreground">{formatPrice(1599)}</span>
         <span className="text-muted-foreground">/ one-time</span>
       </div>
-      {!isIndia && (
-        <p className="text-xs text-muted-foreground mb-6">
-          {currency.flag} Showing in {currency.code}
-        </p>
-      )}
-      {isIndia && <div className="mb-6" />}
+      <CurrencySelector
+        currentCode={countryCode}
+        onSelect={setSelectedCountry}
+        currency={currency}
+      />
+      <div className="mb-6" />
 
       {/* Features */}
       <ul className="space-y-3 mb-8">
