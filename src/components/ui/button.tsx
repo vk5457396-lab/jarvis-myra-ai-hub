@@ -17,6 +17,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         neonCyan: "bg-gradient-to-r from-neon-cyan to-neon-cyan/80 text-background font-bold shadow-neon-cyan hover:shadow-[0_0_30px_hsl(185_100%_50%/0.6),0_0_60px_hsl(185_100%_50%/0.3)] hover:scale-105 border border-neon-cyan/30",
         neonPurple: "bg-gradient-to-r from-neon-purple to-neon-purple/80 text-background font-bold shadow-neon-purple hover:shadow-[0_0_30px_hsl(265_100%_65%/0.6),0_0_60px_hsl(265_100%_65%/0.3)] hover:scale-105 border border-neon-purple/30",
+        neonPink: "bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold shadow-[0_0_20px_rgba(236,72,153,0.4)] hover:shadow-[0_0_30px_rgba(236,72,153,0.6),0_0_60px_rgba(236,72,153,0.3)] hover:scale-105 border border-pink-400/30",
         glass: "glass text-foreground hover:bg-white/10 border border-white/20",
         hero: "bg-gradient-neon text-background font-bold shadow-neon-cyan hover:shadow-[0_0_40px_hsl(185_100%_50%/0.5),0_0_80px_hsl(265_100%_65%/0.3)] hover:scale-105 border border-white/20",
       },

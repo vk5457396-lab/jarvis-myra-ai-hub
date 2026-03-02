@@ -8,7 +8,7 @@ import SourceCodeCard from "@/components/SourceCodeCard";
 import FlashSaleBanner from "@/components/FlashSaleBanner";
 import BinancePaymentModal from "@/components/BinancePaymentModal";
 import MobileAppComingSoon from "@/components/MobileAppComingSoon";
-import { jarvisFeatures, myraFeatures } from "@/data/features";
+import { jarvisFeatures, myraFeatures, auraFeatures } from "@/data/features";
 import { Check, Shield, CreditCard, Zap, Code, Wallet } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 
@@ -17,6 +17,7 @@ import { getMyraPrice, getMyraName } from "@/utils/flashSale";
 const jarvisPrice = 899;
 const myraPrice = getMyraPrice();
 const myraName = getMyraName();
+const auraPrice = 899;
 
 const Pricing = () => {
   const [isOutsideIndia, setIsOutsideIndia] = useState(false);
@@ -134,6 +135,12 @@ const Pricing = () => {
                       >
                         {myraName} {formatPrice(myraPrice)}
                       </button>
+                      <button
+                        onClick={() => openBinancePayment("AURA AI", auraPrice)}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 text-pink-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-pink-500/30"
+                      >
+                        AURA AI {formatPrice(auraPrice)}
+                      </button>
                     </div>
                   </div>
                   
@@ -219,9 +226,10 @@ const Pricing = () => {
             </h2>
             <p className="text-muted-foreground">Pick the assistant that fits your needs</p>
           </motion.div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <ProductCard name="Jarvis" tagline="AI System Assistant for power users" price={jarvisPrice} features={jarvisFeatures} variant="jarvis" delay={0.1} />
             <ProductCard name={myraName} tagline="AI Personal Voice Assistant for daily life" price={myraPrice} features={myraFeatures} variant="myra" delay={0.2} />
+            <ProductCard name="AURA AI" tagline="Your AI Girlfriend - Smart & Caring Companion" price={auraPrice} features={auraFeatures} variant="aura" delay={0.3} />
           </div>
         </div>
       </section>
