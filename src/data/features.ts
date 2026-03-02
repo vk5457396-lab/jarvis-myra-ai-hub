@@ -80,3 +80,12 @@ export const myraFeatures = [
   "Real-time News Updates",
   "Smart Task Management",
 ];
+
+export const auraFeatures = [
+  "AI Girlfriend Voice Assistant",
+  "Emotional Conversations & Memory",
+  "15+ Premium Female Voices",
+  "Daily Life Automation & Tasks",
+  "WhatsApp & Social Media Control",
+  "Smart Companion & Entertainment",
+];
