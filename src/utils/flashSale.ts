@@ -26,3 +26,15 @@ export const getMyraName = (): string => {
   const isAfterFeb1 = new Date() >= new Date('2026-02-01');
   return isAfterFeb1 ? "MYRA 2.0" : "MYRA";
 };
+
+export const getJarvisName = (): string => {
+  return "Jarvis 2.0";
+};
+
+export const getAuraName = (): string => {
+  return "AURA 1.0";
+};
+
+export const getTripleBundlePrice = (): number => {
+  return 2399;
+};

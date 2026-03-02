@@ -4,7 +4,7 @@ import { Check, Sparkles, Gift, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 import { usePurchaseCounts } from "@/hooks/usePurchaseCounts";
-import { getMyraPrice, getMyraName, getBundlePrice } from "@/utils/flashSale";
+import { getMyraPrice, getMyraName, getBundlePrice, getJarvisName } from "@/utils/flashSale";
 import { useCurrency } from "@/hooks/useCurrency";
 import CurrencySelector from "@/components/CurrencySelector";
 
@@ -19,6 +19,7 @@ const BundleCard = () => {
   const originalPrice = jarvisPrice + myraPrice;
   const savings = originalPrice - bundlePrice;
   const myraName = getMyraName();
+  const jarvisName = getJarvisName();
   
   const bundleSoldCount = purchaseCounts?.bundle || 0;
 
@@ -27,9 +28,9 @@ const BundleCard = () => {
   };
 
   const bundleFeatures = [
-    `Both Jarvis & ${myraName} included`,
+    `Both ${jarvisName} & ${myraName} included`,
     `Save ${formatPrice(savings)} on bundle`,
-    "All Jarvis features",
+    `All ${jarvisName} features`,
     `All ${myraName} features`,
     "Priority support",
     "Free lifetime updates",
@@ -68,7 +69,7 @@ const BundleCard = () => {
 
       {/* Name & Tagline */}
       <h3 className="font-display text-3xl font-bold mb-2 bg-gradient-neon bg-clip-text text-transparent">
-        Jarvis + {myraName}
+        {jarvisName} + {myraName}
       </h3>
       <p className="text-muted-foreground mb-4">
         Get both AI assistants at a discounted price
@@ -139,7 +140,7 @@ const BundleCard = () => {
         isOpen={showPaymentSelector}
         onClose={() => setShowPaymentSelector(false)}
         amount={bundlePrice}
-        productName={`Jarvis + ${myraName} Bundle`}
+        productName={`${jarvisName} + ${myraName} Bundle`}
       />
     </motion.div>
   );
