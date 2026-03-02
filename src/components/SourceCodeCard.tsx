@@ -7,7 +7,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import CurrencySelector from "@/components/CurrencySelector";
 
 interface SourceCodeCardProps {
-  variant: "jarvis" | "myra" | "bundle";
+  variant: "jarvis" | "myra" | "aura" | "bundle";
 }
 
 const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
@@ -19,17 +19,17 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
 
   const config = {
     jarvis: {
-      name: "Jarvis",
-      productName: "Jarvis Source Code",
+      name: "Jarvis 2.0",
+      productName: "Jarvis 2.0 Source Code",
       price: isIndia ? 4500 : 3499,
       originalPrice: isIndia ? 5999 : 4999,
       savings: isIndia ? 1499 : 1500,
       gradient: "from-primary to-cyan-400",
       bgGradient: "from-primary/10 via-cyan-500/5 to-blue-500/10",
       glowColor: "primary",
-      badgeText: "JARVIS CODE",
+      badgeText: "JARVIS 2.0 CODE",
       features: [
-        "Complete Jarvis Source Code",
+        "Complete Jarvis 2.0 Source Code",
         "Python & Automation Scripts",
         "Full Documentation",
         "Customization Guide",
@@ -56,9 +56,28 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
         "Developer Support",
       ],
     },
+    aura: {
+      name: "AURA 1.0",
+      productName: "AURA 1.0 Source Code",
+      price: isIndia ? 4500 : 3499,
+      originalPrice: isIndia ? 5999 : 4999,
+      savings: isIndia ? 1499 : 1500,
+      gradient: "from-pink-500 to-rose-400",
+      bgGradient: "from-pink-500/10 via-rose-500/5 to-red-500/10",
+      glowColor: "pink-500",
+      badgeText: "AURA 1.0 CODE",
+      features: [
+        "Complete AURA 1.0 Source Code",
+        "Python & Automation Scripts",
+        "Full Documentation",
+        "Customization Guide",
+        "Future Code Updates",
+        "Developer Support",
+      ],
+    },
     bundle: {
-      name: `Jarvis + ${myraName}`,
-      productName: `Jarvis + ${myraName} Source Code Bundle`,
+      name: `Jarvis 2.0 + ${myraName}`,
+      productName: `Jarvis 2.0 + ${myraName} Source Code Bundle`,
       price: isIndia ? 6999 : 4999,
       originalPrice: isIndia ? 9000 : 6998,
       savings: isIndia ? 2001 : 1999,
@@ -67,7 +86,7 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
       glowColor: "yellow-500",
       badgeText: "BEST VALUE",
       features: [
-        "Complete Jarvis Source Code",
+        "Complete Jarvis 2.0 Source Code",
         `Complete ${myraName} Source Code`,
         "Python & Automation Scripts",
         "Full Documentation",

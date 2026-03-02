@@ -8,22 +8,29 @@ import SourceCodeCard from "@/components/SourceCodeCard";
 import FlashSaleBanner from "@/components/FlashSaleBanner";
 import BinancePaymentModal from "@/components/BinancePaymentModal";
 import MobileAppComingSoon from "@/components/MobileAppComingSoon";
+import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
+import CurrencySelector from "@/components/CurrencySelector";
+import { Button } from "@/components/ui/button";
 import { jarvisFeatures, myraFeatures, auraFeatures } from "@/data/features";
 import { Check, Shield, CreditCard, Zap, Code, Wallet } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 
-import { getMyraPrice, getMyraName } from "@/utils/flashSale";
+import { getMyraPrice, getMyraName, getJarvisName, getAuraName, getTripleBundlePrice } from "@/utils/flashSale";
 
 const jarvisPrice = 899;
 const myraPrice = getMyraPrice();
 const myraName = getMyraName();
+const jarvisName = getJarvisName();
+const auraName = getAuraName();
 const auraPrice = 899;
+const tripleBundlePrice = getTripleBundlePrice();
 
 const Pricing = () => {
   const [isOutsideIndia, setIsOutsideIndia] = useState(false);
   const [showBinanceModal, setShowBinanceModal] = useState(false);
+  const [showComboPayment, setShowComboPayment] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState({ name: "", amount: 0 });
-  const { formatPrice, isIndia, currency } = useCurrency();
+  const { formatPrice, isIndia, currency, countryCode, setSelectedCountry } = useCurrency();
 
   useEffect(() => {
     const checkLocation = async () => {
@@ -118,16 +125,22 @@ const Pricing = () => {
                     <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Products</p>
                     <div className="flex flex-wrap gap-2">
                       <button
-                        onClick={() => openBinancePayment("Jarvis + MYRA Bundle", 1499)}
+                        onClick={() => openBinancePayment("Jarvis 2.0 + MYRA 2.0 Bundle", 1499)}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-amber-500/30"
                       >
-                        Bundle {formatPrice(1499)}
+                        2-Bundle {formatPrice(1499)}
                       </button>
                       <button
-                        onClick={() => openBinancePayment("Jarvis AI", jarvisPrice)}
+                        onClick={() => openBinancePayment("Jarvis 2.0 + MYRA 2.0 + AURA 1.0 Combo", tripleBundlePrice)}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-pink-500/20 hover:from-amber-500/30 hover:to-pink-500/30 text-amber-300 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-amber-500/30"
+                      >
+                        3-Combo {formatPrice(tripleBundlePrice)}
+                      </button>
+                      <button
+                        onClick={() => openBinancePayment("Jarvis 2.0 AI", jarvisPrice)}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-primary/30"
                       >
-                        Jarvis {formatPrice(jarvisPrice)}
+                        Jarvis 2.0 {formatPrice(jarvisPrice)}
                       </button>
                       <button
                         onClick={() => openBinancePayment(myraName, myraPrice)}
@@ -136,10 +149,10 @@ const Pricing = () => {
                         {myraName} {formatPrice(myraPrice)}
                       </button>
                       <button
-                        onClick={() => openBinancePayment("AURA AI", auraPrice)}
+                        onClick={() => openBinancePayment("AURA 1.0 AI", auraPrice)}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 text-pink-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-pink-500/30"
                       >
-                        AURA AI {formatPrice(auraPrice)}
+                        AURA 1.0 {formatPrice(auraPrice)}
                       </button>
                     </div>
                   </div>
@@ -151,16 +164,16 @@ const Pricing = () => {
                     </p>
                     <div className="flex flex-wrap gap-2">
                       <button
-                        onClick={() => openBinancePayment("Source Code Bundle (Jarvis + MYRA)", 4999)}
+                        onClick={() => openBinancePayment("Source Code Bundle (Jarvis 2.0 + MYRA 2.0)", 4999)}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-yellow-500/30"
                       >
                         Bundle {formatPrice(4999)}
                       </button>
                       <button
-                        onClick={() => openBinancePayment("Jarvis Source Code", 3499)}
+                        onClick={() => openBinancePayment("Jarvis 2.0 Source Code", 3499)}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-primary/30"
                       >
-                        Jarvis {formatPrice(3499)}
+                        Jarvis 2.0 {formatPrice(3499)}
                       </button>
                       <button
                         onClick={() => openBinancePayment(`${myraName} Source Code`, 3499)}
@@ -186,25 +199,93 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* Bundle Deal - Featured */}
+      {/* Bundle Deals */}
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4">
-          <motion.div initial={{
-          opacity: 0,
-          y: 20
-        }} whileInView={{
-          opacity: 1,
-          y: 0
-        }} viewport={{
-          once: true
-        }} className="text-center mb-8">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-8">
             <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
-              🎁 Special <span className="gradient-text">Bundle Offer</span>
+              🎁 Special <span className="gradient-text">Bundle Offers</span>
             </h2>
-            <p className="text-muted-foreground">Get both assistants and save!</p>
+            <p className="text-muted-foreground">Get multiple assistants and save!</p>
           </motion.div>
-          <div className="max-w-md mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             <BundleCard />
+            {/* Triple Combo Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              whileHover={{ y: -10 }}
+              className="relative glass-card rounded-2xl p-8 overflow-hidden border-2 border-transparent bg-gradient-to-b from-pink-500/10 via-primary/10 to-secondary/10"
+              style={{ borderImage: "linear-gradient(135deg, hsl(var(--primary)), #ec4899, hsl(var(--secondary))) 1" }}
+            >
+              <div className="absolute -top-1 left-1/2 -translate-x-1/2">
+                <div className="bg-gradient-to-r from-primary via-pink-500 to-secondary px-4 py-1 rounded-b-lg">
+                  <span className="text-xs font-display font-bold text-background tracking-wider">MEGA COMBO</span>
+                </div>
+              </div>
+              <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-20 bg-pink-500" />
+              <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full blur-3xl opacity-20 bg-primary" />
+
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-display tracking-wider mb-4 bg-gradient-to-r from-primary/20 via-pink-500/20 to-secondary/20 text-foreground border border-pink-500/30 mt-4">
+                <Zap size={12} className="text-pink-400" />
+                ALL 3 AI ASSISTANTS
+              </div>
+
+              <h3 className="font-display text-3xl font-bold mb-2 bg-gradient-to-r from-primary via-pink-400 to-secondary bg-clip-text text-transparent">
+                {jarvisName} + {myraName} + {auraName}
+              </h3>
+              <p className="text-muted-foreground mb-4">Get all three AI assistants at the best price</p>
+
+              <div className="flex items-baseline gap-2 mb-2">
+                <span className="font-display text-5xl font-bold text-foreground">{formatPrice(tripleBundlePrice)}</span>
+                <span className="text-muted-foreground">/ one-time</span>
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-muted-foreground line-through">{formatPrice(jarvisPrice + myraPrice + auraPrice)}</span>
+                <span className="text-xs font-display px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
+                  SAVE {formatPrice(jarvisPrice + myraPrice + auraPrice - tripleBundlePrice)}
+                </span>
+              </div>
+              <CurrencySelector currentCode={countryCode} onSelect={setSelectedCountry} currency={currency} />
+              <div className="mb-4" />
+
+              <ul className="space-y-3 mb-8">
+                {[
+                  `All ${jarvisName} features included`,
+                  `All ${myraName} features included`,
+                  `All ${auraName} features included`,
+                  `Save ${formatPrice(jarvisPrice + myraPrice + auraPrice - tripleBundlePrice)} on combo`,
+                  "Priority support",
+                  "Free lifetime updates",
+                ].map((feature, index) => (
+                  <motion.li key={index} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 + index * 0.1 }} className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center bg-gradient-to-r from-primary via-pink-500 to-secondary">
+                      <Check size={12} className="text-background" />
+                    </div>
+                    <span className="text-foreground/80 text-sm">{feature}</span>
+                  </motion.li>
+                ))}
+              </ul>
+
+              <Button
+                variant="neonPink"
+                size="xl"
+                className="w-full bg-gradient-to-r from-primary via-pink-500 to-secondary hover:opacity-90"
+                onClick={() => setShowComboPayment(true)}
+              >
+                <Zap size={18} className="mr-2" />
+                Get Mega Combo
+              </Button>
+
+              <PaymentGatewaySelector
+                isOpen={showComboPayment}
+                onClose={() => setShowComboPayment(false)}
+                amount={tripleBundlePrice}
+                productName={`${jarvisName} + ${myraName} + ${auraName} Combo`}
+              />
+            </motion.div>
           </div>
         </div>
       </section>
@@ -227,9 +308,9 @@ const Pricing = () => {
             <p className="text-muted-foreground">Pick the assistant that fits your needs</p>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <ProductCard name="Jarvis" tagline="AI System Assistant for power users" price={jarvisPrice} features={jarvisFeatures} variant="jarvis" delay={0.1} />
+            <ProductCard name={jarvisName} tagline="AI System Assistant for power users" price={jarvisPrice} features={jarvisFeatures} variant="jarvis" delay={0.1} />
             <ProductCard name={myraName} tagline="AI Personal Voice Assistant for daily life" price={myraPrice} features={myraFeatures} variant="myra" delay={0.2} />
-            <ProductCard name="AURA AI" tagline="Your AI Girlfriend - Smart & Caring Companion" price={auraPrice} features={auraFeatures} variant="aura" delay={0.3} />
+            <ProductCard name={auraName} tagline="Your AI Girlfriend - Smart & Caring Companion" price={auraPrice} features={auraFeatures} variant="aura" delay={0.3} />
           </div>
         </div>
       </section>
@@ -285,9 +366,10 @@ const Pricing = () => {
               Or Buy <span className="gradient-text">Individual</span> Source Code
             </h3>
           </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <SourceCodeCard variant="jarvis" />
             <SourceCodeCard variant="myra" />
+            <SourceCodeCard variant="aura" />
           </div>
         </div>
       </section>

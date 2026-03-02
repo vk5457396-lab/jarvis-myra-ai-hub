@@ -84,8 +84,8 @@ export const myraFeatures = [
 export const auraFeatures = [
   "AI Girlfriend Voice Assistant",
   "Emotional Conversations & Memory",
-  "15+ Premium Female Voices",
-  "Daily Life Automation & Tasks",
-  "WhatsApp & Social Media Control",
+  "1 Premium Female Voice Model",
+  "Modes: Roast, Angry, Professional",
+  "Real Girlfriend Feel & Care",
   "Smart Companion & Entertainment",
 ];
