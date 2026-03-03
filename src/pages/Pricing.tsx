@@ -347,21 +347,14 @@ const Pricing = () => {
             <p className="text-muted-foreground">Get the complete source code and create your custom AI assistant</p>
           </motion.div>
           
-          {/* Source Code Bundle - Featured */}
-          <div className="max-w-lg mx-auto mb-12">
+          {/* Source Code Combos */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
             <SourceCodeCard variant="bundle" />
+            <SourceCodeCard variant="triple" />
           </div>
 
           {/* Individual Source Code Cards */}
-          <motion.div initial={{
-          opacity: 0,
-          y: 20
-        }} whileInView={{
-          opacity: 1,
-          y: 0
-        }} viewport={{
-          once: true
-        }} className="text-center mb-8">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-8">
             <h3 className="font-display text-xl md:text-2xl font-bold mb-2">
               Or Buy <span className="gradient-text">Individual</span> Source Code
             </h3>
