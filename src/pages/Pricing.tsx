@@ -212,78 +212,99 @@ const Pricing = () => {
             <BundleCard />
             {/* Triple Combo Card */}
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              whileHover={{ y: -10 }}
-              className="relative glass-card rounded-2xl p-8 overflow-hidden border-2 border-transparent bg-gradient-to-b from-pink-500/10 via-primary/10 to-secondary/10"
-              style={{ borderImage: "linear-gradient(135deg, hsl(var(--primary)), #ec4899, hsl(var(--secondary))) 1" }}
+              whileHover={{ y: -10, transition: { duration: 0.3 } }}
+              className="relative group rounded-[2rem] overflow-hidden backdrop-blur-2xl transition-all duration-500"
+              style={{
+                background: 'linear-gradient(165deg, hsla(330, 80%, 60%, 0.05) 0%, hsla(263, 70%, 58%, 0.04) 20%, hsla(188, 100%, 50%, 0.03) 40%, hsla(220, 20%, 6%, 0.95) 55%, hsla(220, 20%, 4%, 0.98) 100%)',
+                border: '2px solid transparent',
+                borderImage: 'linear-gradient(135deg, hsla(188, 100%, 50%, 0.35), hsla(330, 80%, 60%, 0.35), hsla(263, 70%, 58%, 0.35)) 1',
+                boxShadow: '0 0 0 1px hsla(330, 80%, 60%, 0.08), 0 25px 70px -20px hsla(330, 80%, 60%, 0.12)',
+              }}
             >
-              <div className="absolute -top-1 left-1/2 -translate-x-1/2">
-                <div className="bg-gradient-to-r from-primary via-pink-500 to-secondary px-4 py-1 rounded-b-lg">
-                  <span className="text-xs font-display font-bold text-background tracking-wider">MEGA COMBO</span>
+              {/* Mega Combo Badge */}
+              <div className="absolute -top-0.5 left-1/2 -translate-x-1/2 z-20">
+                <div className="bg-gradient-to-r from-cyan-500 via-pink-500 to-violet-500 px-6 py-1.5 rounded-b-2xl shadow-lg shadow-pink-500/20">
+                  <div className="flex items-center gap-1.5">
+                    <Zap size={11} className="text-white" />
+                    <span className="text-[10px] font-display font-black text-white tracking-[0.2em]">MEGA COMBO</span>
+                  </div>
                 </div>
               </div>
-              <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-20 bg-pink-500" />
-              <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full blur-3xl opacity-20 bg-primary" />
 
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-display tracking-wider mb-4 bg-gradient-to-r from-primary/20 via-pink-500/20 to-secondary/20 text-foreground border border-pink-500/30 mt-4">
-                <Zap size={12} className="text-pink-400" />
-                ALL 3 AI ASSISTANTS
+              {/* Glow */}
+              <div className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-15 bg-pink-500 group-hover:opacity-30 transition-all duration-700" />
+              <div className="absolute -bottom-32 -left-32 w-64 h-64 rounded-full blur-[100px] opacity-10 bg-cyan-500 group-hover:opacity-20 transition-all duration-700" />
+
+              {/* Grid */}
+              <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+
+              <div className="relative z-10 p-8 md:p-9">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-[11px] font-display tracking-[0.15em] mb-6 bg-gradient-to-r from-cyan-500/10 via-pink-500/10 to-violet-500/10 text-foreground border border-pink-500/20 mt-5 backdrop-blur-sm">
+                  <Zap size={13} className="text-pink-400" />
+                  ALL 3 AI ASSISTANTS
+                </div>
+
+                <h3 className="font-display text-3xl md:text-4xl font-black mb-3 bg-gradient-to-r from-cyan-400 via-pink-400 to-violet-400 bg-clip-text text-transparent tracking-tight">
+                  {jarvisName} + {myraName} + {auraName}
+                </h3>
+                <p className="text-muted-foreground text-sm mb-5 leading-relaxed">Get all three AI assistants at the best price</p>
+
+                <div className="flex items-baseline gap-3 mb-2">
+                  <span className="font-display text-5xl md:text-6xl font-black text-foreground tracking-tight">{formatPrice(tripleBundlePrice)}</span>
+                  <span className="text-muted-foreground text-sm font-medium">/ one-time</span>
+                </div>
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-muted-foreground line-through text-sm">{formatPrice(jarvisPrice + myraPrice + auraPrice)}</span>
+                  <span className="text-[10px] font-display font-bold px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                    SAVE {formatPrice(jarvisPrice + myraPrice + auraPrice - tripleBundlePrice)}
+                  </span>
+                </div>
+                <CurrencySelector currentCode={countryCode} onSelect={setSelectedCountry} currency={currency} />
+                <div className="mb-7" />
+
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-pink-500/30 to-transparent mb-7" />
+
+                <ul className="space-y-3.5 mb-9">
+                  {[
+                    `All ${jarvisName} features included`,
+                    `All ${myraName} features included`,
+                    `All ${auraName} features included`,
+                    `Save ${formatPrice(jarvisPrice + myraPrice + auraPrice - tripleBundlePrice)} on combo`,
+                    "Priority support",
+                    "Free lifetime updates",
+                  ].map((feature, index) => (
+                    <motion.li key={index} initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 + index * 0.06 }} className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-lg flex items-center justify-center bg-gradient-to-br from-cyan-500 via-pink-500 to-violet-500 flex-shrink-0 mt-0.5">
+                        <Check size={11} className="text-white" strokeWidth={3} />
+                      </div>
+                      <span className="text-foreground/80 text-sm leading-relaxed">{feature}</span>
+                    </motion.li>
+                  ))}
+                </ul>
+
+                <Button
+                  variant="neonPink"
+                  size="xl"
+                  className="w-full bg-gradient-to-r from-cyan-500 via-pink-500 to-violet-500 hover:opacity-90 font-black text-base tracking-wide"
+                  onClick={() => setShowComboPayment(true)}
+                >
+                  <Zap size={16} className="mr-2" />
+                  Get Mega Combo
+                </Button>
+
+                <p className="text-center text-[10px] text-muted-foreground mt-4 tracking-wide">
+                  Instant delivery • Lifetime access • Free updates
+                </p>
               </div>
-
-              <h3 className="font-display text-3xl font-bold mb-2 bg-gradient-to-r from-primary via-pink-400 to-secondary bg-clip-text text-transparent">
-                {jarvisName} + {myraName} + {auraName}
-              </h3>
-              <p className="text-muted-foreground mb-4">Get all three AI assistants at the best price</p>
-
-              <div className="flex items-baseline gap-2 mb-2">
-                <span className="font-display text-5xl font-bold text-foreground">{formatPrice(tripleBundlePrice)}</span>
-                <span className="text-muted-foreground">/ one-time</span>
-              </div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-muted-foreground line-through">{formatPrice(jarvisPrice + myraPrice + auraPrice)}</span>
-                <span className="text-xs font-display px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
-                  SAVE {formatPrice(jarvisPrice + myraPrice + auraPrice - tripleBundlePrice)}
-                </span>
-              </div>
-              <CurrencySelector currentCode={countryCode} onSelect={setSelectedCountry} currency={currency} />
-              <div className="mb-4" />
-
-              <ul className="space-y-3 mb-8">
-                {[
-                  `All ${jarvisName} features included`,
-                  `All ${myraName} features included`,
-                  `All ${auraName} features included`,
-                  `Save ${formatPrice(jarvisPrice + myraPrice + auraPrice - tripleBundlePrice)} on combo`,
-                  "Priority support",
-                  "Free lifetime updates",
-                ].map((feature, index) => (
-                  <motion.li key={index} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 + index * 0.1 }} className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center bg-gradient-to-r from-primary via-pink-500 to-secondary">
-                      <Check size={12} className="text-background" />
-                    </div>
-                    <span className="text-foreground/80 text-sm">{feature}</span>
-                  </motion.li>
-                ))}
-              </ul>
-
-              <Button
-                variant="neonPink"
-                size="xl"
-                className="w-full bg-gradient-to-r from-primary via-pink-500 to-secondary hover:opacity-90"
-                onClick={() => setShowComboPayment(true)}
-              >
-                <Zap size={18} className="mr-2" />
-                Get Mega Combo
-              </Button>
 
               <PaymentGatewaySelector
                 isOpen={showComboPayment}
                 onClose={() => setShowComboPayment(false)}
-                amount={tripleBundlePrice}
-                productName={`${jarvisName} + ${myraName} + ${auraName} Combo`}
+                productId="combo_all"
               />
             </motion.div>
           </div>

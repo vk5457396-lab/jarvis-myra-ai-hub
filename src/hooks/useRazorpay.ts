@@ -10,11 +10,11 @@ declare global {
 }
 
 interface PaymentOptions {
-  amount: number;
-  productName: string;
+  productId: string;
   customerName?: string;
   customerEmail?: string;
   customerPhone?: string;
+  isInternational?: boolean;
 }
 
 export const useRazorpay = () => {
@@ -26,7 +26,6 @@ export const useRazorpay = () => {
         resolve(true);
         return;
       }
-
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => resolve(true);
@@ -37,14 +36,13 @@ export const useRazorpay = () => {
 
   const initiatePayment = useCallback(
     async ({
-      amount,
-      productName,
+      productId,
       customerName,
       customerEmail,
       customerPhone,
+      isInternational,
     }: PaymentOptions) => {
       try {
-        // Load Razorpay script
         const scriptLoaded = await loadRazorpayScript();
         if (!scriptLoaded) {
           toast.error("Failed to load payment gateway");
@@ -53,19 +51,21 @@ export const useRazorpay = () => {
 
         toast.loading("Initializing payment...", { id: "payment-init" });
 
-        // Create order via backend function
+        // Backend controls the price — we only send product_id
         const { data, error } = await invokeBackendFunction<{
           key_id: string;
           amount: number;
           currency: string;
           order_id: string;
+          product_name: string;
+          display_amount: number;
           error?: string;
         }>("create-razorpay-order", {
-          amount,
-          product_name: productName,
+          product_id: productId,
           customer_name: customerName,
           customer_email: customerEmail,
           customer_phone: customerPhone,
+          is_international: isInternational || false,
         });
 
         toast.dismiss("payment-init");
@@ -76,7 +76,9 @@ export const useRazorpay = () => {
           return;
         }
 
-        // Configure Razorpay options
+        const productName = data.product_name;
+        const amount = data.display_amount;
+
         const options = {
           key: data.key_id,
           amount: data.amount,
@@ -85,10 +87,8 @@ export const useRazorpay = () => {
           description: `Purchase ${productName}`,
           order_id: data.order_id,
           handler: async function (response: any) {
-            // Payment successful
             console.log("Payment successful:", response);
             
-            // Determine product type for database
             let productType = 'bundle';
             const lowerName = productName.toLowerCase();
             if (lowerName.includes('jarvis') && !lowerName.includes('myra') && !lowerName.includes('bundle')) {
@@ -99,7 +99,6 @@ export const useRazorpay = () => {
               productType = lowerName.includes('source') ? 'bundle_source' : 'bundle';
             }
 
-            // Send Telegram notification (fire and forget)
             invokeBackendFunction("send-telegram-notification", {
               payment_id: response.razorpay_payment_id,
               product_name: productName,
@@ -110,7 +109,6 @@ export const useRazorpay = () => {
               customer_phone: customerPhone,
             }).catch((err) => console.error("Telegram notification error:", err));
 
-            // Navigate with all details for Thank You page
             navigate(
               `/thank-you?product=${encodeURIComponent(productName)}&payment_id=${response.razorpay_payment_id}&amount=${amount}&phone=${encodeURIComponent(customerPhone || '')}`
             );
