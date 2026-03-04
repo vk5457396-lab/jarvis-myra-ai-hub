@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { useRazorpay } from "@/hooks/useRazorpay";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface PaymentGatewaySelectorProps {
   isOpen: boolean;
   onClose: () => void;
-  amount: number;
-  productName: string;
+  productId: string;
   customerName?: string;
   customerEmail?: string;
   customerPhone?: string;
@@ -14,26 +14,26 @@ interface PaymentGatewaySelectorProps {
 const PaymentGatewaySelector = ({
   isOpen,
   onClose,
-  amount,
-  productName,
+  productId,
   customerName,
   customerEmail,
   customerPhone,
 }: PaymentGatewaySelectorProps) => {
   const { initiatePayment } = useRazorpay();
+  const { isIndia } = useCurrency();
 
   useEffect(() => {
     if (isOpen) {
       initiatePayment({
-        amount,
-        productName,
+        productId,
         customerName,
         customerEmail,
         customerPhone,
+        isInternational: !isIndia,
       });
       onClose();
     }
-  }, [isOpen, amount, productName, customerName, customerEmail, customerPhone, initiatePayment, onClose]);
+  }, [isOpen, productId, customerName, customerEmail, customerPhone, isIndia, initiatePayment, onClose]);
 
   return null;
 };
