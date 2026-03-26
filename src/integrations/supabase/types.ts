@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          referral_code: string
+          referred_by: string | null
+          updated_at: string
+          wallet_balance: number
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          referral_code?: string
+          referred_by?: string | null
+          updated_at?: string
+          wallet_balance?: number
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          referral_code?: string
+          referred_by?: string | null
+          updated_at?: string
+          wallet_balance?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       purchases: {
         Row: {
           amount: number
@@ -50,12 +94,67 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_earnings: {
+        Row: {
+          commission_amount: number
+          created_at: string
+          id: string
+          purchase_amount: number
+          purchase_id: string
+          referred_user_id: string
+          referrer_id: string
+          status: string
+        }
+        Insert: {
+          commission_amount: number
+          created_at?: string
+          id?: string
+          purchase_amount: number
+          purchase_id: string
+          referred_user_id: string
+          referrer_id: string
+          status?: string
+        }
+        Update: {
+          commission_amount?: number
+          created_at?: string
+          id?: string
+          purchase_amount?: number
+          purchase_id?: string
+          referred_user_id?: string
+          referrer_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_earnings_referred_user_id_fkey"
+            columns: ["referred_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_earnings_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      process_referral_commission: {
+        Args: {
+          p_purchase_amount: number
+          p_purchase_id: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
