@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Check, Sparkles, Gift, Users, ArrowRight, Crown } from "lucide-react";
+import { Check, Gift, Users, ArrowRight, Crown, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 import ContactFormModal from "@/components/ContactFormModal";
@@ -19,10 +19,10 @@ const BundleCard = () => {
 
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
-  const springX = useSpring(mouseX, { stiffness: 150, damping: 20 });
-  const springY = useSpring(mouseY, { stiffness: 150, damping: 20 });
-  const rotateX = useTransform(springY, [0, 1], [3, -3]);
-  const rotateY = useTransform(springX, [0, 1], [-3, 3]);
+  const springX = useSpring(mouseX, { stiffness: 120, damping: 25 });
+  const springY = useSpring(mouseY, { stiffness: 120, damping: 25 });
+  const rotateX = useTransform(springY, [0, 1], [4, -4]);
+  const rotateY = useTransform(springX, [0, 1], [-4, 4]);
 
   const jarvisPrice = 899;
   const myraPrice = getMyraPrice();
@@ -32,8 +32,9 @@ const BundleCard = () => {
   const myraName = getMyraName();
   const jarvisName = getJarvisName();
   const bundleSoldCount = purchaseCounts?.bundle || 0;
-  const accentHsl = "188 100% 50%";
-  const accentHsl2 = "263 70% 58%";
+
+  const hsl = "188 100% 50%";
+  const hsl2 = "263 70% 58%";
 
   const bundleFeatures = [
     `Both ${jarvisName} & ${myraName} included`,
@@ -61,123 +62,118 @@ const BundleCard = () => {
     <>
       <motion.div
         ref={cardRef}
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 60, scale: 0.95 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
         style={{ rotateX, rotateY, transformPerspective: 1200 }}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => { mouseX.set(0.5); mouseY.set(0.5); }}
-        className="relative group rounded-[2rem] overflow-hidden transition-all duration-500 will-change-transform"
+        className="relative group rounded-3xl overflow-hidden transition-all duration-500 will-change-transform hover:-translate-y-2"
       >
-        {/* Animated border */}
-        <div className="absolute inset-0 rounded-[2rem] p-px overflow-hidden">
+        {/* Dual-color animated ring */}
+        <div className="absolute inset-0 rounded-3xl p-px overflow-hidden">
           <motion.div
-            className="absolute inset-[-200%]"
+            className="absolute inset-[-300%]"
             animate={{ rotate: 360 }}
-            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-            style={{ background: `conic-gradient(from 0deg, hsla(${accentHsl}, 0.5), transparent 30%, hsla(${accentHsl2}, 0.5), transparent 70%, hsla(${accentHsl}, 0.5))` }}
+            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+            style={{ background: `conic-gradient(from 0deg, hsla(${hsl}, 0.6), transparent 25%, hsla(${hsl2}, 0.6), transparent 55%, hsla(${hsl}, 0.6))` }}
           />
         </div>
 
-        {/* Card inner */}
-        <div className="relative rounded-[calc(2rem-1px)] overflow-hidden m-px" style={{ background: `linear-gradient(165deg, hsla(${accentHsl}, 0.06) 0%, hsla(${accentHsl2}, 0.04) 25%, hsla(220, 20%, 6%, 0.97) 45%, hsla(220, 20%, 4%, 0.99) 100%)` }}>
+        {/* Card body */}
+        <div className="relative rounded-[calc(1.5rem-1px)] overflow-hidden m-px backdrop-blur-xl" style={{ background: `linear-gradient(170deg, hsla(${hsl}, 0.07) 0%, hsla(${hsl2}, 0.04) 20%, hsla(220, 15%, 8%, 0.98) 40%, hsla(220, 20%, 5%, 0.99) 100%)` }}>
 
-          {/* Particles */}
-          {[...Array(6)].map((_, i) => (
-            <motion.div key={i} className="absolute w-1 h-1 rounded-full opacity-0 group-hover:opacity-50" style={{ background: i % 2 === 0 ? `hsla(${accentHsl}, 0.8)` : `hsla(${accentHsl2}, 0.8)`, left: `${10 + i * 15}%`, top: `${15 + (i % 3) * 25}%` }}
-              animate={{ y: [0, -25, 0], opacity: [0, 0.5, 0] }} transition={{ duration: 3 + i * 0.4, repeat: Infinity, delay: i * 0.3 }} />
+          {/* Mesh gradient */}
+          <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ background: `radial-gradient(ellipse at 10% 10%, hsla(${hsl}, 0.12), transparent 50%), radial-gradient(ellipse at 90% 90%, hsla(${hsl2}, 0.1), transparent 50%)` }} />
+
+          {/* Floating orbs */}
+          {[...Array(4)].map((_, i) => (
+            <motion.div key={i} className="absolute rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+              style={{ background: i % 2 === 0 ? `hsla(${hsl}, 0.12)` : `hsla(${hsl2}, 0.12)`, width: `${50 + i * 15}px`, height: `${50 + i * 15}px`, left: `${10 + i * 22}%`, top: `${15 + (i % 3) * 25}%` }}
+              animate={{ y: [0, -12, 0] }} transition={{ duration: 3.5 + i, repeat: Infinity, delay: i * 0.4 }} />
           ))}
-
-          {/* Glows */}
-          <div className="absolute -top-24 -right-24 w-56 h-56 rounded-full blur-[80px] opacity-20 group-hover:opacity-40 transition-all duration-700" style={{ background: `hsla(${accentHsl}, 0.5)` }} />
-          <div className="absolute -bottom-24 -left-24 w-56 h-56 rounded-full blur-[80px] opacity-15 group-hover:opacity-30 transition-all duration-700" style={{ background: `hsla(${accentHsl2}, 0.4)` }} />
 
           {/* Best Value Badge */}
           <div className="absolute -top-px left-1/2 -translate-x-1/2 z-20">
             <motion.div
-              animate={{ boxShadow: [`0 4px 20px hsla(${accentHsl}, 0.3)`, `0 4px 35px hsla(${accentHsl}, 0.5)`, `0 4px 20px hsla(${accentHsl}, 0.3)`] }}
+              animate={{ boxShadow: [`0 4px 20px hsla(${hsl}, 0.3)`, `0 4px 40px hsla(${hsl}, 0.6)`, `0 4px 20px hsla(${hsl}, 0.3)`] }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-500 px-7 py-2 rounded-b-2xl"
+              className="bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500 px-8 py-2.5 rounded-b-2xl"
             >
-              <span className="text-[10px] font-display font-black text-white tracking-[0.2em] flex items-center gap-1.5">
-                <Crown size={11} /> BEST VALUE
+              <span className="text-[10px] font-display font-black text-white tracking-[0.25em] flex items-center gap-2">
+                <Crown size={12} /> BEST VALUE
               </span>
             </motion.div>
           </div>
 
-          {/* Dot grid */}
-          <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 0.5px, transparent 0)', backgroundSize: '20px 20px' }} />
-
           <div className="relative z-10 p-8 md:p-10">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-[11px] font-display tracking-[0.15em] mb-6 mt-5 backdrop-blur-sm border" style={{ background: 'linear-gradient(135deg, hsla(188,100%,50%,0.08), hsla(263,70%,58%,0.08))', borderColor: 'hsla(188,100%,50%,0.2)' }}>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-display tracking-[0.15em] mb-7 mt-5 backdrop-blur-md border" style={{ background: `linear-gradient(135deg, hsla(${hsl}, 0.06), hsla(${hsl2}, 0.06))`, borderColor: `hsla(${hsl}, 0.2)` }}>
               <Gift size={13} className="text-violet-400" />
               <span className="text-foreground/80">BUNDLE DEAL</span>
             </div>
 
-            <h3 className="font-display text-3xl md:text-4xl font-black mb-2 bg-gradient-to-r from-cyan-400 via-blue-400 to-violet-400 bg-clip-text text-transparent tracking-tight">
+            <h3 className="font-display text-3xl md:text-4xl font-black mb-3 bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400 bg-clip-text text-transparent tracking-tight">
               {jarvisName} + {myraName}
             </h3>
-            <p className="text-muted-foreground text-sm mb-5 leading-relaxed">Get both AI assistants at a discounted price</p>
+            <p className="text-muted-foreground text-sm mb-6 leading-relaxed">Get both AI assistants at a discounted price</p>
 
             {bundleSoldCount > 0 && (
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-display mb-5 border backdrop-blur-sm" style={{ background: 'hsla(188,100%,50%,0.06)', borderColor: 'hsla(188,100%,50%,0.12)' }}>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-display mb-6 border backdrop-blur-sm" style={{ background: `hsla(${hsl}, 0.05)`, borderColor: `hsla(${hsl}, 0.12)` }}>
                 <Users size={14} className="text-cyan-400" />
-                <span className="text-foreground/70">{bundleSoldCount}+ bundles sold</span>
+                <span className="text-foreground/60">{bundleSoldCount}+ bundles sold</span>
               </div>
             )}
 
-            {/* Price */}
-            <div className="flex items-baseline gap-3 mb-1">
-              <span className="font-display text-5xl md:text-6xl font-black bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent tracking-tight" style={{ textShadow: '0 0 40px hsla(188,100%,50%,0.3)' }}>
+            <div className="mb-2">
+              <span className="font-display text-5xl md:text-6xl font-black bg-gradient-to-r from-cyan-300 to-violet-400 bg-clip-text text-transparent tracking-tighter" style={{ textShadow: `0 0 60px hsla(${hsl}, 0.25)` }}>
                 {formatPrice(bundlePrice)}
               </span>
             </div>
             <div className="flex items-center gap-3 mb-2">
               <span className="text-muted-foreground line-through text-sm">{formatPrice(originalPrice)}</span>
-              <span className="text-[10px] font-display font-bold px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">SAVE {formatPrice(savings)}</span>
+              <span className="text-[10px] font-display font-black px-3 py-1.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">SAVE {formatPrice(savings)}</span>
             </div>
             <CurrencySelector currentCode={countryCode} onSelect={setSelectedCountry} currency={currency} />
-            <div className="mb-7" />
+            <div className="mb-8" />
 
-            <div className="h-px w-full mb-7" style={{ background: 'linear-gradient(to right, transparent, hsla(188,100%,50%,0.25), hsla(263,70%,58%,0.25), transparent)' }} />
+            <div className="h-px w-full mb-8" style={{ background: `linear-gradient(to right, transparent 5%, hsla(${hsl}, 0.2) 30%, hsla(${hsl2}, 0.2) 70%, transparent 95%)` }} />
 
-            <ul className="space-y-3 mb-9">
+            <ul className="space-y-3.5 mb-9">
               {bundleFeatures.map((feature, index) => (
-                <motion.li key={index} initial={{ opacity: 0, x: -15 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 + index * 0.05 }} className="flex items-start gap-3 group/item">
-                  <motion.div whileHover={{ scale: 1.2 }} className="w-5 h-5 rounded-lg flex items-center justify-center bg-gradient-to-br from-cyan-500 to-violet-500 flex-shrink-0 mt-0.5" style={{ boxShadow: '0 0 10px hsla(188,100%,50%,0.3)' }}>
+                <motion.li key={index} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 + index * 0.04 }} className="flex items-start gap-3 group/item">
+                  <motion.div whileHover={{ scale: 1.3, rotate: 10 }} className="w-5 h-5 rounded-lg flex items-center justify-center bg-gradient-to-br from-cyan-400 to-violet-500 flex-shrink-0 mt-0.5" style={{ boxShadow: `0 0 12px hsla(${hsl}, 0.3)` }}>
                     <Check size={11} className="text-white" strokeWidth={3} />
                   </motion.div>
-                  <span className="text-foreground/75 text-sm leading-relaxed group-hover/item:text-foreground/90 transition-colors">{feature}</span>
+                  <span className="text-foreground/70 text-sm leading-relaxed group-hover/item:text-foreground transition-colors duration-300">{feature}</span>
                 </motion.li>
               ))}
             </ul>
 
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Button
                 variant="neonCyan"
                 size="xl"
-                className="w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-500 hover:opacity-90 group/btn font-black text-base tracking-wide relative overflow-hidden"
+                className="w-full bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500 hover:opacity-90 group/btn font-black text-base tracking-wide relative overflow-hidden rounded-2xl"
                 onClick={() => setShowContactForm(true)}
               >
-                <motion.div className="absolute inset-0 opacity-0 group-hover/btn:opacity-100" animate={{ x: ["-100%", "200%"] }} transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }} style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)", width: "50%" }} />
+                <motion.div className="absolute inset-0 opacity-0 group-hover/btn:opacity-100" animate={{ x: ["-100%", "200%"] }} transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }} style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)", width: "40%" }} />
                 <Sparkles size={16} className="mr-2 relative z-10" />
                 <span className="relative z-10">Get Bundle Now</span>
-                <ArrowRight size={16} className="ml-2 group-hover/btn:translate-x-1.5 transition-transform relative z-10" />
+                <ArrowRight size={16} className="ml-2 group-hover/btn:translate-x-2 transition-transform duration-300 relative z-10" />
               </Button>
             </motion.div>
 
-            <p className="text-center text-[10px] text-muted-foreground mt-4 tracking-wide">
+            <p className="text-center text-[10px] text-muted-foreground mt-5 tracking-wider font-display">
               ⚡ Instant delivery • ♾️ Lifetime access • 🔄 Free updates
             </p>
           </div>
 
-          {/* Bottom reflection */}
-          <div className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none" style={{ background: 'linear-gradient(to top, hsla(188,100%,50%,0.02), transparent)' }} />
+          <div className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none" style={{ background: `linear-gradient(to top, hsla(${hsl}, 0.03), transparent)` }} />
         </div>
       </motion.div>
 
-      <ContactFormModal isOpen={showContactForm} onClose={() => setShowContactForm(false)} onSubmit={handleContactSubmit} productName={`${jarvisName} + ${myraName} Bundle`} accentHsl={accentHsl} />
+      <ContactFormModal isOpen={showContactForm} onClose={() => setShowContactForm(false)} onSubmit={handleContactSubmit} productName={`${jarvisName} + ${myraName} Bundle`} accentHsl={hsl} />
       <PaymentGatewaySelector isOpen={showPaymentSelector} onClose={() => setShowPaymentSelector(false)} productId="bundle_jarvis_myra" customerName={customerInfo.name} customerEmail={customerInfo.email} customerPhone={customerInfo.phone} />
     </>
   );
