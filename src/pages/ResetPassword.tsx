@@ -52,7 +52,7 @@ const ResetPassword = () => {
                     <div className="relative">
                       <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input type={showPassword ? "text" : "password"} placeholder="New password (min 6 chars)" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-11 pr-11 h-12 rounded-xl bg-white/5 border-white/10 text-foreground" />
-                      <button type="button" onClick={() => setShowPassword(!s)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     </div>
