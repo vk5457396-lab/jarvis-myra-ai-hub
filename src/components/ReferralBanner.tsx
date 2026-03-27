@@ -24,6 +24,7 @@ const ReferralBanner = () => {
       if (data?.full_name) {
         setReferrerName(data.full_name);
         setVisible(true);
+        localStorage.setItem("referral_code", refCode);
       }
     };
 
