@@ -142,11 +142,69 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      withdrawals: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          processed_at: string | null
+          processed_by: string | null
+          status: string
+          upi_id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          upi_id: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          upi_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       process_referral_commission: {
         Args: {
           p_purchase_amount: number
@@ -155,9 +213,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      process_withdrawal: {
+        Args: { p_status: string; p_withdrawal_id: string }
+        Returns: undefined
+      }
+      request_withdrawal: {
+        Args: { p_amount: number; p_upi_id: string }
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -284,6 +350,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
