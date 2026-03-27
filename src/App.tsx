@@ -24,6 +24,7 @@ import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
+import ReferralBanner from "./components/ReferralBanner";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => {
         {isLoading && <LoadingScreen onLoadingComplete={() => setIsLoading(false)} />}
         {!isLoading && <BackgroundVideo />}
         <BrowserRouter>
+          <ReferralBanner />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/features" element={<Features />} />

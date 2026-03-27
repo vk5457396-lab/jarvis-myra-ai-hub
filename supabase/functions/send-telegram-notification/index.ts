@@ -25,10 +25,11 @@ serve(async (req) => {
       amount, 
       customer_name, 
       customer_email, 
-      customer_phone 
+      customer_phone,
+      referral_code,
     } = await req.json();
 
-    console.log('Received payment notification:', { payment_id, product_name, product_type, amount });
+    console.log('Received payment notification:', { payment_id, product_name, product_type, amount, referral_code });
 
     if (!payment_id || !product_name) {
       throw new Error('Payment ID and product name are required');
@@ -54,6 +55,28 @@ serve(async (req) => {
       // Continue to send Telegram even if DB fails
     } else {
       console.log('Purchase saved to database');
+    }
+
+    // Look up referrer name if referral_code provided
+    let referrerName = '';
+    let referrerInfo = '';
+    if (referral_code) {
+      const { data: referrer } = await supabase
+        .from('profiles')
+        .select('full_name, referral_code')
+        .eq('referral_code', referral_code)
+        .maybeSingle();
+      
+      if (referrer?.full_name) {
+        referrerName = referrer.full_name;
+        referrerInfo = `
+━━━━━━━━━━━━━━━━━━━━━━
+🔗 *Referral Information*
+━━━━━━━━━━━━━━━━━━━━━━
+• Referred by: *${referrerName}*
+• Referral Code: \`${referral_code}\`
+• Commission (5%): *${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount * 0.05)}*`;
+      }
     }
 
     // Format amount with currency
@@ -88,7 +111,7 @@ serve(async (req) => {
 • Name: ${customer_name || '❌ Not provided'}
 • Email: ${customer_email || '❌ Not provided'}
 • Phone: ${customer_phone || '❌ Not provided'}
-
+${referrerInfo}
 ━━━━━━━━━━━━━━━━━━━━━━
 ⏰ *Transaction Time*
 ━━━━━━━━━━━━━━━━━━━━━━
