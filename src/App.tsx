@@ -39,6 +39,7 @@ const App = () => {
         {isLoading && <LoadingScreen onLoadingComplete={() => setIsLoading(false)} />}
         {!isLoading && <BackgroundVideo />}
         <BrowserRouter>
+          <ReferralBanner />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/features" element={<Features />} />
