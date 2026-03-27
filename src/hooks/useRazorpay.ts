@@ -99,6 +99,9 @@ export const useRazorpay = () => {
               productType = lowerName.includes('source') ? 'bundle_source' : 'bundle';
             }
 
+            // Check if user was referred
+            const refCode = new URLSearchParams(window.location.search).get("ref") || localStorage.getItem("referral_code");
+            
             invokeBackendFunction("send-telegram-notification", {
               payment_id: response.razorpay_payment_id,
               product_name: productName,
@@ -107,6 +110,7 @@ export const useRazorpay = () => {
               customer_name: customerName,
               customer_email: customerEmail,
               customer_phone: customerPhone,
+              referral_code: refCode || undefined,
             }).catch((err) => console.error("Telegram notification error:", err));
 
             navigate(

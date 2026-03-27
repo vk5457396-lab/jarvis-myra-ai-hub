@@ -25,10 +25,11 @@ serve(async (req) => {
       amount, 
       customer_name, 
       customer_email, 
-      customer_phone 
+      customer_phone,
+      referral_code,
     } = await req.json();
 
-    console.log('Received payment notification:', { payment_id, product_name, product_type, amount });
+    console.log('Received payment notification:', { payment_id, product_name, product_type, amount, referral_code });
 
     if (!payment_id || !product_name) {
       throw new Error('Payment ID and product name are required');
