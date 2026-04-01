@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Eye, EyeOff, LogIn, Mail, Lock, ArrowRight } from "lucide-react";
+import { lovable } from "@/integrations/lovable/index";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
