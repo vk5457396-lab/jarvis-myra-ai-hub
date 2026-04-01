@@ -269,10 +269,11 @@ const Pricing = () => {
             <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">Or Choose <span className="gradient-text">Individual</span></h2>
             <p className="text-muted-foreground">Pick the assistant that fits your needs</p>
           </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 max-w-7xl mx-auto">
             <ProductCard name={jarvisName} tagline="AI System Assistant for power users" price={jarvisPrice} features={jarvisFeatures} variant="jarvis" delay={0.1} />
             <ProductCard name={myraName} tagline="AI Personal Voice Assistant for daily life" price={myraPrice} features={myraFeatures} variant="myra" delay={0.2} />
             <ProductCard name={auraName} tagline="Your AI Girlfriend - Smart & Caring Companion" price={auraPrice} features={auraFeatures} variant="aura" delay={0.3} />
+            <ProductCard name={ariaName} tagline="AI Music Creator for smart audio workflows" price={ariaPrice} features={ariaFeatures} variant="aria" delay={0.4} />
           </div>
         </div>
       </section>
