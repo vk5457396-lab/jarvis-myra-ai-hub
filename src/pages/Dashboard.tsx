@@ -89,7 +89,7 @@ const Dashboard = () => {
 
   const copyReferralLink = () => {
     if (!profile) return;
-    const link = `${window.location.origin}/signup?ref=${profile.referral_code}`;
+    const link = `${window.location.origin}/pricing?ref=${profile.referral_code}`;
     navigator.clipboard.writeText(link);
     toast.success("Referral link copied!");
   };
@@ -135,7 +135,7 @@ const Dashboard = () => {
     );
   }
 
-  const referralLink = `${window.location.origin}/signup?ref=${profile?.referral_code || ""}`;
+  const referralLink = `${window.location.origin}/pricing?ref=${profile?.referral_code || ""}`;
 
   // Chart data — aggregate earnings by date
   const chartData = earnings.reduce((acc: { date: string; amount: number }[], e) => {
