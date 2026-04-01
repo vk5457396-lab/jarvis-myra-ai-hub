@@ -13,7 +13,7 @@ interface ProductCardProps {
   tagline: string;
   price: number;
   features: string[];
-  variant: "jarvis" | "myra" | "aura";
+  variant: "jarvis" | "myra" | "aura" | "aria";
   delay?: number;
 }
 
