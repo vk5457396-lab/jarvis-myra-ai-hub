@@ -12,7 +12,6 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -35,9 +34,9 @@ serve(async (req) => {
       throw new Error('Payment ID and product name are required');
     }
 
-    // Save purchase to database using service role
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
     
+    // Save purchase to database
     const { error: dbError } = await supabase
       .from('purchases')
       .insert({
@@ -52,48 +51,109 @@ serve(async (req) => {
 
     if (dbError) {
       console.error('Database error:', dbError);
-      // Continue to send Telegram even if DB fails
     } else {
       console.log('Purchase saved to database');
     }
 
-    // Look up referrer name if referral_code provided
+    // Process referral commission if referral_code exists
     let referrerName = '';
     let referrerInfo = '';
     if (referral_code) {
       const { data: referrer } = await supabase
         .from('profiles')
-        .select('full_name, referral_code')
+        .select('id, full_name, referral_code')
         .eq('referral_code', referral_code)
         .maybeSingle();
       
-      if (referrer?.full_name) {
-        referrerName = referrer.full_name;
+      if (referrer) {
+        referrerName = referrer.full_name || 'Unknown';
+        const commission = Math.floor((amount || 0) * 0.05);
+        
+        // Find the referred user by email
+        let referredUserId: string | null = null;
+        if (customer_email) {
+          const { data: referredProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', customer_email)
+            .maybeSingle();
+          referredUserId = referredProfile?.id || null;
+        }
+
+        // Credit 5% commission to referrer's wallet
+        if (commission > 0) {
+          // Insert referral earning record
+          const { error: earnError } = await supabase
+            .from('referral_earnings')
+            .insert({
+              referrer_id: referrer.id,
+              referred_user_id: referredUserId || referrer.id,
+              purchase_id: payment_id,
+              purchase_amount: amount || 0,
+              commission_amount: commission,
+            });
+
+          if (earnError) {
+            console.error('Error inserting referral earning:', earnError);
+          } else {
+            // Update referrer wallet balance
+            const { error: walletError } = await supabase
+              .from('profiles')
+              .update({ wallet_balance: supabase.rpc ? undefined : 0 })
+              .eq('id', referrer.id);
+            
+            // Use raw SQL update for atomic increment
+            const { error: rpcError } = await supabase.rpc('process_referral_commission', {
+              p_user_id: referredUserId || referrer.id,
+              p_purchase_id: payment_id,
+              p_purchase_amount: amount || 0,
+            });
+            
+            // If RPC fails (e.g., user not referred), manually credit
+            if (rpcError) {
+              console.log('RPC commission failed (user may not be referred), manually crediting:', rpcError.message);
+              // Directly update wallet
+              const { data: currentProfile } = await supabase
+                .from('profiles')
+                .select('wallet_balance')
+                .eq('id', referrer.id)
+                .single();
+              
+              if (currentProfile) {
+                await supabase
+                  .from('profiles')
+                  .update({ wallet_balance: currentProfile.wallet_balance + commission, updated_at: new Date().toISOString() })
+                  .eq('id', referrer.id);
+              }
+            }
+            
+            console.log(`Commission of ₹${commission} credited to referrer ${referrer.id}`);
+          }
+        }
+
         referrerInfo = `
 ━━━━━━━━━━━━━━━━━━━━━━
 🔗 *Referral Information*
 ━━━━━━━━━━━━━━━━━━━━━━
 • Referred by: *${referrerName}*
 • Referral Code: \`${referral_code}\`
-• Commission (5%): *${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount * 0.05)}*`;
+• Commission (5%): *₹${commission}*
+• ✅ Commission credited to wallet`;
       }
     }
 
-    // Format amount with currency
     const formattedAmount = new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0,
     }).format(amount);
 
-    // Get current time in IST
     const istTime = new Date().toLocaleString('en-IN', { 
       timeZone: 'Asia/Kolkata',
       dateStyle: 'medium',
       timeStyle: 'short'
     });
 
-    // Create admin notification message with enhanced formatting
     const adminMessage = `
 🎉 *NEW PURCHASE ALERT!* 🎉
 
@@ -120,14 +180,11 @@ ${istTime} (IST)
 ✅ Payment verified and recorded in database
     `.trim();
 
-    // Send admin notification
     const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     
     const telegramResponse = await fetch(telegramUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: TELEGRAM_CHAT_ID,
         text: adminMessage,
@@ -144,8 +201,6 @@ ${istTime} (IST)
 
     console.log('Admin Telegram notification sent successfully');
 
-    // Generate verification deep link for user
-    // This creates a link that when clicked by user, will message the bot
     const verificationMessage = encodeURIComponent(
       `🔐 Payment Verification Request\n\n` +
       `Payment ID: ${payment_id}\n` +
@@ -155,7 +210,6 @@ ${istTime} (IST)
       `Please verify my payment and activate my product.`
     );
     
-    // Create Telegram deep link for user to contact admin
     const telegramDeepLink = `https://t.me/codeninjavik1?text=${verificationMessage}`;
 
     return new Response(

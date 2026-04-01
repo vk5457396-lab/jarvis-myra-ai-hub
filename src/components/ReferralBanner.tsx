@@ -12,19 +12,25 @@ const ReferralBanner = () => {
   const refCode = searchParams.get("ref");
 
   useEffect(() => {
-    if (!refCode) return;
+    // Check URL param first, then localStorage
+    const code = refCode || localStorage.getItem("referral_code");
+    if (!code) return;
+
+    // Always persist to localStorage
+    if (refCode) {
+      localStorage.setItem("referral_code", refCode);
+    }
 
     const fetchReferrer = async () => {
       const { data } = await supabase
         .from("profiles")
         .select("full_name, referral_code")
-        .eq("referral_code", refCode)
+        .eq("referral_code", code)
         .maybeSingle();
 
       if (data?.full_name) {
         setReferrerName(data.full_name);
         setVisible(true);
-        localStorage.setItem("referral_code", refCode);
       }
     };
 
