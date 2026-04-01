@@ -89,3 +89,12 @@ export const auraFeatures = [
   "Real Girlfriend Feel & Care",
   "Smart Companion & Entertainment",
 ];
+
+export const ariaFeatures = [
+  "AI Music & Creative Assistant",
+  "Generate Beats, Lyrics & Melodies",
+  "Voice-Controlled Music Production",
+  "Multi-Genre Support (Pop, Hip-Hop, EDM)",
+  "Smart Playlist & Mood Engine",
+  "Real-time Audio Processing",
+];

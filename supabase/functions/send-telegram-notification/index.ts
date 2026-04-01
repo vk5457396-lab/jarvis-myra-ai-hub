@@ -58,77 +58,42 @@ serve(async (req) => {
     // Process referral commission if referral_code exists
     let referrerName = '';
     let referrerInfo = '';
-    if (referral_code) {
+    let commission = 0;
+
+    if (referral_code && amount > 0) {
       const { data: referrer } = await supabase
         .from('profiles')
-        .select('id, full_name, referral_code')
+        .select('id, full_name')
         .eq('referral_code', referral_code)
         .maybeSingle();
       
       if (referrer) {
         referrerName = referrer.full_name || 'Unknown';
-        const commission = Math.floor((amount || 0) * 0.05);
-        
-        // Find the referred user by email
+        commission = Math.floor(amount * 0.05);
+
+        // Find buyer profile by email
         let referredUserId: string | null = null;
         if (customer_email) {
-          const { data: referredProfile } = await supabase
+          const { data: buyerProfile } = await supabase
             .from('profiles')
             .select('id')
             .eq('email', customer_email)
             .maybeSingle();
-          referredUserId = referredProfile?.id || null;
+          referredUserId = buyerProfile?.id || null;
         }
 
-        // Credit 5% commission to referrer's wallet
-        if (commission > 0) {
-          // Insert referral earning record
-          const { error: earnError } = await supabase
-            .from('referral_earnings')
-            .insert({
-              referrer_id: referrer.id,
-              referred_user_id: referredUserId || referrer.id,
-              purchase_id: payment_id,
-              purchase_amount: amount || 0,
-              commission_amount: commission,
-            });
+        // Use the safe RPC to credit wallet + insert earning (idempotent)
+        const { error: creditError } = await supabase.rpc('credit_referral_wallet', {
+          p_referrer_id: referrer.id,
+          p_purchase_id: payment_id,
+          p_purchase_amount: amount,
+          p_referred_user_id: referredUserId,
+        });
 
-          if (earnError) {
-            console.error('Error inserting referral earning:', earnError);
-          } else {
-            // Update referrer wallet balance
-            const { error: walletError } = await supabase
-              .from('profiles')
-              .update({ wallet_balance: supabase.rpc ? undefined : 0 })
-              .eq('id', referrer.id);
-            
-            // Use raw SQL update for atomic increment
-            const { error: rpcError } = await supabase.rpc('process_referral_commission', {
-              p_user_id: referredUserId || referrer.id,
-              p_purchase_id: payment_id,
-              p_purchase_amount: amount || 0,
-            });
-            
-            // If RPC fails (e.g., user not referred), manually credit
-            if (rpcError) {
-              console.log('RPC commission failed (user may not be referred), manually crediting:', rpcError.message);
-              // Directly update wallet
-              const { data: currentProfile } = await supabase
-                .from('profiles')
-                .select('wallet_balance')
-                .eq('id', referrer.id)
-                .single();
-              
-              if (currentProfile) {
-                await supabase
-                  .from('profiles')
-                  .update({ wallet_balance: currentProfile.wallet_balance + commission, updated_at: new Date().toISOString() })
-                  .eq('id', referrer.id);
-              }
-            }
-            
-            console.log(`Commission of ₹${commission} credited to referrer ${referrer.id}`);
-          }
+        if (creditError) {
+          console.error('credit_referral_wallet error:', creditError.message);
+        } else {
+          console.log(`Commission ₹${commission} credited to referrer ${referrer.id}`);
         }
 
         referrerInfo = `
