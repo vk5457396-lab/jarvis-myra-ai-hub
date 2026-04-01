@@ -198,6 +198,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      credit_referral_wallet: {
+        Args: {
+          p_purchase_amount: number
+          p_purchase_id: string
+          p_referred_user_id?: string
+          p_referrer_id: string
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

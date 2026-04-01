@@ -13,7 +13,7 @@ interface ProductCardProps {
   tagline: string;
   price: number;
   features: string[];
-  variant: "jarvis" | "myra" | "aura";
+  variant: "jarvis" | "myra" | "aura" | "aria";
   delay?: number;
 }
 
@@ -58,6 +58,20 @@ const variantStyles = {
     accent: { h: 330, s: 80, l: 60 },
     accent2: { h: 350, s: 90, l: 55 },
     ringColor: "hsla(330,80%,60%,0.15)",
+    popularBadge: false,
+  },
+  aria: {
+    productId: "aria",
+    gradient: "from-emerald-400 via-teal-500 to-cyan-600",
+    priceGradient: "from-emerald-300 to-teal-400",
+    badgeLabel: "🎵 CREATIVE AI",
+    badgeIcon: Sparkles,
+    includesText: "Includes: .exe File",
+    includesDesc: "Ready-to-run AI Music Assistant for Windows",
+    buttonVariant: "neonCyan" as const,
+    accent: { h: 160, s: 70, l: 50 },
+    accent2: { h: 175, s: 80, l: 45 },
+    ringColor: "hsla(160,70%,50%,0.15)",
     popularBadge: false,
   },
 };

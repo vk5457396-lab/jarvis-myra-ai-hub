@@ -91,10 +91,14 @@ export const useRazorpay = () => {
             
             let productType = 'bundle';
             const lowerName = productName.toLowerCase();
-            if (lowerName.includes('jarvis') && !lowerName.includes('myra') && !lowerName.includes('bundle')) {
+            if (lowerName.includes('aria') && !lowerName.includes('source')) {
+              productType = 'aria';
+            } else if (lowerName.includes('jarvis') && !lowerName.includes('myra') && !lowerName.includes('bundle')) {
               productType = lowerName.includes('source') ? 'jarvis_source' : 'jarvis';
             } else if (lowerName.includes('myra') && !lowerName.includes('jarvis') && !lowerName.includes('bundle')) {
               productType = lowerName.includes('source') ? 'myra_source' : 'myra';
+            } else if (lowerName.includes('aura') && !lowerName.includes('source')) {
+              productType = 'aura';
             } else if (lowerName.includes('bundle') || (lowerName.includes('jarvis') && lowerName.includes('myra'))) {
               productType = lowerName.includes('source') ? 'bundle_source' : 'bundle';
             }
