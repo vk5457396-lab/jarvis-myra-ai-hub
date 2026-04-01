@@ -12,7 +12,7 @@ import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 import ContactFormModal from "@/components/ContactFormModal";
 import CurrencySelector from "@/components/CurrencySelector";
 import { Button } from "@/components/ui/button";
-import { jarvisFeatures, myraFeatures, auraFeatures } from "@/data/features";
+import { jarvisFeatures, myraFeatures, auraFeatures, ariaFeatures } from "@/data/features";
 import { Check, Shield, CreditCard, Zap, Code, Wallet } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 
@@ -24,6 +24,8 @@ const myraName = getMyraName();
 const jarvisName = getJarvisName();
 const auraName = getAuraName();
 const auraPrice = 899;
+const ariaName = "ARIA 1.0";
+const ariaPrice = 899;
 const tripleBundlePrice = getTripleBundlePrice();
 
 const Pricing = () => {
