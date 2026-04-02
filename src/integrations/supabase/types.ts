@@ -142,6 +142,47 @@ export type Database = {
           },
         ]
       }
+      telegram_alert_settings: {
+        Row: {
+          bot_token_ciphertext: string
+          bot_token_iv: string
+          bot_token_mask: string
+          chat_id: string
+          created_at: string
+          is_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bot_token_ciphertext: string
+          bot_token_iv: string
+          bot_token_mask: string
+          chat_id: string
+          created_at?: string
+          is_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bot_token_ciphertext?: string
+          bot_token_iv?: string
+          bot_token_mask?: string
+          chat_id?: string
+          created_at?: string
+          is_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_alert_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
