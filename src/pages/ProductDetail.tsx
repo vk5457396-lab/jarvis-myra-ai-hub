@@ -4,11 +4,21 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import SourceCodeCard from "@/components/SourceCodeCard";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Monitor, FileCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { jarvisFeatures, myraFeatures, auraFeatures, ariaFeatures } from "@/data/features";
 
-const productConfig: Record<string, { name: string; tagline: string; price: number; features: string[]; variant: "jarvis" | "myra" | "aura" | "aria"; sourceVariant: "jarvis" | "myra" | "aura"; hasExe: boolean; gradient: string; }> = {
+const productConfig: Record<string, {
+  name: string;
+  tagline: string;
+  price: number;
+  features: string[];
+  variant: "jarvis" | "myra" | "aura" | "aria";
+  sourceVariant?: "jarvis" | "myra" | "aura";
+  hasExe: boolean;
+  hasSource: boolean;
+  gradient: string;
+}> = {
   jarvis: {
     name: "Jarvis 2.0",
     tagline: "AI System Assistant for power users",
@@ -17,6 +27,7 @@ const productConfig: Record<string, { name: string; tagline: string; price: numb
     variant: "jarvis",
     sourceVariant: "jarvis",
     hasExe: false,
+    hasSource: true,
     gradient: "from-cyan-400 via-blue-500 to-indigo-600",
   },
   myra: {
@@ -26,7 +37,8 @@ const productConfig: Record<string, { name: string; tagline: string; price: numb
     features: myraFeatures,
     variant: "myra",
     sourceVariant: "myra",
-    hasExe: true,
+    hasExe: false,
+    hasSource: true,
     gradient: "from-violet-400 via-purple-500 to-fuchsia-600",
   },
   aura: {
@@ -36,7 +48,8 @@ const productConfig: Record<string, { name: string; tagline: string; price: numb
     features: auraFeatures,
     variant: "aura",
     sourceVariant: "aura",
-    hasExe: true,
+    hasExe: false,
+    hasSource: true,
     gradient: "from-pink-400 via-rose-500 to-red-500",
   },
   aria: {
@@ -45,8 +58,8 @@ const productConfig: Record<string, { name: string; tagline: string; price: numb
     price: 899,
     features: ariaFeatures,
     variant: "aria",
-    sourceVariant: "jarvis", // placeholder, ARIA doesn't have separate source
     hasExe: true,
+    hasSource: false,
     gradient: "from-emerald-400 via-teal-500 to-cyan-600",
   },
 };
@@ -63,9 +76,6 @@ const ProductDetail = () => {
       </div>
     );
   }
-
-  const showExeCard = config.variant === "aria";
-  const showSourceCode = config.variant !== "aria";
 
   return (
     <div className="min-h-screen">
@@ -97,9 +107,19 @@ const ProductDetail = () => {
 
       <section className="pb-16 md:pb-24">
         <div className="container mx-auto px-4">
-          {showExeCard && (
-            <div className="max-w-lg mx-auto mb-12">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          {/* .exe File Section */}
+          {config.hasExe && (
+            <div className="mb-16">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
+                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass font-display text-sm tracking-wider mb-3" style={{ color: 'hsla(160, 70%, 50%, 0.9)' }}>
+                  <Monitor size={16} /> READY TO USE
+                </span>
+                <h2 className="font-display text-2xl md:text-3xl font-bold">
+                  <span className={`bg-gradient-to-r ${config.gradient} bg-clip-text text-transparent`}>.exe File</span> — Download & Run
+                </h2>
+                <p className="text-muted-foreground text-sm mt-2">No coding required. Just download, install, and start using.</p>
+              </motion.div>
+              <div className="max-w-lg mx-auto">
                 <ProductCard
                   name={config.name}
                   tagline={config.tagline}
@@ -107,20 +127,26 @@ const ProductDetail = () => {
                   features={config.features}
                   variant={config.variant}
                 />
-              </motion.div>
+              </div>
             </div>
           )}
 
-          {showSourceCode && (
-            <div className="max-w-lg mx-auto">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          {/* Source Code Section */}
+          {config.hasSource && config.sourceVariant && (
+            <div>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-center mb-8">
+                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-yellow-400 font-display text-sm tracking-wider mb-3">
+                  <FileCode size={16} /> FOR DEVELOPERS
+                </span>
+                <h2 className="font-display text-2xl md:text-3xl font-bold">
+                  <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">Source Code</span> — Build & Customize
+                </h2>
+                <p className="text-muted-foreground text-sm mt-2">Get the complete source code. Modify, extend, and make it your own.</p>
+              </motion.div>
+              <div className="max-w-lg mx-auto">
                 <SourceCodeCard variant={config.sourceVariant} />
-              </motion.div>
+              </div>
             </div>
-          )}
-
-          {!showExeCard && !showSourceCode && (
-            <p className="text-center text-muted-foreground">Coming soon...</p>
           )}
         </div>
       </section>
