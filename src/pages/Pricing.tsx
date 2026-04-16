@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -7,8 +7,7 @@ import SourceCodeCard from "@/components/SourceCodeCard";
 import FlashSaleBanner from "@/components/FlashSaleBanner";
 import BinancePaymentModal from "@/components/BinancePaymentModal";
 import MobileAppComingSoon from "@/components/MobileAppComingSoon";
-import CurrencySelector from "@/components/CurrencySelector";
-import { Check, Shield, CreditCard, Zap, Code, Wallet, Cpu, Sparkles, Heart, Music, ArrowRight, Package } from "lucide-react";
+import { Check, Shield, CreditCard, Zap, Code, Wallet, Cpu, Sparkles, Heart, Music, ArrowRight, Package, FileCode, Monitor } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 
 const categories = [
@@ -20,6 +19,11 @@ const categories = [
     gradient: "from-cyan-400 via-blue-500 to-indigo-600",
     hsl: "188 100% 50%",
     badge: "⚡ POWER",
+    hasExe: false,
+    hasSource: true,
+    exePrice: 0,
+    sourcePrice: 3900,
+    available: ["Source Code"],
   },
   {
     id: "myra",
@@ -29,6 +33,11 @@ const categories = [
     gradient: "from-violet-400 via-purple-500 to-fuchsia-600",
     hsl: "263 70% 58%",
     badge: "🔥 POPULAR",
+    hasExe: false,
+    hasSource: true,
+    exePrice: 0,
+    sourcePrice: 3900,
+    available: ["Source Code"],
   },
   {
     id: "aura",
@@ -38,6 +47,11 @@ const categories = [
     gradient: "from-pink-400 via-rose-500 to-red-500",
     hsl: "330 80% 60%",
     badge: "💖 EMOTIONAL",
+    hasExe: false,
+    hasSource: true,
+    exePrice: 0,
+    sourcePrice: 3900,
+    available: ["Source Code"],
   },
   {
     id: "aria",
@@ -47,6 +61,11 @@ const categories = [
     gradient: "from-emerald-400 via-teal-500 to-cyan-600",
     hsl: "160 70% 50%",
     badge: "🎵 CREATIVE",
+    hasExe: true,
+    hasSource: false,
+    exePrice: 899,
+    sourcePrice: 0,
+    available: [".exe File"],
   },
 ];
 
@@ -133,12 +152,12 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* Category Cards */}
+      {/* Category Cards - Each AI has its own clear card */}
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-3">Choose Your <span className="gradient-text">AI Assistant</span></h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">Click on any category to explore products, source code, and purchase options</p>
+            <p className="text-muted-foreground max-w-xl mx-auto">Click on any AI to view & purchase available products</p>
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
@@ -187,11 +206,33 @@ const Pricing = () => {
                     <h3 className={`font-display text-2xl font-black mb-2 bg-gradient-to-r ${cat.gradient} bg-clip-text text-transparent`}>
                       {cat.name}
                     </h3>
-                    <p className="text-muted-foreground text-sm mb-6 leading-relaxed">{cat.tagline}</p>
+                    <p className="text-muted-foreground text-sm mb-5 leading-relaxed">{cat.tagline}</p>
+
+                    {/* Available products - clear labels */}
+                    <div className="space-y-2 mb-5">
+                      {cat.hasExe && (
+                        <div className="flex items-center justify-between px-3 py-2 rounded-lg border" style={{ background: `hsla(${cat.hsl}, 0.04)`, borderColor: `hsla(${cat.hsl}, 0.12)` }}>
+                          <div className="flex items-center gap-2">
+                            <Monitor size={13} style={{ color: `hsla(${cat.hsl}, 0.8)` }} />
+                            <span className="text-xs text-foreground/70">.exe File</span>
+                          </div>
+                          <span className="text-xs font-display font-bold" style={{ color: `hsla(${cat.hsl}, 0.9)` }}>{formatPrice(cat.exePrice)}</span>
+                        </div>
+                      )}
+                      {cat.hasSource && (
+                        <div className="flex items-center justify-between px-3 py-2 rounded-lg border" style={{ background: `hsla(${cat.hsl}, 0.04)`, borderColor: `hsla(${cat.hsl}, 0.12)` }}>
+                          <div className="flex items-center gap-2">
+                            <FileCode size={13} style={{ color: `hsla(${cat.hsl}, 0.8)` }} />
+                            <span className="text-xs text-foreground/70">Source Code</span>
+                          </div>
+                          <span className="text-xs font-display font-bold" style={{ color: `hsla(${cat.hsl}, 0.9)` }}>{formatPrice(cat.sourcePrice)}</span>
+                        </div>
+                      )}
+                    </div>
 
                     {/* CTA */}
                     <div className="flex items-center gap-2 text-sm font-display font-bold" style={{ color: `hsla(${cat.hsl}, 0.9)` }}>
-                      <span>View Products</span>
+                      <span>View & Buy</span>
                       <ArrowRight size={14} className="group-hover:translate-x-2 transition-transform duration-300" />
                     </div>
                   </div>
