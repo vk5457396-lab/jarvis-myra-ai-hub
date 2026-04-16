@@ -15,11 +15,11 @@ const PRODUCT_PRICES: Record<string, { price: number; name: string }> = {
   aria: { price: 899, name: 'ARIA 1.0' },
   bundle_jarvis_myra: { price: 1599, name: 'Jarvis 2.0 + MYRA 2.0 Bundle' },
   combo_all: { price: 2399, name: 'Jarvis 2.0 + MYRA 2.0 + AURA 1.0 Combo' },
-  source_jarvis: { price: 4500, name: 'Jarvis 2.0 Source Code' },
-  source_myra: { price: 4500, name: 'MYRA 2.0 Source Code' },
-  source_aura: { price: 4500, name: 'AURA 1.0 Source Code' },
-  source_bundle: { price: 6999, name: 'Jarvis 2.0 + MYRA 2.0 Source Code Bundle' },
-  source_triple: { price: 9999, name: 'Jarvis 2.0 + MYRA 2.0 + AURA 1.0 Source Code' },
+  source_jarvis: { price: 3900, name: 'Jarvis 2.0 Source Code' },
+  source_myra: { price: 3900, name: 'MYRA 2.0 Source Code' },
+  source_aura: { price: 3900, name: 'AURA 1.0 Source Code' },
+  source_bundle: { price: 5999, name: 'Jarvis 2.0 + MYRA 2.0 Source Code Bundle' },
+  source_triple: { price: 8999, name: 'Jarvis 2.0 + MYRA 2.0 + AURA 1.0 Source Code' },
 };
 
 const INTERNATIONAL_PRICES: Record<string, number> = {

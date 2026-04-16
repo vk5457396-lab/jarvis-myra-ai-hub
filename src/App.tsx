@@ -25,6 +25,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import ProductDetail from "./pages/ProductDetail";
 import ReferralBanner from "./components/ReferralBanner";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => {
             <Route path="/aura-features" element={<AuraFeatures />} />
             <Route path="/demos" element={<DemoVideos />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/pricing/:productId" element={<ProductDetail />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/services" element={<Services />} />
             <Route path="/thank-you" element={<ThankYou />} />
