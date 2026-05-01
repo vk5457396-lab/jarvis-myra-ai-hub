@@ -27,6 +27,7 @@ import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import ProductDetail from "./pages/ProductDetail";
 import ReferralBanner from "./components/ReferralBanner";
+import CursorGlow from "./components/CursorGlow";
 
 const queryClient = new QueryClient();
 
