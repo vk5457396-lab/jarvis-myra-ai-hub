@@ -41,6 +41,7 @@ const App = () => {
         <Sonner />
         {isLoading && <LoadingScreen onLoadingComplete={() => setIsLoading(false)} />}
         {!isLoading && <BackgroundVideo />}
+        {!isLoading && <CursorGlow />}
         <BrowserRouter>
           <ReferralBanner />
           <Routes>
