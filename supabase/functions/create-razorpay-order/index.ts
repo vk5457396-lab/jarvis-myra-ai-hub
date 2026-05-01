@@ -19,6 +19,7 @@ const PRODUCT_PRICES: Record<string, { price: number; name: string }> = {
   source_myra: { price: 3900, name: 'MYRA 2.0 Source Code' },
   source_aura: { price: 3900, name: 'AURA 1.0 Source Code' },
   source_bundle: { price: 5999, name: 'Jarvis 2.0 + MYRA 2.0 Source Code Bundle' },
+  source_aria: { price: 3900, name: 'ARIA 1.0 Source Code' },
   source_triple: { price: 8999, name: 'Jarvis 2.0 + MYRA 2.0 + AURA 1.0 Source Code' },
 };
 
