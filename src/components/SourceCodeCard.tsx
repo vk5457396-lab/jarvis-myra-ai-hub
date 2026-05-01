@@ -8,7 +8,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import CurrencySelector from "@/components/CurrencySelector";
 
 interface SourceCodeCardProps {
-  variant: "jarvis" | "myra" | "aura" | "bundle" | "triple";
+  variant: "jarvis" | "myra" | "aura" | "aria" | "bundle" | "triple";
 }
 
 const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
