@@ -34,6 +34,7 @@ const INTERNATIONAL_PRICES: Record<string, number> = {
   source_myra: 3499,
   source_aura: 3499,
   source_bundle: 4999,
+  source_aria: 3499,
   source_triple: 7999,
 };
 
