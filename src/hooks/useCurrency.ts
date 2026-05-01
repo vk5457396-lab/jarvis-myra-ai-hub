@@ -80,20 +80,41 @@ export const useCurrency = (): CurrencyState => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const cached = typeof window !== "undefined" ? localStorage.getItem("geo_country_code") : null;
+    if (cached) {
+      const mapped = COUNTRY_TO_CURRENCY[cached] || cached;
+      setCountryCode(mapped);
+      setCurrency(CURRENCIES[mapped] || DEFAULT_CURRENCY);
+      setLoading(false);
+      return;
+    }
     const detectCountry = async () => {
-      try {
-        const response = await fetch('https://ipapi.co/json/');
-        const data = await response.json();
-        const code = data.country_code || "IN";
-        const mapped = COUNTRY_TO_CURRENCY[code] || code;
-        setCountryCode(mapped);
-        setCurrency(CURRENCIES[mapped] || DEFAULT_CURRENCY);
-      } catch {
-        setCountryCode("IN");
-        setCurrency(CURRENCIES.IN);
-      } finally {
-        setLoading(false);
+      // Try multiple CORS-friendly endpoints with graceful fallback
+      const endpoints = [
+        { url: "https://ipwho.is/", field: "country_code" },
+        { url: "https://get.geojs.io/v1/ip/country.json", field: "country" },
+      ];
+      for (const ep of endpoints) {
+        try {
+          const res = await fetch(ep.url);
+          if (!res.ok) continue;
+          const data = await res.json();
+          const code = (data?.[ep.field] || "").toString().toUpperCase();
+          if (code && code.length === 2) {
+            const mapped = COUNTRY_TO_CURRENCY[code] || code;
+            setCountryCode(mapped);
+            setCurrency(CURRENCIES[mapped] || DEFAULT_CURRENCY);
+            try { localStorage.setItem("geo_country_code", code); } catch {}
+            setLoading(false);
+            return;
+          }
+        } catch {
+          // try next
+        }
       }
+      setCountryCode("IN");
+      setCurrency(CURRENCIES.IN);
+      setLoading(false);
     };
     detectCountry();
   }, []);

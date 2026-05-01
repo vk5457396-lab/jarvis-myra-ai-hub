@@ -3,89 +3,71 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import SourceCodeCard from "@/components/SourceCodeCard";
 import FlashSaleBanner from "@/components/FlashSaleBanner";
 import BinancePaymentModal from "@/components/BinancePaymentModal";
 import MobileAppComingSoon from "@/components/MobileAppComingSoon";
-import { Check, Shield, CreditCard, Zap, Code, Wallet, Cpu, Sparkles, Heart, Music, ArrowRight, Package, FileCode, Monitor } from "lucide-react";
+import { Check, Shield, CreditCard, Zap, Code, Wallet, Monitor, FileCode, ArrowRight, Package } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
-
-const categories = [
-  {
-    id: "jarvis",
-    name: "Jarvis 2.0",
-    tagline: "AI System Automation Assistant",
-    icon: Cpu,
-    gradient: "from-cyan-400 via-blue-500 to-indigo-600",
-    hsl: "188 100% 50%",
-    badge: "⚡ POWER",
-    hasExe: false,
-    hasSource: true,
-    exePrice: 0,
-    sourcePrice: 3900,
-    available: ["Source Code"],
-  },
-  {
-    id: "myra",
-    name: "MYRA 2.0",
-    tagline: "AI Personal Voice Assistant",
-    icon: Sparkles,
-    gradient: "from-violet-400 via-purple-500 to-fuchsia-600",
-    hsl: "263 70% 58%",
-    badge: "🔥 POPULAR",
-    hasExe: false,
-    hasSource: true,
-    exePrice: 0,
-    sourcePrice: 3900,
-    available: ["Source Code"],
-  },
-  {
-    id: "aura",
-    name: "AURA 1.0",
-    tagline: "AI Girlfriend Companion",
-    icon: Heart,
-    gradient: "from-pink-400 via-rose-500 to-red-500",
-    hsl: "330 80% 60%",
-    badge: "💖 EMOTIONAL",
-    hasExe: false,
-    hasSource: true,
-    exePrice: 0,
-    sourcePrice: 3900,
-    available: ["Source Code"],
-  },
-  {
-    id: "aria",
-    name: "ARIA 1.0",
-    tagline: "AI Music & Creative Assistant",
-    icon: Music,
-    gradient: "from-emerald-400 via-teal-500 to-cyan-600",
-    hsl: "160 70% 50%",
-    badge: "🎵 CREATIVE",
-    hasExe: true,
-    hasSource: false,
-    exePrice: 899,
-    sourcePrice: 0,
-    available: [".exe File"],
-  },
-];
+import thumbJarvis from "@/assets/thumb-jarvis.png";
+import thumbMyra from "@/assets/thumb-myra.png";
+import thumbAura from "@/assets/thumb-aura.png";
+import thumbAria from "@/assets/thumb-aria.png";
 
 const Pricing = () => {
   const navigate = useNavigate();
   const [showBinanceModal, setShowBinanceModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState({ name: "", amount: 0 });
-  const { formatPrice, currency, countryCode, setSelectedCountry } = useCurrency();
+  const { formatPrice } = useCurrency();
 
   const openBinancePayment = (productName: string, amount: number) => {
     setSelectedProduct({ name: productName, amount });
     setShowBinanceModal(true);
   };
 
+  const sourceAis = [
+    { thumb: thumbJarvis, name: "Jarvis 2.0", hsl: "188 100% 50%" },
+    { thumb: thumbMyra, name: "MYRA 2.0", hsl: "263 70% 58%" },
+    { thumb: thumbAura, name: "AURA 1.0", hsl: "330 80% 60%" },
+    { thumb: thumbAria, name: "ARIA 1.0", hsl: "160 70% 50%" },
+  ];
+
+  const exeAis = [
+    { thumb: thumbAria, name: "ARIA 1.0", hsl: "160 70% 50%" },
+  ];
+
+  const mainCategories = [
+    {
+      id: "source",
+      title: "Source Code",
+      tagline: "For developers — modify, extend & own it",
+      icon: FileCode,
+      hsl: "45 95% 55%",
+      gradient: "from-yellow-400 via-amber-500 to-orange-500",
+      badge: "💻 DEVELOPER",
+      countLabel: "4 AIs + Bundles",
+      thumbs: sourceAis,
+      priceLabel: `Starts at ${formatPrice(3900)}`,
+    },
+    {
+      id: "exe",
+      title: ".exe File",
+      tagline: "Ready to use — download, install & run",
+      icon: Monitor,
+      hsl: "160 70% 50%",
+      gradient: "from-emerald-400 via-teal-500 to-cyan-600",
+      badge: "⚡ READY TO USE",
+      countLabel: `${exeAis.length} AI Available`,
+      thumbs: exeAis,
+      priceLabel: `Starts at ${formatPrice(899)}`,
+    },
+  ];
+
   return (
     <div className="min-h-screen">
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-32 pb-16 md:pt-40 md:pb-24 relative overflow-hidden">
+      <section className="pt-32 pb-12 md:pt-40 md:pb-16 relative overflow-hidden">
         <div className="absolute inset-0 circuit-pattern opacity-20" />
         <div className="absolute top-1/3 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-secondary/10 rounded-full blur-3xl" />
@@ -93,20 +75,117 @@ const Pricing = () => {
         <div className="container mx-auto px-4 relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-center max-w-3xl mx-auto">
             <span className="inline-block px-4 py-2 rounded-full glass text-secondary font-display text-sm tracking-wider mb-6">
-              SIMPLE PRICING
+              CHOOSE YOUR CATEGORY
             </span>
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              One-Time Payment, <span className="gradient-text">Lifetime Access</span>
+              Pick a <span className="text-aurora">Category</span> to Begin
             </h1>
             <p className="text-lg text-muted-foreground">
-              No subscriptions. No hidden fees. Choose your AI assistant and get started.
+              Two simple categories. Click one to see all available AIs inside.
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Binance Modal */}
-      <BinancePaymentModal isOpen={showBinanceModal} onClose={() => setShowBinanceModal(false)} productName={selectedProduct.name} amount={selectedProduct.amount} />
+      {/* Marquee strip */}
+      <section className="py-3 border-y border-white/5 bg-background/30 backdrop-blur-md overflow-hidden">
+        <div className="flex w-max animate-marquee gap-12 whitespace-nowrap text-sm font-display">
+          {[...Array(2)].flatMap((_, k) =>
+            [
+              "⚡ Lifetime License",
+              "🔒 Secure Razorpay & Crypto Checkout",
+              "♾️ Free Future Updates",
+              "🎁 Source Code from ₹3900",
+              "🚀 Instant Delivery via Telegram",
+              "💎 Premium Developer Support",
+              "🌍 40+ Currencies Supported",
+            ].map((t, i) => (
+              <span key={`${k}-${i}`} className="text-foreground/70 hover:text-foreground transition-colors">{t}</span>
+            ))
+          )}
+        </div>
+      </section>
+
+      {/* Two main category cards */}
+      <section className="py-12 md:py-20">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {mainCategories.map((cat, idx) => {
+              const Icon = cat.icon;
+              return (
+                <motion.div
+                  key={cat.id}
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.15, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                  whileHover={{ scale: 1.02, y: -6 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate(`/pricing/${cat.id}`)}
+                  className="relative group cursor-pointer rounded-3xl overflow-hidden"
+                >
+                  {/* Animated rotating border */}
+                  <div className="absolute inset-0 rounded-3xl p-px overflow-hidden">
+                    <motion.div
+                      className="absolute inset-[-200%]"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+                      style={{ background: `conic-gradient(from 0deg, hsla(${cat.hsl}, 0.6), transparent 30%, hsla(${cat.hsl}, 0.4), transparent 70%, hsla(${cat.hsl}, 0.6))` }}
+                    />
+                  </div>
+
+                  <div
+                    className="relative rounded-[calc(1.5rem-1px)] overflow-hidden m-px p-8 md:p-10 backdrop-blur-xl transition-all duration-500"
+                    style={{ background: `linear-gradient(170deg, hsla(${cat.hsl}, 0.1) 0%, hsla(220, 15%, 8%, 0.96) 40%, hsla(220, 20%, 5%, 0.99) 100%)` }}
+                  >
+                    {/* Glow */}
+                    <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[80px] opacity-20 group-hover:opacity-50 transition-all duration-700" style={{ background: `hsla(${cat.hsl}, 0.6)` }} />
+
+                    <div className="flex items-start justify-between mb-6 relative z-10">
+                      <span className="inline-block text-[10px] font-display font-bold tracking-[0.18em] px-3 py-1.5 rounded-full border" style={{ background: `hsla(${cat.hsl}, 0.1)`, borderColor: `hsla(${cat.hsl}, 0.25)`, color: `hsla(${cat.hsl}, 1)` }}>
+                        {cat.badge}
+                      </span>
+                      <span className="text-xs text-muted-foreground font-display">{cat.countLabel}</span>
+                    </div>
+
+                    {/* Icon */}
+                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${cat.gradient} flex items-center justify-center mb-6 shadow-lg relative z-10`} style={{ boxShadow: `0 0 35px hsla(${cat.hsl}, 0.35)` }}>
+                      <Icon className="w-8 h-8 text-white" />
+                    </div>
+
+                    <h2 className={`font-display text-3xl md:text-4xl font-black mb-2 bg-gradient-to-r ${cat.gradient} bg-clip-text text-transparent`}>
+                      {cat.title}
+                    </h2>
+                    <p className="text-muted-foreground text-sm md:text-base mb-6 leading-relaxed">{cat.tagline}</p>
+
+                    {/* AI thumbnails */}
+                    <div className="flex items-center gap-2 mb-6 relative z-10">
+                      {cat.thumbs.map((ai) => (
+                        <div
+                          key={ai.name}
+                          className="relative w-12 h-12 rounded-xl overflow-hidden border bg-background/50 backdrop-blur-sm"
+                          style={{ borderColor: `hsla(${ai.hsl}, 0.4)`, boxShadow: `0 0 12px hsla(${ai.hsl}, 0.25)` }}
+                          title={ai.name}
+                        >
+                          <img src={ai.thumb} alt={ai.name} loading="lazy" width={48} height={48} className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                      <span className="text-sm font-display font-bold" style={{ color: `hsla(${cat.hsl}, 1)` }}>{cat.priceLabel}</span>
+                      <div className="flex items-center gap-2 text-sm font-display font-bold" style={{ color: `hsla(${cat.hsl}, 1)` }}>
+                        <span>Explore</span>
+                        <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform duration-300" />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
       {/* Crypto Section */}
       <section className="py-6">
@@ -122,7 +201,7 @@ const Pricing = () => {
                     <h3 className="text-base md:text-lg font-display font-semibold text-foreground mb-1">
                       Crypto Payment via <span className="text-amber-400">Binance</span>
                     </h3>
-                    <p className="text-sm text-muted-foreground">Pay with USDT • International & Indian Users • Fast & Secure</p>
+                    <p className="text-sm text-muted-foreground">Pay with USDT • International & Indian Users • Same prices as Razorpay</p>
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -133,6 +212,7 @@ const Pricing = () => {
                     <button onClick={() => openBinancePayment("Jarvis 2.0 Source Code", 3900)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-primary/30">Jarvis 2.0 {formatPrice(3900)}</button>
                     <button onClick={() => openBinancePayment("MYRA 2.0 Source Code", 3900)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary/10 hover:bg-secondary/20 text-secondary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-secondary/30">MYRA 2.0 {formatPrice(3900)}</button>
                     <button onClick={() => openBinancePayment("AURA 1.0 Source Code", 3900)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 text-pink-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-pink-500/30">AURA 1.0 {formatPrice(3900)}</button>
+                    <button onClick={() => openBinancePayment("ARIA 1.0 Source Code", 3900)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-emerald-500/30">ARIA 1.0 {formatPrice(3900)}</button>
                   </div>
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1 mt-3"><Package size={12} /> Products (.exe)</p>
                   <div className="flex flex-wrap gap-2">
@@ -145,120 +225,12 @@ const Pricing = () => {
         </div>
       </section>
 
+      <BinancePaymentModal isOpen={showBinanceModal} onClose={() => setShowBinanceModal(false)} productName={selectedProduct.name} amount={selectedProduct.amount} />
+
       {/* Flash Sale */}
       <section className="py-4">
         <div className="container mx-auto px-4">
           <div className="max-w-xl mx-auto"><FlashSaleBanner /></div>
-        </div>
-      </section>
-
-      {/* Category Cards - Each AI has its own clear card */}
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-3">Choose Your <span className="gradient-text">AI Assistant</span></h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">Click on any AI to view & purchase available products</p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {categories.map((cat, index) => {
-              const Icon = cat.icon;
-              return (
-                <motion.div
-                  key={cat.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                  whileHover={{ scale: 1.04, y: -8 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => navigate(`/pricing/${cat.id}`)}
-                  className="relative group cursor-pointer rounded-2xl overflow-hidden"
-                >
-                  {/* Animated border */}
-                  <div className="absolute inset-0 rounded-2xl p-px overflow-hidden">
-                    <motion.div
-                      className="absolute inset-[-200%]"
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                      style={{ background: `conic-gradient(from 0deg, hsla(${cat.hsl}, 0.5), transparent 30%, hsla(${cat.hsl}, 0.3), transparent 60%, hsla(${cat.hsl}, 0.5))` }}
-                    />
-                  </div>
-
-                  <div
-                    className="relative rounded-[calc(1rem-1px)] overflow-hidden m-px p-6 md:p-8 backdrop-blur-xl transition-all duration-500"
-                    style={{ background: `linear-gradient(170deg, hsla(${cat.hsl}, 0.08) 0%, hsla(220, 15%, 8%, 0.98) 40%, hsla(220, 20%, 5%, 0.99) 100%)` }}
-                  >
-                    {/* Glow */}
-                    <div className="absolute -top-16 -right-16 w-40 h-40 rounded-full blur-[60px] opacity-0 group-hover:opacity-30 transition-all duration-700" style={{ background: `hsla(${cat.hsl}, 0.5)` }} />
-
-                    {/* Badge */}
-                    <span className="inline-block text-[10px] font-display font-bold tracking-[0.15em] px-3 py-1 rounded-full mb-5 border" style={{ background: `hsla(${cat.hsl}, 0.08)`, borderColor: `hsla(${cat.hsl}, 0.2)`, color: `hsla(${cat.hsl}, 0.9)` }}>
-                      {cat.badge}
-                    </span>
-
-                    {/* Icon */}
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${cat.gradient} flex items-center justify-center mb-5 shadow-lg`} style={{ boxShadow: `0 0 25px hsla(${cat.hsl}, 0.25)` }}>
-                      <Icon className="w-7 h-7 text-white" />
-                    </div>
-
-                    {/* Name */}
-                    <h3 className={`font-display text-2xl font-black mb-2 bg-gradient-to-r ${cat.gradient} bg-clip-text text-transparent`}>
-                      {cat.name}
-                    </h3>
-                    <p className="text-muted-foreground text-sm mb-5 leading-relaxed">{cat.tagline}</p>
-
-                    {/* Available products - clear labels */}
-                    <div className="space-y-2 mb-5">
-                      {cat.hasExe && (
-                        <div className="flex items-center justify-between px-3 py-2 rounded-lg border" style={{ background: `hsla(${cat.hsl}, 0.04)`, borderColor: `hsla(${cat.hsl}, 0.12)` }}>
-                          <div className="flex items-center gap-2">
-                            <Monitor size={13} style={{ color: `hsla(${cat.hsl}, 0.8)` }} />
-                            <span className="text-xs text-foreground/70">.exe File</span>
-                          </div>
-                          <span className="text-xs font-display font-bold" style={{ color: `hsla(${cat.hsl}, 0.9)` }}>{formatPrice(cat.exePrice)}</span>
-                        </div>
-                      )}
-                      {cat.hasSource && (
-                        <div className="flex items-center justify-between px-3 py-2 rounded-lg border" style={{ background: `hsla(${cat.hsl}, 0.04)`, borderColor: `hsla(${cat.hsl}, 0.12)` }}>
-                          <div className="flex items-center gap-2">
-                            <FileCode size={13} style={{ color: `hsla(${cat.hsl}, 0.8)` }} />
-                            <span className="text-xs text-foreground/70">Source Code</span>
-                          </div>
-                          <span className="text-xs font-display font-bold" style={{ color: `hsla(${cat.hsl}, 0.9)` }}>{formatPrice(cat.sourcePrice)}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* CTA */}
-                    <div className="flex items-center gap-2 text-sm font-display font-bold" style={{ color: `hsla(${cat.hsl}, 0.9)` }}>
-                      <span>View & Buy</span>
-                      <ArrowRight size={14} className="group-hover:translate-x-2 transition-transform duration-300" />
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Source Code Bundles */}
-      <section className="py-16 md:py-24 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-yellow-500/5 to-transparent" />
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-8">
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-yellow-400 font-display text-sm tracking-wider mb-6">
-              <Code size={16} /> SOURCE CODE BUNDLES
-            </span>
-            <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">Save More with <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">Bundles</span></h2>
-            <p className="text-muted-foreground">Get multiple source codes at a discounted price</p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <SourceCodeCard variant="bundle" />
-            <SourceCodeCard variant="triple" />
-          </div>
         </div>
       </section>
 

@@ -8,7 +8,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import CurrencySelector from "@/components/CurrencySelector";
 
 interface SourceCodeCardProps {
-  variant: "jarvis" | "myra" | "aura" | "bundle" | "triple";
+  variant: "jarvis" | "myra" | "aura" | "aria" | "bundle" | "triple";
 }
 
 const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
@@ -32,6 +32,7 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
     jarvis: { productId: "source_jarvis", name: "Jarvis 2.0", price: isIndia ? 3900 : 3499, originalPrice: isIndia ? 5999 : 4999, savings: isIndia ? 2099 : 1500, gradient: "from-cyan-400 via-blue-500 to-indigo-600", hsl: "188 100% 50%", badgeText: "JARVIS 2.0", features: ["Complete Jarvis 2.0 Source Code", "Python & Automation Scripts", "Full Documentation", "Customization Guide", "Future Code Updates", "Developer Support"] },
     myra: { productId: "source_myra", name: myraName, price: isIndia ? 3900 : 3499, originalPrice: isIndia ? 5999 : 4999, savings: isIndia ? 2099 : 1500, gradient: "from-violet-400 via-purple-500 to-fuchsia-600", hsl: "263 70% 58%", badgeText: myraName.toUpperCase(), features: [`Complete ${myraName} Source Code`, "Python & Automation Scripts", "Full Documentation", "Customization Guide", "Future Code Updates", "Developer Support"] },
     aura: { productId: "source_aura", name: "AURA 1.0", price: isIndia ? 3900 : 3499, originalPrice: isIndia ? 5999 : 4999, savings: isIndia ? 2099 : 1500, gradient: "from-pink-400 via-rose-500 to-red-500", hsl: "330 80% 60%", badgeText: "AURA 1.0", features: ["Complete AURA 1.0 Source Code", "Python & Automation Scripts", "Full Documentation", "Customization Guide", "Future Code Updates", "Developer Support"] },
+    aria: { productId: "source_aria", name: "ARIA 1.0", price: isIndia ? 3900 : 3499, originalPrice: isIndia ? 5999 : 4999, savings: isIndia ? 2099 : 1500, gradient: "from-emerald-400 via-teal-500 to-cyan-600", hsl: "160 70% 50%", badgeText: "ARIA 1.0", features: ["Complete ARIA 1.0 Source Code", "Music & Audio Engine Code", "Python & Automation Scripts", "Full Documentation", "Customization Guide", "Future Code Updates", "Developer Support"] },
     bundle: { productId: "source_bundle", name: `Jarvis 2.0 + ${myraName}`, price: isIndia ? 5999 : 4999, originalPrice: isIndia ? 7800 : 6998, savings: isIndia ? 1801 : 1999, gradient: "from-amber-400 via-orange-500 to-red-500", hsl: "38 92% 55%", badgeText: "BEST VALUE", features: ["Complete Jarvis 2.0 Source Code", `Complete ${myraName} Source Code`, "Python & Automation Scripts", "Full Documentation", "Customization Guide", "Future Code Updates", "Developer Support", "Commercial License"] },
     triple: { productId: "source_triple", name: "All 3 AI Source Codes", price: isIndia ? 8999 : 7999, originalPrice: isIndia ? 11700 : 10497, savings: isIndia ? 2701 : 2498, gradient: "from-emerald-400 via-cyan-400 to-violet-500", hsl: "160 70% 50%", badgeText: "MEGA BUNDLE", features: ["Complete Jarvis 2.0 Source Code", `Complete ${myraName} Source Code`, "Complete AURA 1.0 Source Code", "All Python & Automation Scripts", "Full Documentation for All 3", "Customization Guide", "Future Code Updates", "Developer Support", "Commercial License"] },
   };
