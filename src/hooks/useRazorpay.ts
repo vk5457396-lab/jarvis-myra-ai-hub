@@ -106,6 +106,8 @@ export const useRazorpay = () => {
             
             invokeBackendFunction("send-telegram-notification", {
               payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
               product_name: productName,
               product_type: productType,
               amount,
@@ -114,6 +116,7 @@ export const useRazorpay = () => {
               customer_phone: customerPhone,
               referral_code: refCode || undefined,
             }).catch(() => {});
+
 
             navigate(
               `/thank-you?product=${encodeURIComponent(productName)}&payment_id=${response.razorpay_payment_id}&amount=${amount}&phone=${encodeURIComponent(customerPhone || '')}`

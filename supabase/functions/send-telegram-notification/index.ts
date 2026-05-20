@@ -10,6 +10,29 @@ const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN');
 const TELEGRAM_CHAT_ID = Deno.env.get('TELEGRAM_CHAT_ID');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const RAZORPAY_KEY_SECRET = Deno.env.get('RAZORPAY_KEY_SECRET');
+
+// HMAC-SHA256 hex digest using Web Crypto
+async function hmacSha256Hex(secret: string, message: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
+  return Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -17,32 +40,75 @@ serve(async (req) => {
   }
 
   try {
-    const { 
-      payment_id, 
-      product_name, 
+    const {
+      payment_id,
+      razorpay_order_id,
+      razorpay_signature,
+      product_name,
       product_type,
-      amount, 
-      customer_name, 
-      customer_email, 
+      amount,
+      customer_name,
+      customer_email,
       customer_phone,
       referral_code,
     } = await req.json();
 
-    console.log('Received payment notification:', { payment_id, product_name, product_type, amount, referral_code });
+    if (!payment_id || !product_name || !razorpay_order_id || !razorpay_signature) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required payment fields' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    if (!payment_id || !product_name) {
-      throw new Error('Payment ID and product name are required');
+    if (!RAZORPAY_KEY_SECRET) {
+      return new Response(
+        JSON.stringify({ error: 'Payment verification unavailable' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // CRITICAL: verify the Razorpay signature server-side before any financial side effect.
+    const expectedSignature = await hmacSha256Hex(
+      RAZORPAY_KEY_SECRET,
+      `${razorpay_order_id}|${payment_id}`
+    );
+    if (!timingSafeEqual(expectedSignature, String(razorpay_signature))) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid payment signature' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
-    
-    // Save purchase to database
+
+    // Fetch the verified order from Razorpay to get the authoritative amount.
+    // This prevents a caller from claiming a larger purchase amount than what was actually paid.
+    let verifiedAmount = 0;
+    try {
+      const RAZORPAY_KEY_ID = Deno.env.get('RAZORPAY_KEY_ID');
+      if (RAZORPAY_KEY_ID) {
+        const auth = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
+        const orderRes = await fetch(`https://api.razorpay.com/v1/orders/${razorpay_order_id}`, {
+          headers: { Authorization: `Basic ${auth}` },
+        });
+        if (orderRes.ok) {
+          const order = await orderRes.json();
+          verifiedAmount = Math.round((order.amount || 0) / 100);
+        }
+      }
+    } catch {
+      // If verification call fails, do not credit referral commission
+      verifiedAmount = 0;
+    }
+
+    // Save purchase to database (uses verified amount when available)
+    const recordedAmount = verifiedAmount > 0 ? verifiedAmount : (amount || 0);
     const { error: dbError } = await supabase
       .from('purchases')
       .insert({
         product_name,
         product_type: product_type || 'bundle',
-        amount: amount || 0,
+        amount: recordedAmount,
         payment_id,
         customer_name,
         customer_email,
@@ -50,28 +116,25 @@ serve(async (req) => {
       });
 
     if (dbError) {
-      console.error('Database error:', dbError);
-    } else {
-      console.log('Purchase saved to database');
+      console.error('Database insert failed');
     }
 
-    // Process referral commission if referral_code exists
+    // Process referral commission only with the verified amount
     let referrerName = '';
     let referrerInfo = '';
     let commission = 0;
 
-    if (referral_code && amount > 0) {
+    if (referral_code && verifiedAmount > 0) {
       const { data: referrer } = await supabase
         .from('profiles')
         .select('id, full_name')
         .eq('referral_code', referral_code)
         .maybeSingle();
-      
+
       if (referrer) {
         referrerName = referrer.full_name || 'Unknown';
-        commission = Math.floor(amount * 0.05);
+        commission = Math.floor(verifiedAmount * 0.05);
 
-        // Find buyer profile by email
         let referredUserId: string | null = null;
         if (customer_email) {
           const { data: buyerProfile } = await supabase
@@ -82,18 +145,15 @@ serve(async (req) => {
           referredUserId = buyerProfile?.id || null;
         }
 
-        // Use the safe RPC to credit wallet + insert earning (idempotent)
         const { error: creditError } = await supabase.rpc('credit_referral_wallet', {
           p_referrer_id: referrer.id,
           p_purchase_id: payment_id,
-          p_purchase_amount: amount,
+          p_purchase_amount: verifiedAmount,
           p_referred_user_id: referredUserId,
         });
 
         if (creditError) {
-          console.error('credit_referral_wallet error:', creditError.message);
-        } else {
-          console.log(`Commission ₹${commission} credited to referrer ${referrer.id}`);
+          console.error('Referral credit failed');
         }
 
         referrerInfo = `
@@ -111,12 +171,12 @@ serve(async (req) => {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(recordedAmount);
 
-    const istTime = new Date().toLocaleString('en-IN', { 
+    const istTime = new Date().toLocaleString('en-IN', {
       timeZone: 'Asia/Kolkata',
       dateStyle: 'medium',
-      timeStyle: 'short'
+      timeStyle: 'short',
     });
 
     const adminMessage = `
@@ -146,7 +206,7 @@ ${istTime} (IST)
     `.trim();
 
     const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-    
+
     const telegramResponse = await fetch(telegramUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -157,14 +217,9 @@ ${istTime} (IST)
       }),
     });
 
-    const telegramResult = await telegramResponse.json();
-
     if (!telegramResponse.ok) {
-      console.error('Telegram API error:', telegramResult);
-      throw new Error(`Telegram error: ${telegramResult.description}`);
+      console.error('Telegram notification failed');
     }
-
-    console.log('Admin Telegram notification sent successfully');
 
     const verificationMessage = encodeURIComponent(
       `🔐 Payment Verification Request\n\n` +
@@ -174,12 +229,12 @@ ${istTime} (IST)
       `Phone: ${customer_phone || 'N/A'}\n\n` +
       `Please verify my payment and activate my product.`
     );
-    
+
     const telegramDeepLink = `https://t.me/codeninjavik1?text=${verificationMessage}`;
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         message: 'Notification sent',
         telegramLink: telegramDeepLink,
       }),
@@ -187,11 +242,9 @@ ${istTime} (IST)
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Error sending notification:', errorMessage);
+  } catch {
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Notification failed' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
