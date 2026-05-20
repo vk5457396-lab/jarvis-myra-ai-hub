@@ -13,36 +13,27 @@ export const usePurchaseCounts = () => {
   return useQuery({
     queryKey: ["purchase-counts"],
     queryFn: async (): Promise<PurchaseCounts> => {
-      const { data, error } = await supabase
-        .from("purchases")
-        .select("product_type, amount");
+      const { data, error } = await supabase.rpc("get_purchase_counts");
 
       if (error) {
-        console.error("Error fetching purchase counts:", error);
         return { jarvis: 0, myra: 0, bundle: 0, total: 0, totalRevenue: 0 };
       }
 
-      const counts = {
-        jarvis: 0,
-        myra: 0,
-        bundle: 0,
-        total: 0,
-        totalRevenue: 0,
-      };
+      const counts = { jarvis: 0, myra: 0, bundle: 0, total: 0, totalRevenue: 0 };
 
-      data?.forEach((purchase) => {
-        counts.total++;
-        counts.totalRevenue += purchase.amount || 0;
-        
-        if (purchase.product_type === "jarvis" || purchase.product_type === "jarvis_source") {
-          counts.jarvis++;
-        } else if (purchase.product_type === "myra" || purchase.product_type === "myra_source") {
-          counts.myra++;
-        } else if (purchase.product_type === "bundle" || purchase.product_type === "bundle_source") {
-          counts.bundle++;
-          // Bundle counts towards both products
-          counts.jarvis++;
-          counts.myra++;
+      (data as Array<{ product_type: string; count: number; revenue: number }> | null)?.forEach((row) => {
+        const c = Number(row.count) || 0;
+        const r = Number(row.revenue) || 0;
+        counts.total += c;
+        counts.totalRevenue += r;
+        if (row.product_type === "jarvis" || row.product_type === "jarvis_source") {
+          counts.jarvis += c;
+        } else if (row.product_type === "myra" || row.product_type === "myra_source") {
+          counts.myra += c;
+        } else if (row.product_type === "bundle" || row.product_type === "bundle_source") {
+          counts.bundle += c;
+          counts.jarvis += c;
+          counts.myra += c;
         }
       });
 

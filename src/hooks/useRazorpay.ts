@@ -71,7 +71,6 @@ export const useRazorpay = () => {
         toast.dismiss("payment-init");
 
         if (error || data?.error) {
-          console.error("Order creation error:", error || data?.error);
           toast.error("Failed to initialize payment. Please try again.");
           return;
         }
@@ -87,7 +86,6 @@ export const useRazorpay = () => {
           description: `Purchase ${productName}`,
           order_id: data.order_id,
           handler: async function (response: any) {
-            console.log("Payment successful:", response);
             
             let productType = 'bundle';
             const lowerName = productName.toLowerCase();
@@ -115,7 +113,7 @@ export const useRazorpay = () => {
               customer_email: customerEmail,
               customer_phone: customerPhone,
               referral_code: refCode || undefined,
-            }).catch((err) => console.error("Telegram notification error:", err));
+            }).catch(() => {});
 
             navigate(
               `/thank-you?product=${encodeURIComponent(productName)}&payment_id=${response.razorpay_payment_id}&amount=${amount}&phone=${encodeURIComponent(customerPhone || '')}`
@@ -138,13 +136,11 @@ export const useRazorpay = () => {
 
         const razorpay = new window.Razorpay(options);
         razorpay.on("payment.failed", function (response: any) {
-          console.error("Payment failed:", response.error);
-          toast.error(`Payment failed: ${response.error.description}`);
+          toast.error(`Payment failed: ${response?.error?.description ?? "Please try again."}`);
         });
 
         razorpay.open();
-      } catch (error) {
-        console.error("Payment error:", error);
+      } catch {
         toast.error("Something went wrong. Please try again.");
       }
     },

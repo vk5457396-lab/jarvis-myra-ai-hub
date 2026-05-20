@@ -14,24 +14,47 @@ interface ContactFormRequest {
   message: string;
 }
 
+function escapeHtml(text: string): string {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { name, email, subject, message }: ContactFormRequest = await req.json();
+    const body = (await req.json()) as ContactFormRequest;
+    const name = (body.name || "").trim();
+    const email = (body.email || "").trim();
+    const subject = (body.subject || "").trim();
+    const message = (body.message || "").trim();
 
-    // Validate inputs
     if (!name || !email || !subject || !message) {
       return new Response(
         JSON.stringify({ error: "All fields are required" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
+    if (name.length > 100 || subject.length > 200 || message.length > 5000 || email.length > 255 || !EMAIL_RE.test(email)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid input" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
-    // Send email using Resend API
+    const safeName = escapeHtml(name);
+    const safeEmail = escapeHtml(email);
+    const safeSubject = escapeHtml(subject);
+    const safeMessage = escapeHtml(message);
+
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -41,44 +64,38 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "AI Assistants Contact <onboarding@resend.dev>",
         to: ["vk5457396@gmail.com"],
-        subject: `Contact Form: ${subject}`,
+        subject: `Contact Form: ${safeSubject}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #6366f1;">New Contact Form Submission</h2>
             <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <p><strong>Name:</strong> ${name}</p>
-              <p><strong>Email:</strong> ${email}</p>
-              <p><strong>Subject:</strong> ${subject}</p>
+              <p><strong>Name:</strong> ${safeName}</p>
+              <p><strong>Email:</strong> ${safeEmail}</p>
+              <p><strong>Subject:</strong> ${safeSubject}</p>
             </div>
             <div style="background: #fff; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
               <h3 style="margin-top: 0;">Message:</h3>
-              <p style="white-space: pre-wrap;">${message}</p>
+              <p style="white-space: pre-wrap;">${safeMessage}</p>
             </div>
-            <p style="color: #64748b; font-size: 12px; margin-top: 20px;">
-              This email was sent from the AI Assistants contact form.
-            </p>
           </div>
         `,
       }),
     });
 
     if (!emailResponse.ok) {
-      const errorData = await emailResponse.text();
-      console.error("Resend API error:", errorData);
-      throw new Error(`Failed to send email: ${errorData}`);
+      return new Response(
+        JSON.stringify({ error: "Failed to send email" }),
+        { status: 502, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
-
-    const result = await emailResponse.json();
-    console.log("Email sent successfully:", result);
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
-  } catch (error: any) {
-    console.error("Error sending contact email:", error);
+  } catch {
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Something went wrong" }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }

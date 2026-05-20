@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const RAZORPAY_KEY_ID = 'rzp_live_RyTu3gnoAMnsod';
+const RAZORPAY_KEY_ID = Deno.env.get('RAZORPAY_KEY_ID') ?? 'rzp_live_RyTu3gnoAMnsod';
 const RAZORPAY_KEY_SECRET = Deno.env.get('RAZORPAY_KEY_SECRET');
 
 const PRODUCT_PRICES: Record<string, { price: number; name: string }> = {
