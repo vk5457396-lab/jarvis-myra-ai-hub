@@ -1,0 +1,20 @@
+# CodeNinjaVik — Jarvis & MYRA AI Voice Assistants
+
+> India's premium AI voice assistants for Windows PCs. Jarvis, MYRA, AURA, and ARIA — voice control, automation, and AI companionship, with source code options for developers.
+
+## Pages
+
+- [Home](/): Overview of Jarvis, MYRA, AURA, and ARIA assistants with pricing highlights.
+- [Features](/features): Full feature breakdown for the Jarvis and MYRA voice assistants.
+- [AURA Features](/aura-features): Feature breakdown for the AURA AI girlfriend assistant.
+- [Demos](/demos): Video walkthroughs of the assistants in action.
+- [Pricing](/pricing): Plans, bundles, and source-code pricing in INR and international currencies.
+- [Services](/services): Custom AI development and consulting services.
+- [Contact](/contact): Get in touch for support, sales, and partnerships.
+
+## Optional
+
+- [Privacy Policy](/privacy-policy)
+- [Terms & Conditions](/terms-and-conditions)
+- [Refund Policy](/refund-policy)
+- [Shipping & Delivery](/shipping-policy)
