@@ -13,7 +13,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center gap-3 mb-4">
-              <img src={logo} alt="Logo" className="w-10 h-10 rounded-full border border-primary/50" />
+              <img src={logo} alt="codeninjavik logo" className="w-10 h-10 rounded-full border border-primary/50" />
               <span className="font-display text-xl gradient-text font-bold">codeninjavik</span>
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed">
@@ -57,11 +57,12 @@ const Footer = () => {
           <div>
             <h4 className="font-display text-sm text-primary mb-4 tracking-wider">CONNECT</h4>
             <div className="flex gap-4">
-              <motion.a href="mailto:support@aiassistants.com" whileHover={{ scale: 1.1 }} className="w-10 h-10 rounded-lg glass flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"><Mail size={18} /></motion.a>
-              <motion.a href="https://wa.me/919999999999" target="_blank" rel="noopener noreferrer" whileHover={{ scale: 1.1 }} className="w-10 h-10 rounded-lg glass flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"><MessageCircle size={18} /></motion.a>
-              <motion.a href="#" whileHover={{ scale: 1.1 }} className="w-10 h-10 rounded-lg glass flex items-center justify-center text-muted-foreground hover:text-secondary transition-colors"><Twitter size={18} /></motion.a>
-              <motion.a href="#" whileHover={{ scale: 1.1 }} className="w-10 h-10 rounded-lg glass flex items-center justify-center text-muted-foreground hover:text-secondary transition-colors"><Github size={18} /></motion.a>
+              <motion.a href="mailto:support@aiassistants.com" aria-label="Send email" whileHover={{ scale: 1.1 }} className="w-10 h-10 rounded-lg glass flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"><Mail size={18} /></motion.a>
+              <motion.a href="https://wa.me/919999999999" aria-label="WhatsApp" target="_blank" rel="noopener noreferrer" whileHover={{ scale: 1.1 }} className="w-10 h-10 rounded-lg glass flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"><MessageCircle size={18} /></motion.a>
+              <motion.a href="#" aria-label="Twitter" whileHover={{ scale: 1.1 }} className="w-10 h-10 rounded-lg glass flex items-center justify-center text-muted-foreground hover:text-secondary transition-colors"><Twitter size={18} /></motion.a>
+              <motion.a href="#" aria-label="GitHub" whileHover={{ scale: 1.1 }} className="w-10 h-10 rounded-lg glass flex items-center justify-center text-muted-foreground hover:text-secondary transition-colors"><Github size={18} /></motion.a>
             </div>
+
           </div>
         </div>
 

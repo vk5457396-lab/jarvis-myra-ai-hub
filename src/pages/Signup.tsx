@@ -123,6 +123,7 @@ const Signup = () => {
                       <Input
                         type="text"
                         placeholder="Full name"
+                        aria-label="Full name"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         className="pl-11 h-12 rounded-xl bg-white/5 border-white/10 focus:border-secondary/50 text-foreground"
@@ -134,6 +135,7 @@ const Signup = () => {
                       <Input
                         type="email"
                         placeholder="Email address"
+                        aria-label="Email address"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-11 h-12 rounded-xl bg-white/5 border-white/10 focus:border-secondary/50 text-foreground"
@@ -145,13 +147,15 @@ const Signup = () => {
                       <Input
                         type={showPassword ? "text" : "password"}
                         placeholder="Password (min 6 characters)"
+                        aria-label="Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="pl-11 pr-11 h-12 rounded-xl bg-white/5 border-white/10 focus:border-secondary/50 text-foreground"
                       />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "Hide password" : "Show password"} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
+
                     </div>
 
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
