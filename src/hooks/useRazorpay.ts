@@ -118,9 +118,21 @@ export const useRazorpay = () => {
             }).catch(() => {});
 
 
-            navigate(
-              `/thank-you?product=${encodeURIComponent(productName)}&payment_id=${response.razorpay_payment_id}&amount=${amount}&phone=${encodeURIComponent(customerPhone || '')}`
-            );
+            try {
+              sessionStorage.setItem(
+                'payment_confirmation',
+                JSON.stringify({
+                  product: productName,
+                  payment_id: response.razorpay_payment_id,
+                  amount,
+                  phone: customerPhone || '',
+                  ts: Date.now(),
+                })
+              );
+            } catch {
+              // ignore storage errors
+            }
+            navigate('/thank-you');
           },
           prefill: {
             name: customerName || "",

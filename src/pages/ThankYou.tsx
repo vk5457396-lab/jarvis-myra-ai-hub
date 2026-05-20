@@ -1,18 +1,37 @@
 import { motion } from "framer-motion";
 import { CheckCircle, Send, ArrowLeft, MessageCircle, Phone, Mail, Shield, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 const ThankYou = () => {
-  const [searchParams] = useSearchParams();
-  const product = searchParams.get("product") || "AI Assistant";
-  const paymentId = searchParams.get("payment_id") || "";
-  const amount = searchParams.get("amount") || "";
-  const phone = searchParams.get("phone") || "";
+  const [details, setDetails] = useState({ product: "AI Assistant", paymentId: "", amount: "", phone: "" });
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('payment_confirmation');
+      if (raw) {
+        const d = JSON.parse(raw);
+        setDetails({
+          product: d.product || "AI Assistant",
+          paymentId: d.payment_id || "",
+          amount: d.amount ? String(d.amount) : "",
+          phone: d.phone || "",
+        });
+        // Clear so PII does not persist beyond this view
+        sessionStorage.removeItem('payment_confirmation');
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const { product, paymentId, amount, phone } = details;
+
+
   
   const [copied, setCopied] = useState(false);
 
