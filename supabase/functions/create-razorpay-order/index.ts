@@ -90,7 +90,8 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Razorpay API error: ${errorText}`);
+      console.error('Razorpay API error:', errorText);
+      throw new Error('Payment initialization failed. Please try again.');
     }
 
     const order = await response.json();
