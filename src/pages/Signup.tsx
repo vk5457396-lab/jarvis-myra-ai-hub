@@ -34,15 +34,12 @@ const Signup = () => {
 
     setLoading(true);
 
-    // Look up referrer by referral code
+    // Look up referrer by referral code (safe RPC, no PII exposure)
     let referrerId: string | null = null;
     if (referralCode) {
-      const { data: referrer } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("referral_code", referralCode)
-        .maybeSingle();
-      if (referrer) referrerId = referrer.id;
+      const { data: referrer } = await supabase.rpc("get_referrer_by_code", { _code: referralCode });
+      const row = Array.isArray(referrer) ? referrer[0] : null;
+      if (row) referrerId = row.id;
     }
 
     const { data, error } = await supabase.auth.signUp({

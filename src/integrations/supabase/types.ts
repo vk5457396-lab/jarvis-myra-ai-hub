@@ -248,6 +248,21 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_purchase_counts: {
+        Args: never
+        Returns: {
+          count: number
+          product_type: string
+          revenue: number
+        }[]
+      }
+      get_referrer_by_code: {
+        Args: { _code: string }
+        Returns: {
+          full_name: string
+          id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -22,14 +22,10 @@ const ReferralBanner = () => {
     }
 
     const fetchReferrer = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("full_name, referral_code")
-        .eq("referral_code", code)
-        .maybeSingle();
-
-      if (data?.full_name) {
-        setReferrerName(data.full_name);
+      const { data } = await supabase.rpc("get_referrer_by_code", { _code: code });
+      const row = Array.isArray(data) ? data[0] : null;
+      if (row?.full_name) {
+        setReferrerName(row.full_name);
         setVisible(true);
       }
     };
