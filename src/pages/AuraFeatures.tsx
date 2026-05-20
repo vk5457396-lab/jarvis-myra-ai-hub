@@ -210,7 +210,7 @@ const AuraFeatures = () => {
                 <div className="w-11 h-11 rounded-xl bg-pink-500/15 flex items-center justify-center mb-3 group-hover:bg-pink-500/25 transition-colors">
                   <cap.icon className="w-5 h-5 text-pink-400" />
                 </div>
-                <h4 className="font-display text-sm font-bold mb-1 text-foreground">{cap.title}</h4>
+                <h3 className="font-display text-sm font-bold mb-1 text-foreground">{cap.title}</h3>
                 <p className="text-xs text-muted-foreground">{cap.desc}</p>
               </motion.div>
             ))}

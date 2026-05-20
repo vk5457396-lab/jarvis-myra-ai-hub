@@ -82,6 +82,7 @@ const Login = () => {
                       <Input
                         type="email"
                         placeholder="Email address"
+                        aria-label="Email address"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-11 h-12 rounded-xl bg-white/5 border-white/10 focus:border-primary/50 text-foreground"
@@ -93,13 +94,15 @@ const Login = () => {
                       <Input
                         type={showPassword ? "text" : "password"}
                         placeholder="Password"
+                        aria-label="Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="pl-11 pr-11 h-12 rounded-xl bg-white/5 border-white/10 focus:border-primary/50 text-foreground"
                       />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "Hide password" : "Show password"} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
+
                     </div>
 
                     <div className="text-right">
