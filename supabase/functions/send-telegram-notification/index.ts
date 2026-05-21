@@ -84,9 +84,12 @@ serve(async (req) => {
     // Fetch the verified order from Razorpay to get the authoritative amount.
     // This prevents a caller from claiming a larger purchase amount than what was actually paid.
     let verifiedAmount = 0;
+    let verificationFailed = false;
     try {
       const RAZORPAY_KEY_ID = Deno.env.get('RAZORPAY_KEY_ID');
-      if (RAZORPAY_KEY_ID) {
+      if (!RAZORPAY_KEY_ID) {
+        verificationFailed = true;
+      } else {
         const auth = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
         const orderRes = await fetch(`https://api.razorpay.com/v1/orders/${razorpay_order_id}`, {
           headers: { Authorization: `Basic ${auth}` },
@@ -94,15 +97,24 @@ serve(async (req) => {
         if (orderRes.ok) {
           const order = await orderRes.json();
           verifiedAmount = Math.round((order.amount || 0) / 100);
+        } else {
+          verificationFailed = true;
         }
       }
     } catch {
-      // If verification call fails, do not credit referral commission
-      verifiedAmount = 0;
+      verificationFailed = true;
     }
 
-    // Save purchase to database (uses verified amount when available)
-    const recordedAmount = verifiedAmount > 0 ? verifiedAmount : (amount || 0);
+    if (verificationFailed || verifiedAmount <= 0) {
+      console.error('Razorpay order verification failed - refusing to record unverified amount');
+      return new Response(
+        JSON.stringify({ error: 'Unable to verify payment amount. Please contact support.' }),
+        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Only the server-verified amount is recorded; client-supplied `amount` is never trusted.
+    const recordedAmount = verifiedAmount;
     const { error: dbError } = await supabase
       .from('purchases')
       .insert({
