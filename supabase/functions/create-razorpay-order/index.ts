@@ -14,31 +14,23 @@ if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
 const PRODUCT_PRICES: Record<string, { price: number; name: string }> = {
   jarvis: { price: 899, name: 'Jarvis 2.0' },
   myra: { price: 899, name: 'MYRA 2.0' },
-  aura: { price: 899, name: 'AURA 1.0' },
   aria: { price: 899, name: 'ARIA 1.0' },
   bundle_jarvis_myra: { price: 1599, name: 'Jarvis 2.0 + MYRA 2.0 Bundle' },
-  combo_all: { price: 2399, name: 'Jarvis 2.0 + MYRA 2.0 + AURA 1.0 Combo' },
   source_jarvis: { price: 3900, name: 'Jarvis 2.0 Source Code' },
   source_myra: { price: 3900, name: 'MYRA 2.0 Source Code' },
-  source_aura: { price: 3900, name: 'AURA 1.0 Source Code' },
-  source_bundle: { price: 6999, name: 'Jarvis 2.0 + MYRA 2.0 Source Code Bundle' },
   source_aria: { price: 3900, name: 'ARIA 1.0 Source Code' },
-  source_triple: { price: 8999, name: 'Jarvis 2.0 + MYRA 2.0 + AURA 1.0 Source Code' },
+  source_bundle: { price: 6999, name: 'Jarvis 2.0 + MYRA 2.0 Source Code Bundle' },
 };
 
 const INTERNATIONAL_PRICES: Record<string, number> = {
   jarvis: 1299,
   myra: 1299,
-  aura: 1299,
   aria: 1299,
   bundle_jarvis_myra: 2299,
-  combo_all: 3499,
   source_jarvis: 3499,
   source_myra: 3499,
-  source_aura: 3499,
-  source_bundle: 4999,
   source_aria: 3499,
-  source_triple: 7999,
+  source_bundle: 4999,
 };
 
 serve(async (req) => {

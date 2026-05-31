@@ -11,11 +11,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.codeninjavik.in/aura-features</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://www.codeninjavik.in/demos</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -36,12 +31,17 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.codeninjavik.in/pricing/aura</loc>
+    <loc>https://www.codeninjavik.in/pricing/aria</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.codeninjavik.in/pricing/aria</loc>
+    <loc>https://www.codeninjavik.in/pricing/source</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.codeninjavik.in/pricing/exe</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
