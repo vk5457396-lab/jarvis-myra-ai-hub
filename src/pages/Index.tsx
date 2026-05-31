@@ -28,6 +28,9 @@ const Index = () => {
       {/* Hero Section */}
       <HeroSection />
 
+      {/* MYRA Desktop Install - Featured at top */}
+      <MyraInstallSection />
+
       {/* Features Overview */}
       <section className="py-20 md:py-32 relative">
         <div className="container mx-auto px-4">
@@ -213,9 +216,6 @@ const Index = () => {
           </div>
         </div>
       </section>
-
-      {/* MYRA Desktop Install */}
-      <MyraInstallSection />
 
       {/* API Resources Section */}
       <ApiResourcesSection />
