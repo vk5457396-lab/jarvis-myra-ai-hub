@@ -8,7 +8,7 @@ import BackgroundVideo from "@/components/BackgroundVideo";
 import LoadingScreen from "@/components/LoadingScreen";
 import Index from "./pages/Index";
 import Features from "./pages/Features";
-import AuraFeatures from "./pages/AuraFeatures";
+
 import DemoVideos from "./pages/DemoVideos";
 import Pricing from "./pages/Pricing";
 import Contact from "./pages/Contact";
@@ -47,7 +47,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/features" element={<Features />} />
-            <Route path="/aura-features" element={<AuraFeatures />} />
+            
             <Route path="/demos" element={<DemoVideos />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/pricing/:productId" element={<ProductDetail />} />
