@@ -8,6 +8,7 @@ import VideoThumbnail from "@/components/VideoThumbnail";
 import ApiResourcesSection from "@/components/ApiResourcesSection";
 import WebsiteServiceCard from "@/components/WebsiteServiceCard";
 import MobileAppComingSoon from "@/components/MobileAppComingSoon";
+import MyraInstallSection from "@/components/MyraInstallSection";
 import { features, jarvisFeatures, myraFeatures } from "@/data/features";
 import { ChevronRight, Shield, Zap, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -212,6 +213,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* MYRA Desktop Install */}
+      <MyraInstallSection />
 
       {/* API Resources Section */}
       <ApiResourcesSection />
