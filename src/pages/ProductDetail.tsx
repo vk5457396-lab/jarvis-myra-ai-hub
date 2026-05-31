@@ -26,7 +26,7 @@ const ProductDetail = () => {
   // Map legacy individual product ids to the source category
   const view = (() => {
     if (productId === "exe" || productId === "aria") return "exe";
-    if (productId === "source" || productId === "jarvis" || productId === "myra" || productId === "aura") return "source";
+    if (productId === "source" || productId === "jarvis" || productId === "myra") return "source";
     return null;
   })();
 
@@ -106,9 +106,8 @@ const ProductDetail = () => {
                 <p className="text-muted-foreground">Get multiple source codes at a discounted price</p>
               </motion.div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 max-w-2xl mx-auto">
                 <SourceCodeCard variant="bundle" />
-                <SourceCodeCard variant="triple" />
               </div>
             </>
           )}
