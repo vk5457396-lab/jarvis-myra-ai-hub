@@ -214,6 +214,9 @@ const Index = () => {
         </div>
       </section>
 
+      {/* MYRA Desktop Install */}
+      <MyraInstallSection />
+
       {/* API Resources Section */}
       <ApiResourcesSection />
 
