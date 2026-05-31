@@ -5,12 +5,12 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FlashSaleBanner from "@/components/FlashSaleBanner";
 import BinancePaymentModal from "@/components/BinancePaymentModal";
-import MobileAppComingSoon from "@/components/MobileAppComingSoon";
+
 import { Check, Shield, CreditCard, Zap, Code, Wallet, Monitor, FileCode, ArrowRight, Package } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import thumbJarvis from "@/assets/thumb-jarvis.png";
 import thumbMyra from "@/assets/thumb-myra.png";
-import thumbAura from "@/assets/thumb-aura.png";
+
 import thumbAria from "@/assets/thumb-aria.png";
 
 const Pricing = () => {
@@ -27,7 +27,6 @@ const Pricing = () => {
   const sourceAis = [
     { thumb: thumbJarvis, name: "Jarvis 2.0", hsl: "188 100% 50%" },
     { thumb: thumbMyra, name: "MYRA 2.0", hsl: "263 70% 58%" },
-    { thumb: thumbAura, name: "AURA 1.0", hsl: "330 80% 60%" },
     { thumb: thumbAria, name: "ARIA 1.0", hsl: "160 70% 50%" },
   ];
 
@@ -44,7 +43,7 @@ const Pricing = () => {
       hsl: "45 95% 55%",
       gradient: "from-yellow-400 via-amber-500 to-orange-500",
       badge: "💻 DEVELOPER",
-      countLabel: "4 AIs + Bundles",
+      countLabel: "3 AIs + Bundle",
       thumbs: sourceAis,
       priceLabel: `Starts at ${formatPrice(3900)}`,
     },
@@ -208,10 +207,8 @@ const Pricing = () => {
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1"><Code size={12} /> Source Code</p>
                   <div className="flex flex-wrap gap-2">
                     <button onClick={() => openBinancePayment("Source Code Bundle (Jarvis 2.0 + MYRA 2.0)", 6999)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-yellow-500/30">2-Bundle {formatPrice(6999)}</button>
-                    <button onClick={() => openBinancePayment("All 3 Source Codes (Jarvis + MYRA + AURA)", 8999)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-pink-500/20 hover:from-amber-500/30 hover:to-pink-500/30 text-amber-300 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-amber-500/30">3-Bundle {formatPrice(8999)}</button>
                     <button onClick={() => openBinancePayment("Jarvis 2.0 Source Code", 3900)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-primary/30">Jarvis 2.0 {formatPrice(3900)}</button>
                     <button onClick={() => openBinancePayment("MYRA 2.0 Source Code", 3900)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary/10 hover:bg-secondary/20 text-secondary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-secondary/30">MYRA 2.0 {formatPrice(3900)}</button>
-                    <button onClick={() => openBinancePayment("AURA 1.0 Source Code", 3900)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 text-pink-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-pink-500/30">AURA 1.0 {formatPrice(3900)}</button>
                     <button onClick={() => openBinancePayment("ARIA 1.0 Source Code", 3900)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-emerald-500/30">ARIA 1.0 {formatPrice(3900)}</button>
                   </div>
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1 mt-3"><Package size={12} /> Products (.exe)</p>
@@ -234,12 +231,6 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* Mobile App */}
-      <section className="py-8 md:py-12">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto"><MobileAppComingSoon /></div>
-        </div>
-      </section>
 
       {/* What's Included */}
       <section className="py-16 md:py-24">

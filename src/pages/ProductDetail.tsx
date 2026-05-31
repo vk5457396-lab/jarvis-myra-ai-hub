@@ -9,15 +9,13 @@ import { Button } from "@/components/ui/button";
 import { ariaFeatures } from "@/data/features";
 import thumbJarvis from "@/assets/thumb-jarvis.png";
 import thumbMyra from "@/assets/thumb-myra.png";
-import thumbAura from "@/assets/thumb-aura.png";
 import thumbAria from "@/assets/thumb-aria.png";
 
-type SourceVariant = "jarvis" | "myra" | "aura" | "aria";
+type SourceVariant = "jarvis" | "myra" | "aria";
 
 const sourceList: { variant: SourceVariant; thumb: string; hsl: string }[] = [
   { variant: "jarvis", thumb: thumbJarvis, hsl: "188 100% 50%" },
   { variant: "myra", thumb: thumbMyra, hsl: "263 70% 58%" },
-  { variant: "aura", thumb: thumbAura, hsl: "330 80% 60%" },
   { variant: "aria", thumb: thumbAria, hsl: "160 70% 50%" },
 ];
 
