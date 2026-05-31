@@ -9,15 +9,13 @@ import { Button } from "@/components/ui/button";
 import { ariaFeatures } from "@/data/features";
 import thumbJarvis from "@/assets/thumb-jarvis.png";
 import thumbMyra from "@/assets/thumb-myra.png";
-import thumbAura from "@/assets/thumb-aura.png";
 import thumbAria from "@/assets/thumb-aria.png";
 
-type SourceVariant = "jarvis" | "myra" | "aura" | "aria";
+type SourceVariant = "jarvis" | "myra" | "aria";
 
 const sourceList: { variant: SourceVariant; thumb: string; hsl: string }[] = [
   { variant: "jarvis", thumb: thumbJarvis, hsl: "188 100% 50%" },
   { variant: "myra", thumb: thumbMyra, hsl: "263 70% 58%" },
-  { variant: "aura", thumb: thumbAura, hsl: "330 80% 60%" },
   { variant: "aria", thumb: thumbAria, hsl: "160 70% 50%" },
 ];
 
@@ -28,7 +26,7 @@ const ProductDetail = () => {
   // Map legacy individual product ids to the source category
   const view = (() => {
     if (productId === "exe" || productId === "aria") return "exe";
-    if (productId === "source" || productId === "jarvis" || productId === "myra" || productId === "aura") return "source";
+    if (productId === "source" || productId === "jarvis" || productId === "myra") return "source";
     return null;
   })();
 
@@ -108,9 +106,8 @@ const ProductDetail = () => {
                 <p className="text-muted-foreground">Get multiple source codes at a discounted price</p>
               </motion.div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 max-w-2xl mx-auto">
                 <SourceCodeCard variant="bundle" />
-                <SourceCodeCard variant="triple" />
               </div>
             </>
           )}

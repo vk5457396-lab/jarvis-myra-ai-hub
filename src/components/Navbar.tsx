@@ -9,7 +9,6 @@ import logo from "@/assets/logo.png";
 const navLinks = [
   { name: "Home", path: "/" },
   { name: "Features", path: "/features" },
-  { name: "AURA 1.0", path: "/aura-features" },
   { name: "Demos", path: "/demos" },
   { name: "Pricing", path: "/pricing" },
   { name: "Services", path: "/services" },

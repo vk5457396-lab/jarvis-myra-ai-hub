@@ -13,7 +13,7 @@ interface ProductCardProps {
   tagline: string;
   price: number;
   features: string[];
-  variant: "jarvis" | "myra" | "aura" | "aria";
+  variant: "jarvis" | "myra" | "aria";
   delay?: number;
 }
 
@@ -45,20 +45,6 @@ const variantStyles = {
     accent2: { h: 290, s: 80, l: 65 },
     ringColor: "hsla(263,70%,58%,0.15)",
     popularBadge: true,
-  },
-  aura: {
-    productId: "aura",
-    gradient: "from-pink-400 via-rose-500 to-red-500",
-    priceGradient: "from-pink-300 to-rose-400",
-    badgeLabel: "💖 EMOTIONAL AI",
-    badgeIcon: Heart,
-    includesText: "Includes: .exe File",
-    includesDesc: "Ready-to-run AI Girlfriend for Windows",
-    buttonVariant: "neonPink" as const,
-    accent: { h: 330, s: 80, l: 60 },
-    accent2: { h: 350, s: 90, l: 55 },
-    ringColor: "hsla(330,80%,60%,0.15)",
-    popularBadge: false,
   },
   aria: {
     productId: "aria",

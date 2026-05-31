@@ -39,7 +39,7 @@ const Footer = () => {
             <ul className="space-y-2">
               <li><Link to="/pricing" className="text-muted-foreground hover:text-primary transition-colors text-sm">Jarvis 2.0 - AI System Assistant</Link></li>
               <li><Link to="/pricing" className="text-muted-foreground hover:text-primary transition-colors text-sm">MYRA 2.0 - AI Personal Assistant</Link></li>
-              <li><Link to="/aura-features" className="text-muted-foreground hover:text-primary transition-colors text-sm">AURA 1.0 - AI Girlfriend</Link></li>
+              <li><Link to="/pricing" className="text-muted-foreground hover:text-primary transition-colors text-sm">ARIA 1.0 - AI Music Creator</Link></li>
             </ul>
           </div>
 

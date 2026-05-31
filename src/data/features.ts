@@ -81,14 +81,6 @@ export const myraFeatures = [
   "Smart Task Management",
 ];
 
-export const auraFeatures = [
-  "AI Girlfriend Voice Assistant",
-  "Emotional Conversations & Memory",
-  "1 Premium Female Voice Model",
-  "Modes: Roast, Angry, Professional",
-  "Real Girlfriend Feel & Care",
-  "Smart Companion & Entertainment",
-];
 
 export const ariaFeatures = [
   "AI Music & Creative Assistant",
