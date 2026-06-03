@@ -114,7 +114,15 @@ const CommandBlock = ({ cmd, index }: { cmd: typeof commands[0]; index: number }
 };
 
 const MyraInstallSection = () => {
-  const navigate = useNavigate();
+  const [showPaymentSelector, setShowPaymentSelector] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [customerInfo, setCustomerInfo] = useState({ name: "", email: "", phone: "" });
+
+  const handleContactSubmit = (data: { name: string; email: string; phone: string }) => {
+    setCustomerInfo(data);
+    setShowContactForm(false);
+    setShowPaymentSelector(true);
+  };
 
   return (
     <section className="py-20 md:py-28 relative overflow-hidden">
