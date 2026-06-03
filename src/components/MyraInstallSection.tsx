@@ -245,7 +245,7 @@ const MyraInstallSection = () => {
         onClose={() => setShowContactForm(false)}
         onSubmit={handleContactSubmit}
         productName="MYRA 2.0 Activation Key"
-        accentHsl={{ h: 38, s: 92, l: 50 }}
+        accentHsl="38, 92%, 50%"
       />
       <PaymentGatewaySelector
         isOpen={showPaymentSelector}
