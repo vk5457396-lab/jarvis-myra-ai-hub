@@ -201,7 +201,7 @@ const MyraInstallSection = () => {
               variant="neonCyan"
               size="lg"
               className="w-full group/btn font-bold text-sm tracking-wide relative overflow-hidden rounded-xl"
-              onClick={() => navigate("/pricing")}
+              onClick={() => setShowContactForm(true)}
             >
               <motion.div
                 className="absolute inset-0 opacity-0 group-hover/btn:opacity-100"
