@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Copy, Check, Terminal, Download, RefreshCw, Play, Package, Key, Zap, ArrowRight, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
+import ContactFormModal from "@/components/ContactFormModal";
+
 
 const commands = [
   {
