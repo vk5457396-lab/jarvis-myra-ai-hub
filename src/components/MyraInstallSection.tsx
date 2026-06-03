@@ -250,7 +250,7 @@ const MyraInstallSection = () => {
       <PaymentGatewaySelector
         isOpen={showPaymentSelector}
         onClose={() => setShowPaymentSelector(false)}
-        productId="myra"
+        productId="myra_activation"
         customerName={customerInfo.name}
         customerEmail={customerInfo.email}
         customerPhone={customerInfo.phone}

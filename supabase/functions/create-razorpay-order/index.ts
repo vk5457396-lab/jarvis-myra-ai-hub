@@ -14,6 +14,7 @@ if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
 const PRODUCT_PRICES: Record<string, { price: number; name: string }> = {
   jarvis: { price: 899, name: 'Jarvis 2.0' },
   myra: { price: 899, name: 'MYRA 2.0' },
+  myra_activation: { price: 799, name: 'MYRA 2.0 Activation Key (Lifetime)' },
   aria: { price: 899, name: 'ARIA 1.0' },
   bundle_jarvis_myra: { price: 1599, name: 'Jarvis 2.0 + MYRA 2.0 Bundle' },
   source_jarvis: { price: 3900, name: 'Jarvis 2.0 Source Code' },
@@ -25,6 +26,7 @@ const PRODUCT_PRICES: Record<string, { price: number; name: string }> = {
 const INTERNATIONAL_PRICES: Record<string, number> = {
   jarvis: 1299,
   myra: 1299,
+  myra_activation: 1155,
   aria: 1299,
   bundle_jarvis_myra: 2299,
   source_jarvis: 3499,
