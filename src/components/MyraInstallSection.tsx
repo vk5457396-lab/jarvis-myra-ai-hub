@@ -239,6 +239,22 @@ const MyraInstallSection = () => {
           </div>
         </motion.div>
       </div>
+
+      <ContactFormModal
+        isOpen={showContactForm}
+        onClose={() => setShowContactForm(false)}
+        onSubmit={handleContactSubmit}
+        productName="MYRA 2.0 Activation Key"
+        accentHsl={{ h: 38, s: 92, l: 50 }}
+      />
+      <PaymentGatewaySelector
+        isOpen={showPaymentSelector}
+        onClose={() => setShowPaymentSelector(false)}
+        productId="myra"
+        customerName={customerInfo.name}
+        customerEmail={customerInfo.email}
+        customerPhone={customerInfo.phone}
+      />
     </section>
   );
 };
