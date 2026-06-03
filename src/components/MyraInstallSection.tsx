@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Copy, Check, Terminal, Download, RefreshCw, Play, Package, Key, Zap, ArrowRight, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
+import ContactFormModal from "@/components/ContactFormModal";
+
 
 const commands = [
   {
@@ -112,7 +114,15 @@ const CommandBlock = ({ cmd, index }: { cmd: typeof commands[0]; index: number }
 };
 
 const MyraInstallSection = () => {
-  const navigate = useNavigate();
+  const [showPaymentSelector, setShowPaymentSelector] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [customerInfo, setCustomerInfo] = useState({ name: "", email: "", phone: "" });
+
+  const handleContactSubmit = (data: { name: string; email: string; phone: string }) => {
+    setCustomerInfo(data);
+    setShowContactForm(false);
+    setShowPaymentSelector(true);
+  };
 
   return (
     <section className="py-20 md:py-28 relative overflow-hidden">
@@ -191,7 +201,7 @@ const MyraInstallSection = () => {
               variant="neonCyan"
               size="lg"
               className="w-full group/btn font-bold text-sm tracking-wide relative overflow-hidden rounded-xl"
-              onClick={() => navigate("/pricing")}
+              onClick={() => setShowContactForm(true)}
             >
               <motion.div
                 className="absolute inset-0 opacity-0 group-hover/btn:opacity-100"
@@ -229,6 +239,22 @@ const MyraInstallSection = () => {
           </div>
         </motion.div>
       </div>
+
+      <ContactFormModal
+        isOpen={showContactForm}
+        onClose={() => setShowContactForm(false)}
+        onSubmit={handleContactSubmit}
+        productName="MYRA 2.0 Activation Key"
+        accentHsl="38, 92%, 50%"
+      />
+      <PaymentGatewaySelector
+        isOpen={showPaymentSelector}
+        onClose={() => setShowPaymentSelector(false)}
+        productId="myra"
+        customerName={customerInfo.name}
+        customerEmail={customerInfo.email}
+        customerPhone={customerInfo.phone}
+      />
     </section>
   );
 };
