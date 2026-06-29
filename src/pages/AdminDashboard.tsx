@@ -5,13 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
-  Shield, LogOut, Users, Wallet, TrendingUp, CheckCircle2, XCircle, Clock, ArrowDownToLine
+  Shield, LogOut, Users, Wallet, TrendingUp, CheckCircle2, XCircle, Clock, ArrowDownToLine, Package
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from "recharts";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AdminProductsTab from "@/components/admin/AdminProductsTab";
 
 interface UserProfile {
   id: string;
@@ -50,7 +51,7 @@ const AdminDashboard = () => {
   const [withdrawals, setWithdrawals] = useState<WithdrawalRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"users" | "withdrawals">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "withdrawals" | "products">("users");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -263,7 +264,17 @@ const AdminDashboard = () => {
             >
               <ArrowDownToLine size={14} className="inline mr-2" /> Withdrawals ({withdrawals.length})
             </button>
+            <button
+              onClick={() => setActiveTab("products")}
+              className={`px-5 py-2.5 rounded-xl font-display font-bold text-sm transition-all ${
+                activeTab === "products" ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white" : "bg-white/5 border border-white/10 text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Package size={14} className="inline mr-2" /> Products
+            </button>
           </div>
+
+          {activeTab === "products" && <AdminProductsTab />}
 
           {/* Users Table */}
           {activeTab === "users" && (
