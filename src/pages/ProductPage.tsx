@@ -333,7 +333,7 @@ const ProductPage = () => {
       </section>
 
       <ContactFormModal
-        open={showContact}
+        isOpen={showContact}
         onClose={() => setShowContact(false)}
         onSubmit={(c) => {
           setShowContact(false);
