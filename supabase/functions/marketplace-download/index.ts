@@ -78,15 +78,15 @@ serve(async (req) => {
       razorpay_order_id: razorpay_order_id ?? null,
     });
 
+    // increment download_count
+    const { data: cur } = await admin
+      .from("marketplace_products")
+      .select("download_count")
+      .eq("id", product.id)
+      .maybeSingle();
     await admin
       .from("marketplace_products")
-      .update({ download_count: (await admin.rpc as unknown as () => void) ? undefined : undefined })
-      .eq("id", product.id);
-    // increment download_count via raw update
-    await admin.rpc("noop_just_increment" as never).catch(() => {});
-    await admin
-      .from("marketplace_products")
-      .update({ download_count: (product as { download_count?: number }).download_count ?? 0 })
+      .update({ download_count: ((cur?.download_count as number) ?? 0) + 1 })
       .eq("id", product.id);
 
     return new Response(
