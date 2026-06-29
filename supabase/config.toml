@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.send-telegram-notification]
 verify_jwt = false
+
+[functions.marketplace-create-order]
+verify_jwt = false
+
+[functions.marketplace-download]
+verify_jwt = false

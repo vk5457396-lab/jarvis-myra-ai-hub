@@ -26,6 +26,8 @@ import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import ProductDetail from "./pages/ProductDetail";
+import Products from "./pages/Products";
+import ProductPage from "./pages/ProductPage";
 import ReferralBanner from "./components/ReferralBanner";
 import CursorGlow from "./components/CursorGlow";
 
@@ -51,6 +53,8 @@ const App = () => {
             <Route path="/demos" element={<DemoVideos />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/pricing/:productId" element={<ProductDetail />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/products/:slug" element={<ProductPage />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/services" element={<Services />} />
             <Route path="/thank-you" element={<ThankYou />} />
