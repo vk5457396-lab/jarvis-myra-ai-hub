@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { ArrowLeft, Download, Package, ShieldCheck, Loader2, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +10,19 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ContactFormModal from "@/components/ContactFormModal";
 import { invokeBackendFunction } from "@/integrations/backend/invokeFunction";
+
+const SITE_URL = "https://jarvis-myra-ai-hub.lovable.app";
+
+const buildKeywords = (p: { title: string; category?: string | null; short_description?: string | null; description?: string | null }) => {
+  const stop = new Set(["the","and","for","with","that","this","from","your","you","are","our","was","have","has","will","can","get","use","all","any","not","but","its","into","been","one","two","new","now","how","what","why","when","where","which","who","free","paid","download","product"]);
+  const text = `${p.title} ${p.category ?? ""} ${p.short_description ?? ""} ${p.description ?? ""}`.toLowerCase();
+  const words = text.replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(w => w.length > 2 && !stop.has(w));
+  const freq = new Map<string, number>();
+  words.forEach(w => freq.set(w, (freq.get(w) ?? 0) + 1));
+  const single = Array.from(freq.entries()).sort((a, b) => b[1] - a[1]).map(([w]) => w).slice(0, 15);
+  // add title phrase itself
+  return Array.from(new Set([p.title.toLowerCase(), ...(p.category ? [p.category.toLowerCase()] : []), ...single])).join(", ");
+};
 
 interface MarketProduct {
   id: string;
