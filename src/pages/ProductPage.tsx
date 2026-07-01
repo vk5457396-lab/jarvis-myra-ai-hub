@@ -213,8 +213,6 @@ const ProductPage = () => {
 
   return (
     <div className="min-h-screen">
-  return (
-    <div className="min-h-screen">
       <Helmet>
         <title>{`${product.title} | Download on CodeNinja`}</title>
         <meta name="description" content={(product.short_description || product.description || `Download ${product.title} from CodeNinja marketplace.`).slice(0, 158)} />
