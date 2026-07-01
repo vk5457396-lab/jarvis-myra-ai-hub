@@ -213,6 +213,36 @@ const ProductPage = () => {
 
   return (
     <div className="min-h-screen">
+  return (
+    <div className="min-h-screen">
+      <Helmet>
+        <title>{`${product.title} | Download on CodeNinja`}</title>
+        <meta name="description" content={(product.short_description || product.description || `Download ${product.title} from CodeNinja marketplace.`).slice(0, 158)} />
+        <meta name="keywords" content={buildKeywords(product)} />
+        <link rel="canonical" href={`${SITE_URL}/products/${product.slug}`} />
+        <meta property="og:title" content={product.title} />
+        <meta property="og:description" content={(product.short_description || "").slice(0, 158)} />
+        <meta property="og:type" content="product" />
+        <meta property="og:url" content={`${SITE_URL}/products/${product.slug}`} />
+        {product.thumbnail_url && <meta property="og:image" content={product.thumbnail_url} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: product.title,
+          description: product.short_description || product.description || product.title,
+          image: product.thumbnail_url || undefined,
+          category: product.category || undefined,
+          url: `${SITE_URL}/products/${product.slug}`,
+          offers: {
+            "@type": "Offer",
+            price: product.price,
+            priceCurrency: "INR",
+            availability: "https://schema.org/InStock",
+            url: `${SITE_URL}/products/${product.slug}`,
+          },
+        })}</script>
+      </Helmet>
       <Navbar />
       <section className="pt-28 pb-16 md:pt-36 md:pb-24 relative overflow-hidden">
         <div className="absolute inset-0 circuit-pattern opacity-20" />
