@@ -272,6 +272,12 @@ const AdminDashboard = () => {
             >
               <Package size={14} className="inline mr-2" /> Products
             </button>
+            <button
+              onClick={() => navigate("/admin/licenses")}
+              className="px-5 py-2.5 rounded-xl font-display font-bold text-sm transition-all bg-white/5 border border-white/10 text-muted-foreground hover:text-foreground"
+            >
+              <KeyRound size={14} className="inline mr-2" /> Licenses
+            </button>
           </div>
 
           {activeTab === "products" && <AdminProductsTab />}
