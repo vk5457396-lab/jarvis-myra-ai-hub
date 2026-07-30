@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
-  Shield, LogOut, Users, Wallet, TrendingUp, CheckCircle2, XCircle, Clock, ArrowDownToLine, Package
+  Shield, LogOut, Users, Wallet, TrendingUp, CheckCircle2, XCircle, Clock, ArrowDownToLine, Package, KeyRound
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
