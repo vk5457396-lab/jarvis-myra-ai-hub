@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      license_settings: {
+        Row: {
+          created_at: string
+          device_lock: boolean
+          id: boolean
+          max_activations: number
+          offline_activation: boolean
+          prefix: string
+          random_length: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          device_lock?: boolean
+          id?: boolean
+          max_activations?: number
+          offline_activation?: boolean
+          prefix?: string
+          random_length?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          device_lock?: boolean
+          id?: boolean
+          max_activations?: number
+          offline_activation?: boolean
+          prefix?: string
+          random_length?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      licenses: {
+        Row: {
+          activated_at: string | null
+          created_at: string
+          created_by: string | null
+          device_id: string | null
+          duration: number | null
+          expires_at: string | null
+          id: string
+          license_key: string
+          plan: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          device_id?: string | null
+          duration?: number | null
+          expires_at?: string | null
+          id?: string
+          license_key: string
+          plan?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          device_id?: string | null
+          duration?: number | null
+          expires_at?: string | null
+          id?: string
+          license_key?: string
+          plan?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marketplace_downloads: {
         Row: {
           amount: number
@@ -346,6 +421,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activate_license: {
+        Args: { p_device_id: string; p_license_key: string }
+        Returns: Json
+      }
       credit_referral_wallet: {
         Args: {
           p_purchase_amount: number
