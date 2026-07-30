@@ -253,3 +253,45 @@
     .cursor-glow, .cursor-trail { display: none; }
   }
 }
+
+/* ===== MYRA License Admin scoped premium theme ===== */
+.license-admin {
+  --background: 222 39% 7%;
+  --foreground: 210 40% 98%;
+  --card: 222 35% 10%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 35% 10%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 263 83% 58%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 258 90% 66%;
+  --secondary-foreground: 0 0% 100%;
+  --accent: 188 94% 43%;
+  --accent-foreground: 222 39% 7%;
+  --muted: 222 25% 16%;
+  --muted-foreground: 215 20% 65%;
+  --border: 222 25% 20%;
+  --input: 222 25% 20%;
+  --ring: 263 83% 58%;
+  --radius: 1rem;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: 'Inter', sans-serif;
+}
+.license-admin h1, .license-admin h2, .license-admin h3,
+.license-admin h4, .license-admin h5, .license-admin h6 {
+  font-family: 'Inter', sans-serif;
+}
+.license-glass {
+  background: linear-gradient(135deg, hsl(0 0% 100% / 0.07) 0%, hsl(0 0% 100% / 0.02) 100%);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid hsl(0 0% 100% / 0.08);
+  border-radius: 16px;
+  box-shadow: 0 10px 40px -12px hsl(263 83% 58% / 0.35);
+  transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+}
+.license-glass:hover {
+  border-color: hsl(263 83% 58% / 0.45);
+  box-shadow: 0 18px 55px -14px hsl(263 83% 58% / 0.55);
+}
