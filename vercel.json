@@ -1,15 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "version": 2,
-
-  "functions": {
-    "api/**/*.js": {
-      "runtime": "@vercel/node",
-      "memory": 1024,
-      "maxDuration": 30
+  "rewrites": [
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
-  },
-
+  ],
   "headers": [
     {
       "source": "/api/(.*)",
@@ -23,17 +19,6 @@
           "value": "nosniff"
         }
       ]
-    }
-  ],
-
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
     }
   ]
 }
