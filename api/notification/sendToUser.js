@@ -8,7 +8,7 @@ import { validateUuid } from '../_utils/validation.js';
 
 export default createHandler('POST', async (req, res) => {
   rateLimit(req, { scope: 'notification-send', max: 60 });
-  requireAdmin(req);
+  await requireAdmin(req);
 
   const userId = validateUuid(req.jsonBody.user_id, 'user_id');
   const payload = parseNotificationPayload(req.jsonBody, { target: 'user', targetValue: userId });

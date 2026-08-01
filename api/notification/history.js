@@ -6,7 +6,7 @@ import { getSupabase } from '../_utils/supabase.js';
 
 export default createHandler(['GET', 'POST'], async (req, res) => {
   rateLimit(req, { scope: 'notification-history', max: 120 });
-  requireAdmin(req);
+  await requireAdmin(req);
 
   const url = new URL(req.url, 'http://localhost');
   const limit = Math.min(Number(url.searchParams.get('limit') || 50) || 50, 200);

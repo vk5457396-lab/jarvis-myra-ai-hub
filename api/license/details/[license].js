@@ -7,7 +7,7 @@ import { validateLicenseKey } from '../../_utils/validation.js';
 
 export default createHandler('GET', async (req, res) => {
   rateLimit(req, { scope: 'license-admin', max: 60 });
-  requireAdmin(req);
+  await requireAdmin(req);
 
   const raw = req.query?.license ?? new URL(req.url, 'http://localhost').pathname.split('/').pop();
   const licenseKey = validateLicenseKey(raw);

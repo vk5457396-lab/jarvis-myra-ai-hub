@@ -7,7 +7,7 @@ import { validateEnum, validatePositiveInt, optionalString } from '../_utils/val
 
 export default createHandler('POST', async (req, res) => {
   rateLimit(req, { scope: 'license-generate', max: 20 });
-  requireAdmin(req);
+  await requireAdmin(req);
 
   const body = req.jsonBody;
   const plan = validateEnum(body.plan, 'plan', ['1_month', '2_months', 'lifetime'], 'lifetime');

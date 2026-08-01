@@ -7,7 +7,7 @@ import { validateLicenseKey } from '../_utils/validation.js';
 
 export default createHandler('POST', async (req, res) => {
   rateLimit(req, { scope: 'license-admin', max: 30 });
-  requireAdmin(req);
+  await requireAdmin(req);
 
   const licenseKey = validateLicenseKey(req.jsonBody.license_key);
   const license = await deactivateLicense(licenseKey);

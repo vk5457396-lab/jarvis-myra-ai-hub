@@ -7,7 +7,7 @@ import { dispatchNotification } from '../_services/notificationService.js';
 
 export default createHandler('POST', async (req, res) => {
   rateLimit(req, { scope: 'notification-send', max: 30 });
-  requireAdmin(req);
+  await requireAdmin(req);
 
   const payload = parseNotificationPayload(req.jsonBody);
   const data = await dispatchNotification(payload);

@@ -8,7 +8,7 @@ import { validateDeviceId } from '../_utils/validation.js';
 
 export default createHandler('POST', async (req, res) => {
   rateLimit(req, { scope: 'notification-send', max: 60 });
-  requireAdmin(req);
+  await requireAdmin(req);
 
   const deviceId = validateDeviceId(req.jsonBody.device_id);
   const payload = parseNotificationPayload(req.jsonBody, {

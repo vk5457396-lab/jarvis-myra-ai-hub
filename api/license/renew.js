@@ -7,7 +7,7 @@ import { validateLicenseKey, validatePositiveInt, optionalString } from '../_uti
 
 export default createHandler('POST', async (req, res) => {
   rateLimit(req, { scope: 'license-admin', max: 30 });
-  requireAdmin(req);
+  await requireAdmin(req);
 
   const body = req.jsonBody;
   const licenseKey = validateLicenseKey(body.license_key);
