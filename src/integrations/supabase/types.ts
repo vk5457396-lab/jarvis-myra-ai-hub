@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      devices: {
+        Row: {
+          android_version: string | null
+          app_version: string | null
+          created_at: string
+          device_id: string
+          fcm_token: string | null
+          id: string
+          last_seen_at: string
+          license_key: string | null
+          plan: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          android_version?: string | null
+          app_version?: string | null
+          created_at?: string
+          device_id: string
+          fcm_token?: string | null
+          id?: string
+          last_seen_at?: string
+          license_key?: string | null
+          plan?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          android_version?: string | null
+          app_version?: string | null
+          created_at?: string
+          device_id?: string
+          fcm_token?: string | null
+          id?: string
+          last_seen_at?: string
+          license_key?: string | null
+          plan?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       license_settings: {
         Row: {
           created_at: string
@@ -194,6 +236,110 @@ export type Database = {
           short_description?: string | null
           slug?: string
           thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notification_deliveries: {
+        Row: {
+          created_at: string
+          device_id: string | null
+          error_code: string | null
+          fcm_token: string | null
+          id: string
+          notification_id: string
+          success: boolean
+        }
+        Insert: {
+          created_at?: string
+          device_id?: string | null
+          error_code?: string | null
+          fcm_token?: string | null
+          id?: string
+          notification_id: string
+          success?: boolean
+        }
+        Update: {
+          created_at?: string
+          device_id?: string | null
+          error_code?: string | null
+          fcm_token?: string | null
+          id?: string
+          notification_id?: string
+          success?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_deliveries_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          action: string | null
+          body: string
+          created_at: string
+          created_by: string | null
+          custom_url: string | null
+          deep_link: string | null
+          error_message: string | null
+          failure_count: number
+          id: string
+          image_url: string | null
+          notification_type: string
+          priority: string
+          scheduled_at: string | null
+          status: string
+          success_count: number
+          target: string
+          target_value: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          action?: string | null
+          body: string
+          created_at?: string
+          created_by?: string | null
+          custom_url?: string | null
+          deep_link?: string | null
+          error_message?: string | null
+          failure_count?: number
+          id?: string
+          image_url?: string | null
+          notification_type?: string
+          priority?: string
+          scheduled_at?: string | null
+          status?: string
+          success_count?: number
+          target?: string
+          target_value?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          action?: string | null
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          custom_url?: string | null
+          deep_link?: string | null
+          error_message?: string | null
+          failure_count?: number
+          id?: string
+          image_url?: string | null
+          notification_type?: string
+          priority?: string
+          scheduled_at?: string | null
+          status?: string
+          success_count?: number
+          target?: string
+          target_value?: string | null
           title?: string
           updated_at?: string
         }
