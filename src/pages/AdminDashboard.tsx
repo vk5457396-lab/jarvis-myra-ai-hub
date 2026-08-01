@@ -13,6 +13,7 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AdminProductsTab from "@/components/admin/AdminProductsTab";
+import NotificationCenter from "@/components/admin/NotificationCenter";
 
 interface UserProfile {
   id: string;
@@ -51,7 +52,7 @@ const AdminDashboard = () => {
   const [withdrawals, setWithdrawals] = useState<WithdrawalRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"users" | "withdrawals" | "products">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "withdrawals" | "products" | "notifications">("users");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -281,6 +282,7 @@ const AdminDashboard = () => {
           </div>
 
           {activeTab === "products" && <AdminProductsTab />}
+          {activeTab === "notifications" && <NotificationCenter />}
 
           {/* Users Table */}
           {activeTab === "users" && (
