@@ -279,7 +279,16 @@ const AdminDashboard = () => {
             >
               <KeyRound size={14} className="inline mr-2" /> Licenses
             </button>
+            <button
+              onClick={() => setActiveTab("notifications")}
+              className={`px-5 py-2.5 rounded-xl font-display font-bold text-sm transition-all ${
+                activeTab === "notifications" ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white" : "bg-white/5 border border-white/10 text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Bell size={14} className="inline mr-2" /> Notifications
+            </button>
           </div>
+
 
           {activeTab === "products" && <AdminProductsTab />}
           {activeTab === "notifications" && <NotificationCenter />}
