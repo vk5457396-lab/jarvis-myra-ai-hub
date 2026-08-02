@@ -19,7 +19,7 @@ Every response is JSON — never HTML — including 404s (`api/[...path].js` cat
 ## Endpoints
 
 Public (Android):
-- `GET|POST /api/health`
+- `GET /api/health`
 - `POST /api/license/verify` — `{ license_key, device_id, app_version?, android_version? }`
 - `POST /api/license/check` — header `Authorization: Bearer <activation_token>`, body `{ device_id? }`
 - `POST /api/device/register` — `{ device_id, user_id?, fcm_token?, app_version?, android_version? }`
@@ -27,7 +27,7 @@ Public (Android):
 Admin (`x-admin-key: <ADMIN_API_KEY>` **or** an admin user's Supabase access token):
 - `POST /api/license/generate` — `{ plan, quantity, prefix?, length? }` (keys stored in the database)
 - `POST /api/license/reset` · `POST /api/license/deactivate` · `POST /api/license/renew`
-- `GET /api/license/details/:license`
+- `GET|POST /api/license/details` — query `?license_key=...` or body `{ license_key }`
 - `POST /api/notification/send` · `sendToUser` · `sendToDevice`
 - `GET /api/notification/history?limit=&offset=`
 
