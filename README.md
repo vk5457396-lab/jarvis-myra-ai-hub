@@ -1,224 +1,223 @@
-
 <div align="center">
 
-# 🚀 MYRA AI HUB
+# 🚀 CodeNinjaVik
 
-### The Ultimate AI Assistant Ecosystem
+### AI • Automation • Android • Web Development • Source Code Marketplace
 
-<img src="https://img.shields.io/badge/Version-v2.0-blue?style=for-the-badge">
-<img src="https://img.shields.io/badge/Platform-Android-green?style=for-the-badge">
-<img src="https://img.shields.io/badge/Website-codeninjavik.in-red?style=for-the-badge">
-<img src="https://img.shields.io/badge/License-Commercial-orange?style=for-the-badge">
-
----
-
-### 🤖 Smart AI • Voice Assistant • Automation • Accessibility • Native Audio
-
-<p>
-An advanced Android AI Assistant powered by Google Gemini Native Audio,
-Accessibility Services, Firebase, Supabase and Modern AI Technologies.
+<p align="center">
+<img src="https://img.shields.io/badge/React-Vite-61DAFB?style=for-the-badge&logo=react&logoColor=white">
+<img src="https://img.shields.io/badge/Vercel-Deployed-black?style=for-the-badge&logo=vercel">
+<img src="https://img.shields.io/badge/Supabase-Database-3ECF8E?style=for-the-badge&logo=supabase">
+<img src="https://img.shields.io/badge/Firebase-FCM-FFCA28?style=for-the-badge&logo=firebase">
+<img src="https://img.shields.io/badge/License-Commercial-blue?style=for-the-badge">
 </p>
+
+### 🌐 https://codeninjavik.in
+
+Your One-Stop Platform for AI Assistants, Premium Source Code, Android Apps, Web Development, Automation Tools, Digital Products, and Developer Resources.
 
 </div>
 
 ---
 
-# 🌟 Features
+# ✨ About
 
-## 🧠 AI Intelligence
+CodeNinjaVik is a modern AI marketplace and developer platform where users can explore, purchase, activate, and manage premium AI assistants, source codes, and digital products.
 
-- Google Gemini Native Audio
-- Natural Human Voice
-- Realtime Conversation
-- Long-term Memory
-- Smart Context Understanding
-- Dynamic Reasoning
-- Function Calling
-- Conversation History
+The platform includes a complete license management system, notification center, admin dashboard, payment integration, secure authentication, and cloud APIs.
 
 ---
 
-## 📱 Android Automation
+# 🔥 Main Features
 
-- Accessibility Automation
-- Dynamic Screen Reading
-- Smart UI Detection
-- Open Any App
-- Click Buttons
-- Type Anywhere
-- Scroll Automatically
-- Gesture Control
-- Dynamic App Detection
-- WhatsApp Automation
-- Instagram Automation
-- Chrome Automation
-- YouTube Automation
+## 🤖 AI Products
+
+- MYRA AI Assistant
+- JARVIS AI Assistant
+- ARIA AI
+- Future AI Products
+- Premium AI Source Code
 
 ---
 
-## 🎤 Voice Assistant
+## 🛒 Digital Marketplace
 
-- Wake Word Support
-- Continuous Listening
-- Native Audio
-- Low Latency
-- Human-like Responses
-- Hindi + English Support
-
----
-
-## 🔔 Push Notifications
-
-- Firebase Cloud Messaging
-- Admin Notification Panel
-- Deep Links
-- Rich Image Notifications
-- Scheduled Notifications
-- User Targeting
-- Premium User Notifications
+- Buy AI Applications
+- Buy Source Code
+- Download Digital Products
+- Premium Membership
+- Product Updates
+- Lifetime Access Products
 
 ---
 
 ## 🔐 License System
 
-- Online License Verification
+- License Key Generation
+- Online Activation
 - Device Binding
-- Lifetime Keys
-- Monthly Keys
-- Hardware Lock
+- Monthly License
+- 2 Month License
+- Lifetime License
+- License Renewal
 - License Reset
-- License Renew
-- Secure Activation
-
----
-
-## 🌐 Website Features
-
-- Admin Dashboard
-- License Generator
 - License Verification
-- Notification Center
+- Device Registration
+
+---
+
+## 👤 User Dashboard
+
+- User Login
+- Secure Authentication
+- Purchase History
+- License Management
+- Product Downloads
+- Profile Management
+
+---
+
+## 👑 Admin Dashboard
+
+- Product Management
+- License Generator
 - User Management
-- Premium Products
+- Sales Dashboard
 - Analytics
-- API Management
+- Notification Center
+- Device Management
+- API Monitoring
+- License Statistics
 
 ---
 
-# 🏗️ Project Architecture
+## 🔔 Notification System
+
+- Firebase Cloud Messaging
+- Instant Push Notifications
+- Rich Image Notifications
+- Deep Linking
+- User Target Notifications
+- Premium User Notifications
+- Scheduled Notifications
+- Notification History
+
+---
+
+## 💳 Payment Features
+
+- Razorpay Integration
+- Secure Checkout
+- Payment Verification
+- Order History
+- Subscription Support
+
+---
+
+## 📱 Android Integration
+
+- Online License Verification
+- Automatic Device Registration
+- Push Notifications
+- Update Notifications
+- Premium Activation
+- Secure API Authentication
+
+---
+
+## 🌐 REST API
+
+The website provides secure APIs for Android applications.
+
+### License APIs
 
 ```
-MYRA AI HUB
-│
-├── Android App
-│   ├── Voice Assistant
-│   ├── Accessibility Service
-│   ├── Automation Engine
-│   ├── Notification Manager
-│   ├── License Manager
-│   └── Gemini Live
-│
-├── Website
-│   ├── React
-│   ├── Vite
-│   ├── Tailwind
-│   ├── Admin Dashboard
-│   └── License Panel
-│
-├── Backend
-│   ├── Vercel Functions
-│   ├── Firebase
-│   ├── Supabase
-│   ├── JWT
-│   └── REST APIs
-│
-└── Database
-    ├── Supabase
-    ├── Firebase
-    └── FCM
+POST /api/license/generate
+POST /api/license/verify
+POST /api/license/check
+POST /api/license/reset
+POST /api/license/deactivate
+POST /api/license/renew
+POST /api/license/details
+```
+
+### Device APIs
+
+```
+POST /api/device/register
+```
+
+### Notification APIs
+
+```
+POST /api/notification/send
+POST /api/notification/sendToUser
+POST /api/notification/sendToDevice
+GET  /api/notification/history
+```
+
+### Health API
+
+```
+GET /api/health
 ```
 
 ---
 
-# ⚙️ Tech Stack
+# 🏗 Tech Stack
 
 ## Frontend
 
 - React
 - Vite
-- Tailwind CSS
 - TypeScript
+- Tailwind CSS
 - Framer Motion
 
 ## Backend
 
 - Node.js
 - Vercel Serverless Functions
-- Firebase Admin
+- REST API
+- JWT Authentication
+
+## Database
+
 - Supabase
-- JWT
+- Firebase
 
-## Android
+## Cloud Services
 
-- Kotlin
-- Accessibility Service
-- WorkManager
-- Coroutines
-- Google Gemini Native Audio
+- Firebase Cloud Messaging
+- Google Gemini
+- Razorpay
 
 ---
 
-# 🌐 Website
+# 🔒 Security
 
-## Official Website
-
-https://codeninjavik.in
-
----
-
-# 📦 API
-
-```
-/api/health
-
-/api/license/generate
-
-/api/license/verify
-
-/api/license/check
-
-/api/license/reset
-
-/api/license/deactivate
-
-/api/license/renew
-
-/api/license/details
-
-/api/device/register
-
-/api/notification/send
-
-/api/notification/sendToUser
-
-/api/notification/sendToDevice
-
-/api/notification/history
-```
+- JWT Authentication
+- Secure License Verification
+- Device Binding
+- API Authentication
+- Admin Protection
+- Environment Variables
+- HTTPS Encryption
+- Secure Headers
+- CORS Protection
 
 ---
 
-# 📂 Folder Structure
+# 📂 Project Structure
 
 ```
 src/
 api/
 public/
-assets/
 components/
-hooks/
 pages/
-services/
+hooks/
+assets/
 database/
 notifications/
 licenses/
@@ -230,9 +229,9 @@ utils/
 # 🚀 Installation
 
 ```bash
-git clone https://github.com/yourusername/myra-ai.git
+git clone https://github.com/vk5457396-lab/jarvis-myra-ai-hub.git
 
-cd myra-ai
+cd jarvis-myra-ai-hub
 
 npm install
 
@@ -241,7 +240,7 @@ npm run dev
 
 ---
 
-# 🔥 Build
+# 📦 Production Build
 
 ```bash
 npm run build
@@ -249,94 +248,63 @@ npm run build
 
 ---
 
-# 🚀 Deploy
+# 🌍 Live Website
 
-Deploy using
-
-- Vercel
-- Firebase
-- Supabase
+https://codeninjavik.in
 
 ---
 
-# 🔒 Security
+# 📈 Upcoming Features
 
-✔ JWT Authentication
-
-✔ Secure License System
-
-✔ Device Verification
-
-✔ Admin Authorization
-
-✔ Firebase Authentication
-
-✔ HTTPS Only
-
-✔ API Protection
-
-✔ Secure Environment Variables
-
----
-
-# 📊 Performance
-
-⚡ Fast Startup
-
-⚡ Native Audio
-
-⚡ Optimized Build
-
-⚡ Lazy Loading
-
-⚡ Dynamic Imports
-
-⚡ Optimized Assets
-
-⚡ Serverless Backend
-
----
-
-# 🤝 Contributing
-
-Pull Requests are welcome.
-
-For major changes please open an issue first.
+- AI Chat Platform
+- AI Image Generator
+- AI Voice Generator
+- AI Video Generator
+- Subscription Management
+- Referral & Rewards System
+- Coupon System
+- Download Center
+- Affiliate Dashboard
+- Multi-language Support
+- Blog & Tutorials
+- Customer Support Panel
+- AI API Marketplace
+- Cloud Sync
+- Desktop Applications
+- Mobile App Store
 
 ---
 
 # 👨‍💻 Developer
 
-## VIKASH KUMAR
+## Vikash Kumar
 
-Founder — CodeNinjaVik
+Founder & Full Stack Developer
 
-🌐 Website
-
+🌐 Website:
 https://codeninjavik.in
 
-GitHub
-
+GitHub:
 https://github.com/vk5457396-lab
 
 ---
 
 # ⭐ Support
 
-If you like this project don't forget to
+If you like this project:
 
-⭐ Star the Repository
+⭐ Star the repository
 
-🍴 Fork the Repository
+🍴 Fork the repository
 
-❤️ Share with Friends
+💙 Share it with others
 
 ---
 
 <div align="center">
 
-# Thank You ❤️
+## 🚀 Building the Future of AI & Automation
 
-### Made with Passion by CodeNinjaVik
+Made with ❤️ by CodeNinjaVik
 
 </div>
