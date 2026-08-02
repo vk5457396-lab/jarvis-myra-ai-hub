@@ -1,5 +1,5 @@
-import { createHandler } from '../_middleware/handler.js';
-import { failure } from '../_utils/response.js';
+import { createHandler } from './_middleware/handler.js';
+import { failure } from './_utils/response.js';
 
 /**
  * Catch-all so an unknown /api/* path returns JSON instead of an HTML 404 page.

@@ -23,7 +23,7 @@ function applySecurityHeaders(res) {
   res.removeHeader?.('X-Powered-By');
 }
 
-function applyCors(req, res) {
+function applyCors(req, res, allowedMethods) {
   const origin = req.headers.origin;
   const list = allowedOrigins();
 
@@ -37,7 +37,7 @@ function applyCors(req, res) {
     return false;
   }
 
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', [...new Set([...allowedMethods, 'OPTIONS'])].join(','));
   res.setHeader(
     'Access-Control-Allow-Headers',
     'authorization, content-type, x-admin-key, x-device-id, apikey'
@@ -84,7 +84,7 @@ export function createHandler(methods, handler) {
   return async function wrapped(req, res) {
     applySecurityHeaders(res);
 
-    if (!applyCors(req, res)) {
+    if (!applyCors(req, res, allowedMethods)) {
       return failure(res, 403, 'Origin not allowed.', 'CORS_NOT_ALLOWED');
     }
 
@@ -106,7 +106,8 @@ export function createHandler(methods, handler) {
       }
       await handler(req, res);
       if (!res.writableEnded) {
-        json(res, 204, { success: true, message: 'OK', data: {} });
+        logger.error('API handler completed without a response', { path: req.url });
+        failure(res, 500, 'Internal server error.', 'EMPTY_HANDLER_RESPONSE');
       }
     } catch (error) {
       if (error instanceof ApiError) {
