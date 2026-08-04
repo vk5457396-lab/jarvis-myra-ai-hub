@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from "react";
 import { useRazorpay } from "@/hooks/useRazorpay";
 import { useCurrency } from "@/hooks/useCurrency";

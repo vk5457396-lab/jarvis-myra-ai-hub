@@ -1,3 +1,5 @@
+"use client";
+
 import { motion } from "framer-motion";
 import { KeyRound, CheckCircle2, ShieldCheck, TimerOff, Infinity as InfinityIcon, CalendarClock } from "lucide-react";
 import { LicenseRow, effectiveStatus } from "@/lib/licenses";

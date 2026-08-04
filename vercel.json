@@ -1,42 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "vite",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
   "installCommand": "npm ci",
-  "functions": {
-    "api/health.js": {
-      "runtime": "nodejs22.x",
-      "maxDuration": 10,
-      "memory": 256
-    },
-    "api/[...path].js": {
-      "runtime": "nodejs22.x",
-      "maxDuration": 10,
-      "memory": 256
-    },
-    "api/device/*.js": {
-      "runtime": "nodejs22.x",
-      "maxDuration": 30,
-      "memory": 512
-    },
-    "api/license/*.js": {
-      "runtime": "nodejs22.x",
-      "maxDuration": 30,
-      "memory": 512
-    },
-    "api/notification/*.js": {
-      "runtime": "nodejs22.x",
-      "maxDuration": 30,
-      "memory": 1024
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/((?!api(?:/|$)).*)",
-      "destination": "/index.html"
-    }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",

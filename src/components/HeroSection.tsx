@@ -1,9 +1,12 @@
+"use client";
+
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { ChevronRight, Mic, Cpu, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SalesSummary from "@/components/SalesSummary";
-import logo from "@/assets/logo.png";
+
+const logo = "/assets/logo.png";
 
 const HeroSection = () => {
   return (
@@ -83,7 +86,7 @@ const HeroSection = () => {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
             >
-              <Link to="/pricing">
+              <Link href="/pricing">
                 <Button variant="neonCyan" size="xl" className="group">
                   <span>Buy Jarvis - ₹799</span>
                   <ChevronRight
@@ -92,7 +95,7 @@ const HeroSection = () => {
                   />
                 </Button>
               </Link>
-              <Link to="/pricing">
+              <Link href="/pricing">
                 <Button variant="neonPurple" size="xl" className="group">
                   <span>Buy MYRA - ₹799</span>
                   <ChevronRight

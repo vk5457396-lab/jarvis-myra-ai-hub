@@ -1,7 +1,7 @@
 import { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { invokeBackendFunction } from "@/integrations/backend/invokeFunction";
+import { invokeBackendFunction } from "@/lib/backend/invokeFunction";
 
 declare global {
   interface Window {
@@ -18,7 +18,7 @@ interface PaymentOptions {
 }
 
 export const useRazorpay = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const loadRazorpayScript = (): Promise<boolean> => {
     return new Promise((resolve) => {
@@ -130,7 +130,7 @@ export const useRazorpay = () => {
             } catch {
               // ignore storage errors
             }
-            navigate('/thank-you');
+            router.push('/thank-you');
           },
           prefill: {
             name: customerName || "",
@@ -157,7 +157,7 @@ export const useRazorpay = () => {
         toast.error("Something went wrong. Please try again.");
       }
     },
-    [navigate]
+    [router]
   );
 
   return { initiatePayment };

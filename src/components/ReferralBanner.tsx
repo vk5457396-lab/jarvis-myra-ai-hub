@@ -1,11 +1,13 @@
+"use client";
+
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Gift } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 
 const ReferralBanner = () => {
-  const [searchParams] = useSearchParams();
+  const searchParams = useSearchParams();
   const [referrerName, setReferrerName] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
 

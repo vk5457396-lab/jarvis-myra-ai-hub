@@ -1,3 +1,5 @@
+"use client";
+
 import { motion } from "framer-motion";
 import { Send, Globe, Code2, Rocket, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";

@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useRef } from "react";
 import aiBackgroundVideo from "@/assets/ai-background-v3.mp4.asset.json";
 

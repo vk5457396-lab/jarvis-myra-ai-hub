@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, Copy, Check, Wallet, ArrowRight } from "lucide-react";
@@ -5,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import binanceQR from "@/assets/binance-qr.png";
+
+const binanceQR = "/assets/binance-qr.png";
 
 interface BinancePaymentModalProps {
   isOpen: boolean;

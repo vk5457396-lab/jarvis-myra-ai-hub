@@ -1,3 +1,5 @@
+"use client";
+
 import { motion } from "framer-motion";
 import { usePurchaseCounts } from "@/hooks/usePurchaseCounts";
 import { Users, ShoppingCart, Sparkles, Package, TrendingUp } from "lucide-react";

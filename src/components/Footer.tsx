@@ -1,7 +1,10 @@
-import { Link } from "react-router-dom";
+"use client";
+
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Mail, MessageCircle, Github, Twitter, Heart, LogIn, UserPlus } from "lucide-react";
-import logo from "@/assets/logo.png";
+
+const logo = "/assets/logo.png";
 
 const Footer = () => {
   return (
@@ -12,7 +15,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="md:col-span-1">
-            <Link to="/" className="flex items-center gap-3 mb-4">
+            <Link href="/" className="flex items-center gap-3 mb-4">
               <img src={logo} alt="codeninjavik logo" className="w-10 h-10 rounded-full border border-primary/50" />
               <span className="font-display text-xl gradient-text font-bold">codeninjavik</span>
             </Link>
@@ -27,7 +30,7 @@ const Footer = () => {
             <ul className="space-y-2">
               {["Home", "Features", "Pricing", "Services", "Contact"].map((item) => (
                 <li key={item}>
-                  <Link to={item === "Home" ? "/" : `/${item.toLowerCase()}`} className="text-muted-foreground hover:text-primary transition-colors text-sm">{item}</Link>
+                  <Link href={item === "Home" ? "/" : `/${item.toLowerCase()}`} className="text-muted-foreground hover:text-primary transition-colors text-sm">{item}</Link>
                 </li>
               ))}
             </ul>
@@ -37,9 +40,9 @@ const Footer = () => {
           <div>
             <h4 className="font-display text-sm text-primary mb-4 tracking-wider">PRODUCTS</h4>
             <ul className="space-y-2">
-              <li><Link to="/pricing" className="text-muted-foreground hover:text-primary transition-colors text-sm">Jarvis 2.0 - AI System Assistant</Link></li>
-              <li><Link to="/pricing" className="text-muted-foreground hover:text-primary transition-colors text-sm">MYRA 2.0 - AI Personal Assistant</Link></li>
-              <li><Link to="/pricing" className="text-muted-foreground hover:text-primary transition-colors text-sm">ARIA 1.0 - AI Music Creator</Link></li>
+              <li><Link href="/pricing" className="text-muted-foreground hover:text-primary transition-colors text-sm">Jarvis 2.0 - AI System Assistant</Link></li>
+              <li><Link href="/pricing" className="text-muted-foreground hover:text-primary transition-colors text-sm">MYRA 2.0 - AI Personal Assistant</Link></li>
+              <li><Link href="/pricing" className="text-muted-foreground hover:text-primary transition-colors text-sm">ARIA 1.0 - AI Music Creator</Link></li>
             </ul>
           </div>
 
@@ -47,9 +50,9 @@ const Footer = () => {
           <div>
             <h4 className="font-display text-sm text-primary mb-4 tracking-wider">ACCOUNT</h4>
             <ul className="space-y-2">
-              <li><Link to="/login" className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"><LogIn size={14} /> Login</Link></li>
-              <li><Link to="/signup" className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"><UserPlus size={14} /> Sign Up</Link></li>
-              <li><Link to="/dashboard" className="text-muted-foreground hover:text-primary transition-colors text-sm">Dashboard</Link></li>
+              <li><Link href="/login" className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"><LogIn size={14} /> Login</Link></li>
+              <li><Link href="/signup" className="text-muted-foreground hover:text-primary transition-colors text-sm flex items-center gap-2"><UserPlus size={14} /> Sign Up</Link></li>
+              <li><Link href="/dashboard" className="text-muted-foreground hover:text-primary transition-colors text-sm">Dashboard</Link></li>
             </ul>
           </div>
 
@@ -69,10 +72,10 @@ const Footer = () => {
         {/* Policy Links */}
         <div className="mt-8 pt-6 border-t border-white/10">
           <div className="flex flex-wrap justify-center gap-4 md:gap-8">
-            <Link to="/privacy-policy" className="text-muted-foreground hover:text-primary transition-colors text-sm">Privacy Policy</Link>
-            <Link to="/terms-and-conditions" className="text-muted-foreground hover:text-primary transition-colors text-sm">Terms & Conditions</Link>
-            <Link to="/refund-policy" className="text-muted-foreground hover:text-primary transition-colors text-sm">Refund Policy</Link>
-            <Link to="/shipping-policy" className="text-muted-foreground hover:text-primary transition-colors text-sm">Shipping & Delivery</Link>
+            <Link href="/privacy-policy" className="text-muted-foreground hover:text-primary transition-colors text-sm">Privacy Policy</Link>
+            <Link href="/terms-and-conditions" className="text-muted-foreground hover:text-primary transition-colors text-sm">Terms & Conditions</Link>
+            <Link href="/refund-policy" className="text-muted-foreground hover:text-primary transition-colors text-sm">Refund Policy</Link>
+            <Link href="/shipping-policy" className="text-muted-foreground hover:text-primary transition-colors text-sm">Shipping & Delivery</Link>
           </div>
         </div>
 

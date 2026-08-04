@@ -104,7 +104,7 @@ export const useCurrency = (): CurrencyState => {
             const mapped = COUNTRY_TO_CURRENCY[code] || code;
             setCountryCode(mapped);
             setCurrency(CURRENCIES[mapped] || DEFAULT_CURRENCY);
-            try { localStorage.setItem("geo_country_code", code); } catch {}
+            try { localStorage.setItem("geo_country_code", code); } catch { /* ignore */ }
             setLoading(false);
             return;
           }

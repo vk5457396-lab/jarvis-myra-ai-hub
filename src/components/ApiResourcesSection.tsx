@@ -1,3 +1,5 @@
+"use client";
+
 import { motion } from "framer-motion";
 import { ExternalLink, Key, Sparkles, Video, Bot, Code, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";

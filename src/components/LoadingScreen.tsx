@@ -1,6 +1,9 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import logo from "@/assets/logo.png";
+
+const logo = "/assets/logo.png";
 
 interface LoadingScreenProps {
   onLoadingComplete: () => void;

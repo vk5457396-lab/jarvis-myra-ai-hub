@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useRef } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Check, Gift, Users, ArrowRight, Crown, Sparkles } from "lucide-react";
