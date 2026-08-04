@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,26 +81,19 @@ const NotificationCenter = () => {
 
   const loadHistory = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("notifications")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(50);
-    if (error) toast.error("Could not load notification history");
-    setHistory((data as NotificationRow[]) ?? []);
+    const res = await fetch("/api/notification/history?limit=50");
+    const json = await res.json();
+    if (!json.success) toast.error("Could not load notification history");
+    setHistory((json.data?.notifications as NotificationRow[]) ?? []);
     setLoading(false);
   }, []);
 
   useEffect(() => { loadHistory(); }, [loadHistory]);
 
   const postNotification = async (payload: Record<string, unknown>) => {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData.session?.access_token;
-    if (!token) throw new Error("Your session expired. Please sign in again.");
-
     const res = await fetch("/api/notification/send", {
       method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+      headers: { "content-type": "application/json" },
       body: JSON.stringify(payload),
     });
 
@@ -188,8 +180,8 @@ const NotificationCenter = () => {
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("notifications").delete().eq("id", id);
-    if (error) { toast.error("Could not delete this entry"); return; }
+    const res = await fetch(`/api/notification/${id}`, { method: "DELETE" });
+    if (!res.ok) { toast.error("Could not delete this entry"); return; }
     setHistory((h) => h.filter((n) => n.id !== id));
     toast.success("History entry deleted");
   };

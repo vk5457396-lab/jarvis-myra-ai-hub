@@ -5,13 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft, Download, Package, ShieldCheck, Loader2, Tag } from "lucide-react";
-import { supabase } from "@/lib/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ContactFormModal from "@/components/ContactFormModal";
-import { invokeBackendFunction } from "@/lib/backend/invokeFunction";
 
 interface MarketProduct {
   id: string;
@@ -63,47 +61,48 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
   useEffect(() => {
     if (!slug) return;
     (async () => {
-      const { data } = await supabase
-        .from("marketplace_products")
-        .select("*")
-        .eq("slug", slug)
-        .eq("is_published", true)
-        .maybeSingle();
-      if (data) {
-        const p = data as unknown as MarketProduct & { screenshots: unknown };
-        const shots = Array.isArray(p.screenshots) ? (p.screenshots as string[]) : [];
-        setProduct({ ...p, screenshots: shots });
-        setActiveShot(p.banner_url || shots[0] || p.thumbnail_url || null);
+      const res = await fetch(`/api/marketplace/products/${encodeURIComponent(slug)}`);
+      const json = await res.json();
+      if (json.success) {
+        const p = json.data as MarketProduct;
+        setProduct(p);
+        setActiveShot(p.banner_url || p.screenshots[0] || p.thumbnail_url || null);
       }
       setLoading(false);
     })();
   }, [slug]);
 
-  const triggerBrowserDownload = (url: string, filename?: string) => {
+  const fetchAndSave = async (body: Record<string, unknown>) => {
+    const res = await fetch("/api/marketplace/download", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => null);
+      toast.error(errJson?.error || "Download failed");
+      return false;
+    }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    if (filename) a.download = filename;
-    a.target = "_blank";
-    a.rel = "noopener";
+    a.download = product?.file_name || "download";
     document.body.appendChild(a);
     a.click();
     a.remove();
+    URL.revokeObjectURL(url);
+    return true;
   };
 
   const downloadFree = async () => {
     if (!product) return;
     setBusy(true);
     try {
-      const { data, error } = await invokeBackendFunction<{ download_url: string; error?: string }>(
-        "marketplace-download",
-        { product_id: product.id }
-      );
-      if (error || data?.error || !data?.download_url) {
-        toast.error(data?.error || error?.message || "Download failed");
-        return;
-      }
-      triggerBrowserDownload(data.download_url, product.file_name ?? undefined);
-      toast.success("Download started!");
+      const ok = await fetchAndSave({ product_id: product.id });
+      if (ok) toast.success("Download started!");
     } finally {
       setBusy(false);
     }
@@ -118,22 +117,19 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
         toast.error("Failed to load payment gateway");
         return;
       }
-      const { data: order, error } = await invokeBackendFunction<{
-        order_id: string;
-        amount: number;
-        currency: string;
-        key_id: string;
-        product_name: string;
-        display_amount: number;
-        error?: string;
-      }>("marketplace-create-order", {
-        product_id: product.id,
-        customer_name: contact.name,
-        customer_email: contact.email,
-        customer_phone: contact.phone,
+      const res = await fetch("/api/marketplace/create-order", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          product_id: product.id,
+          customer_name: contact.name,
+          customer_email: contact.email,
+          customer_phone: contact.phone,
+        }),
       });
-      if (error || order?.error || !order?.order_id) {
-        toast.error(order?.error || error?.message || "Could not start payment");
+      const order = await res.json();
+      if (!res.ok || order?.error || !order?.order_id) {
+        toast.error(order?.error || "Could not start payment");
         return;
       }
 
@@ -151,10 +147,7 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
           razorpay_order_id: string;
           razorpay_signature: string;
         }) => {
-          const { data: dl, error: dlErr } = await invokeBackendFunction<{
-            download_url: string;
-            error?: string;
-          }>("marketplace-download", {
+          const ok = await fetchAndSave({
             product_id: product.id,
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_order_id: response.razorpay_order_id,
@@ -162,12 +155,7 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
             customer_name: contact.name,
             customer_email: contact.email,
           });
-          if (dlErr || dl?.error || !dl?.download_url) {
-            toast.error(dl?.error || dlErr?.message || "Could not generate download");
-            return;
-          }
-          triggerBrowserDownload(dl.download_url, product.file_name ?? undefined);
-          toast.success("Payment successful! Download started.");
+          if (ok) toast.success("Payment successful! Download started.");
         },
         modal: { ondismiss: () => toast.info("Payment cancelled") },
       });

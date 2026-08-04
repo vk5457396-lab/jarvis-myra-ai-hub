@@ -2,7 +2,8 @@ import { initializeApp, getApps, cert, type App, type ServiceAccount } from 'fir
 import { getMessaging } from 'firebase-admin/messaging';
 import logger from './logger';
 import { ApiError } from './response';
-import { getSupabase } from './supabase';
+import { connectMongo } from '@/lib/db/mongoose';
+import { Device } from '@/lib/db/models';
 
 let app: App | null = null;
 
@@ -83,8 +84,8 @@ function buildMessage(payload: any) {
 
 async function removeInvalidTokens(tokens: string[]) {
   if (!tokens.length) return;
-  const supabase = getSupabase();
-  await supabase.from('devices').update({ fcm_token: null }).in('fcm_token', tokens);
+  await connectMongo();
+  await Device.updateMany({ fcmToken: { $in: tokens } }, { $set: { fcmToken: null } });
   logger.warn('Removed invalid FCM tokens', { count: tokens.length });
 }
 

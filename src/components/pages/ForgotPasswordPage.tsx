@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -20,11 +19,13 @@ const ForgotPassword = () => {
     e.preventDefault();
     if (!email) { toast.error("Enter your email"); return; }
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+    const res = await fetch("/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email }),
     });
     setLoading(false);
-    if (error) { toast.error(error.message); return; }
+    if (!res.ok) { toast.error("Something went wrong. Try again."); return; }
     setSent(true);
     toast.success("Password reset email sent!");
   };

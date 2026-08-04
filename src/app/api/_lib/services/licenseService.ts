@@ -1,4 +1,3 @@
-import { getSupabase } from '../utils/supabase';
 import { ApiError } from '../utils/response';
 import logger from '../utils/logger';
 import { signActivationToken, verifyActivationToken } from '../utils/jwt';
@@ -11,52 +10,74 @@ import {
   planLabel,
   publicLicense,
 } from '../utils/plan';
+import { connectMongo } from '@/lib/db/mongoose';
+import { License, LicenseSettings, LICENSE_SETTINGS_ID } from '@/lib/db/models';
 
-const COLUMNS =
-  'id, license_key, plan, duration, status, device_id, created_at, activated_at, expires_at, updated_at, activation_token';
+/**
+ * jwt.ts / plan.ts operate on plain objects shaped like the old Supabase rows
+ * (snake_case, `id` instead of `_id`). This bridge keeps those two shared
+ * utilities untouched — Mongo documents are translated in and out here.
+ */
+function toLegacy(doc: any) {
+  if (!doc) return null;
+  return {
+    id: doc._id.toString(),
+    license_key: doc.licenseKey,
+    plan: doc.plan,
+    duration: doc.duration ?? null,
+    status: doc.status,
+    device_id: doc.deviceId ?? null,
+    created_at: doc.createdAt ? new Date(doc.createdAt).toISOString() : null,
+    activated_at: doc.activatedAt ? new Date(doc.activatedAt).toISOString() : null,
+    expires_at: doc.expiresAt ? new Date(doc.expiresAt).toISOString() : null,
+    updated_at: doc.updatedAt ? new Date(doc.updatedAt).toISOString() : null,
+    activation_token: doc.activationToken ?? null,
+  };
+}
+
+const PATCH_KEY_MAP: Record<string, string> = {
+  license_key: 'licenseKey',
+  device_id: 'deviceId',
+  activated_at: 'activatedAt',
+  expires_at: 'expiresAt',
+  activation_token: 'activationToken',
+};
+
+function mapPatch(patch: Record<string, any>): Record<string, any> {
+  const mapped: Record<string, any> = {};
+  for (const [key, value] of Object.entries(patch)) {
+    mapped[PATCH_KEY_MAP[key] || key] = value;
+  }
+  return mapped;
+}
 
 export async function findByKey(licenseKey: string) {
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from('licenses')
-    .select(COLUMNS)
-    .eq('license_key', licenseKey)
-    .maybeSingle();
-  if (error) throw ApiError.internal('Database error.', 'DB_ERROR');
-  return data || null;
+  await connectMongo();
+  const doc = await License.findOne({ licenseKey }).lean();
+  return toLegacy(doc);
 }
 
 export async function findById(id: string) {
-  const supabase = getSupabase();
-  const { data, error } = await supabase.from('licenses').select(COLUMNS).eq('id', id).maybeSingle();
-  if (error) throw ApiError.internal('Database error.', 'DB_ERROR');
-  return data || null;
+  await connectMongo();
+  const doc = await License.findById(id).lean().catch(() => null);
+  return toLegacy(doc);
 }
 
 export async function update(id: string, patch: Record<string, any>) {
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from('licenses')
-    .update(patch)
-    .eq('id', id)
-    .select(COLUMNS)
-    .maybeSingle();
-  if (error) throw ApiError.internal('Database error.', 'DB_ERROR');
-  return data || null;
+  await connectMongo();
+  const doc = await License.findByIdAndUpdate(id, { $set: mapPatch(patch) }, { new: true }).lean();
+  return toLegacy(doc);
 }
 
 /** Atomically binds a free license to a device (wins the race or returns null). */
 async function claimForDevice(id: string, patch: Record<string, any>) {
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from('licenses')
-    .update(patch)
-    .eq('id', id)
-    .is('device_id', null)
-    .select(COLUMNS)
-    .maybeSingle();
-  if (error) throw ApiError.internal('Database error.', 'DB_ERROR');
-  return data || null;
+  await connectMongo();
+  const doc = await License.findOneAndUpdate(
+    { _id: id, deviceId: null },
+    { $set: mapPatch(patch) },
+    { new: true }
+  ).lean();
+  return toLegacy(doc);
 }
 
 async function syncExpiry(license: any) {
@@ -189,22 +210,17 @@ export async function generateLicenses({
   prefix?: string | null;
   length?: number | null;
 }) {
-  const supabase = getSupabase();
+  await connectMongo();
   const normalized = normalizePlan(plan);
   const duration = planDurationDays(normalized);
 
-  const { data: settings } = await supabase
-    .from('license_settings')
-    .select('prefix, random_length')
-    .maybeSingle();
+  const settings = await LicenseSettings.findById(LICENSE_SETTINGS_ID).lean();
 
   const usedPrefix = prefix || settings?.prefix || 'MYRA';
-  const usedLength = length || settings?.random_length || 16;
+  const usedLength = length || settings?.randomLength || 16;
 
-  const { data: existing, error: existingError } = await supabase.from('licenses').select('license_key');
-  if (existingError) throw ApiError.internal('Database error.', 'DB_ERROR');
-
-  const taken = new Set((existing || []).map((r: any) => r.license_key));
+  const existingKeys = await License.distinct('licenseKey');
+  const taken = new Set(existingKeys);
   const keys: string[] = [];
   let guard = 0;
   while (keys.length < quantity && guard < quantity * 50) {
@@ -219,26 +235,28 @@ export async function generateLicenses({
     throw ApiError.internal('Could not generate unique keys.', 'KEY_GENERATION_FAILED');
   }
 
-  const rows = keys.map((license_key) => ({
-    license_key,
+  const rows = keys.map((licenseKey) => ({
+    licenseKey,
     plan: normalized,
     duration,
     status: STATUS.AVAILABLE,
   }));
 
-  const { data: inserted, error } = await supabase
-    .from('licenses')
-    .insert(rows)
-    .select('license_key, plan, duration, status, created_at');
-  if (error) throw ApiError.internal('Database error.', 'DB_ERROR');
+  const inserted = await License.insertMany(rows);
 
   logger.info('Licenses generated', { count: keys.length, plan: normalized });
 
   return {
     plan: planLabel(normalized),
     plan_id: normalized,
-    count: inserted!.length,
-    licenses: inserted,
+    count: inserted.length,
+    licenses: inserted.map((doc) => ({
+      license_key: doc.licenseKey,
+      plan: doc.plan,
+      duration: doc.duration,
+      status: doc.status,
+      created_at: doc.createdAt,
+    })),
     keys,
   };
 }
@@ -257,6 +275,22 @@ export async function resetDevice(licenseKey: string) {
   });
 
   logger.info('License device reset', { license_id: license.id });
+  return publicLicense(updated || license);
+}
+
+/** Admin: re-enable a previously disabled license, restoring its natural status. */
+export async function enableLicense(licenseKey: string) {
+  const license = await findByKey(licenseKey);
+  if (!license) throw ApiError.notFound('Invalid license.', 'LICENSE_NOT_FOUND');
+
+  const nextStatus = license.device_id
+    ? isExpired(license.expires_at)
+      ? STATUS.EXPIRED
+      : STATUS.ACTIVATED
+    : STATUS.AVAILABLE;
+
+  const updated = await update(license.id, { status: nextStatus });
+  logger.info('License enabled', { license_id: license.id });
   return publicLicense(updated || license);
 }
 

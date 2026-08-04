@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Gift } from "lucide-react";
-import { supabase } from "@/lib/supabase/client";
 
 const ReferralBanner = () => {
   const searchParams = useSearchParams();
@@ -24,10 +23,11 @@ const ReferralBanner = () => {
     }
 
     const fetchReferrer = async () => {
-      const { data } = await supabase.rpc("get_referrer_by_code", { _code: code });
-      const row = Array.isArray(data) ? data[0] : null;
-      if (row?.full_name) {
-        setReferrerName(row.full_name);
+      const res = await fetch(`/api/referrals/lookup?code=${encodeURIComponent(code)}`);
+      const json = await res.json();
+      const referrer = json.success ? json.data.referrer : null;
+      if (referrer?.full_name) {
+        setReferrerName(referrer.full_name);
         setVisible(true);
       }
     };

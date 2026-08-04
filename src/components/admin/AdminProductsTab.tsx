@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import {
   Plus, UploadCloud, Trash2, ImageIcon, Loader2, Save, X, Edit3, Package, Search,
@@ -32,36 +31,18 @@ interface AdminProduct {
 const slugify = (s: string) =>
   s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 80);
 
-const SIGN_EXPIRY = 60 * 60 * 24 * 365 * 5; // 5 years
-
-const uploadToMedia = async (file: File, prefix: string): Promise<string | null> => {
-  const ext = file.name.split(".").pop() || "bin";
-  const path = `${prefix}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  const { error } = await supabase.storage.from("marketplace-media").upload(path, file, {
-    cacheControl: "31536000",
-    upsert: false,
-    contentType: file.type,
-  });
-  if (error) {
-    toast.error(`Upload failed: ${error.message}`);
+const uploadToBlob = async (file: File, folder: string, access: "public" | "private"): Promise<string | null> => {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("folder", folder);
+  form.append("access", access);
+  const res = await fetch("/api/admin/blob/upload", { method: "POST", body: form });
+  const json = await res.json();
+  if (!res.ok || !json.success) {
+    toast.error(json.message || "Upload failed");
     return null;
   }
-  const { data: signed } = await supabase.storage.from("marketplace-media").createSignedUrl(path, SIGN_EXPIRY);
-  return signed?.signedUrl ?? null;
-};
-
-const uploadToFiles = async (file: File): Promise<{ path: string; name: string; size: number } | null> => {
-  const ext = file.name.split(".").pop() || "bin";
-  const path = `products/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  const { error } = await supabase.storage.from("marketplace-files").upload(path, file, {
-    upsert: false,
-    contentType: file.type,
-  });
-  if (error) {
-    toast.error(`File upload failed: ${error.message}`);
-    return null;
-  }
-  return { path, name: file.name, size: file.size };
+  return json.data.url as string;
 };
 
 const emptyDraft = () => ({
@@ -95,13 +76,11 @@ const AdminProductsTab = () => {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("marketplace_products")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (data) {
+    const res = await fetch("/api/admin/marketplace/products");
+    const json = await res.json();
+    if (json.success) {
       setProducts(
-        (data as unknown as AdminProduct[]).map((p) => ({
+        (json.data.products as AdminProduct[]).map((p) => ({
           ...p,
           screenshots: Array.isArray(p.screenshots) ? p.screenshots : [],
         }))
@@ -141,7 +120,7 @@ const AdminProductsTab = () => {
     const file = e.target.files?.[0];
     if (!file || !editing) return;
     setUploadingField(field);
-    const url = await uploadToMedia(file, field);
+    const url = await uploadToBlob(file, field, "public");
     if (url) setEditing({ ...editing, [field]: url });
     setUploadingField(null);
     e.target.value = "";
@@ -153,7 +132,7 @@ const AdminProductsTab = () => {
     setUploadingField("screenshots");
     const urls: string[] = [];
     for (const f of files) {
-      const u = await uploadToMedia(f, "screenshots");
+      const u = await uploadToBlob(f, "screenshots", "public");
       if (u) urls.push(u);
     }
     setEditing({ ...editing, screenshots: [...editing.screenshots, ...urls] });
@@ -164,13 +143,13 @@ const AdminProductsTab = () => {
   const handleFile = async (file: File) => {
     if (!editing) return;
     setUploadingField("file");
-    const res = await uploadToFiles(file);
-    if (res) {
+    const url = await uploadToBlob(file, "products", "private");
+    if (url) {
       setEditing({
         ...editing,
-        file_path: res.path,
-        file_name: res.name,
-        file_size: res.size,
+        file_path: url,
+        file_name: file.name,
+        file_size: file.size,
       });
     }
     setUploadingField(null);
@@ -216,16 +195,22 @@ const AdminProductsTab = () => {
       is_published: editing.is_published,
     };
 
-    let error;
-    if (editing.id) {
-      ({ error } = await supabase.from("marketplace_products").update(payload).eq("id", editing.id));
-    } else {
-      ({ error } = await supabase.from("marketplace_products").insert(payload));
-    }
+    const res = editing.id
+      ? await fetch(`/api/admin/marketplace/products/${editing.id}`, {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+      : await fetch("/api/admin/marketplace/products", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+    const json = await res.json();
     setSaving(false);
 
-    if (error) {
-      toast.error(error.message);
+    if (!res.ok || !json.success) {
+      toast.error(json.message || "Save failed");
       return;
     }
     toast.success(editing.id ? "Product updated" : "Product created");
@@ -235,9 +220,10 @@ const AdminProductsTab = () => {
 
   const remove = async (p: AdminProduct) => {
     if (!confirm(`Delete "${p.title}"?`)) return;
-    const { error } = await supabase.from("marketplace_products").delete().eq("id", p.id);
-    if (error) {
-      toast.error(error.message);
+    const res = await fetch(`/api/admin/marketplace/products/${p.id}`, { method: "DELETE" });
+    const json = await res.json();
+    if (!res.ok || !json.success) {
+      toast.error(json.message || "Delete failed");
       return;
     }
     toast.success("Deleted");
@@ -245,11 +231,13 @@ const AdminProductsTab = () => {
   };
 
   const togglePublish = async (p: AdminProduct) => {
-    const { error } = await supabase
-      .from("marketplace_products")
-      .update({ is_published: !p.is_published })
-      .eq("id", p.id);
-    if (error) toast.error(error.message);
+    const res = await fetch(`/api/admin/marketplace/products/${p.id}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ is_published: !p.is_published }),
+    });
+    const json = await res.json();
+    if (!res.ok || !json.success) toast.error(json.message || "Update failed");
     else load();
   };
 

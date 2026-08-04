@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/lib/supabase/client";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -36,6 +36,7 @@ const DEFAULT_SETTINGS: LicenseSettingsValue = {
 
 const LicenseAdmin = () => {
   const router = useRouter();
+  const { status } = useSession();
   const [section, setSection] = useState<Section>("dashboard");
   const [licenses, setLicenses] = useState<LicenseRow[]>([]);
   const [settings, setSettings] = useState<LicenseSettingsValue>(DEFAULT_SETTINGS);
@@ -43,35 +44,29 @@ const LicenseAdmin = () => {
   const [navOpen, setNavOpen] = useState(false);
 
   const loadData = useCallback(async () => {
-    const [{ data: lic, error }, { data: cfg }] = await Promise.all([
-      supabase.from("licenses").select("*").order("created_at", { ascending: false }),
-      supabase.from("license_settings").select("*").maybeSingle(),
+    const [licRes, cfgRes] = await Promise.all([
+      fetch("/api/admin/licenses"),
+      fetch("/api/admin/license-settings"),
     ]);
-    if (error) toast.error(error.message);
-    setLicenses((lic ?? []) as LicenseRow[]);
-    if (cfg) {
-      setSettings({
-        prefix: cfg.prefix,
-        random_length: cfg.random_length,
-        max_activations: cfg.max_activations,
-        device_lock: cfg.device_lock,
-        offline_activation: cfg.offline_activation,
-      });
-    }
-  }, []);
+    if (licRes.status === 401 || licRes.status === 403) { router.push("/dashboard"); return; }
+
+    const licJson = await licRes.json();
+    if (!licJson.success) toast.error(licJson.message || "Could not load licenses");
+    setLicenses((licJson.data?.licenses ?? []) as LicenseRow[]);
+
+    const cfgJson = await cfgRes.json();
+    if (cfgJson.success) setSettings(cfgJson.data);
+  }, [router]);
 
   useEffect(() => {
+    if (status === "loading") return;
+    if (status === "unauthenticated") { router.push("/login"); return; }
     const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push("/login"); return; }
-      const { data: role } = await supabase
-        .from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
-      if (!role) { router.push("/dashboard"); return; }
       await loadData();
       setLoading(false);
     };
     init();
-  }, [router, loadData]);
+  }, [router, loadData, status]);
 
   if (loading) {
     return (

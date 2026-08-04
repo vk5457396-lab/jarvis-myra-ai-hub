@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import ProductPagePage from "@/components/pages/ProductPagePage";
-import { getSupabaseServerReadonlyClient } from "@/lib/supabase/server";
+import { connectMongo } from "@/lib/db/mongoose";
+import { MarketplaceProduct } from "@/lib/db/models";
 
 const SITE_URL = "https://jarvis-myra-ai-hub.lovable.app";
 
@@ -25,14 +26,20 @@ const buildKeywords = (p: Pick<MarketProductMeta, "title" | "category" | "short_
 };
 
 async function fetchProductForMetadata(slug: string): Promise<MarketProductMeta | null> {
-  const supabase = getSupabaseServerReadonlyClient();
-  const { data } = await supabase
-    .from("marketplace_products")
-    .select("title, slug, short_description, description, category, price, thumbnail_url")
-    .eq("slug", slug)
-    .eq("is_published", true)
-    .maybeSingle();
-  return (data as MarketProductMeta) ?? null;
+  await connectMongo();
+  const p = await MarketplaceProduct.findOne({ slug, isPublished: true })
+    .select("title slug shortDescription description category price thumbnailUrl")
+    .lean();
+  if (!p) return null;
+  return {
+    title: p.title,
+    slug: p.slug,
+    short_description: p.shortDescription ?? null,
+    description: p.description ?? null,
+    category: p.category ?? null,
+    price: p.price,
+    thumbnail_url: p.thumbnailUrl ?? null,
+  };
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {

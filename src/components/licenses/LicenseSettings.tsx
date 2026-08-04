@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,18 +29,20 @@ const LicenseSettings = ({ value, onSaved }: Props) => {
 
   const save = async () => {
     setSaving(true);
-    const { error } = await supabase
-      .from("license_settings")
-      .update({
+    const res = await fetch("/api/admin/license-settings", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
         prefix: form.prefix.trim().toUpperCase() || "MYRA",
         random_length: Math.max(8, Math.min(32, Number(form.random_length) || 16)),
         max_activations: Math.max(1, Number(form.max_activations) || 1),
         device_lock: form.device_lock,
         offline_activation: form.offline_activation,
-      })
-      .eq("id", true);
+      }),
+    });
+    const json = await res.json();
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (!res.ok || !json.success) return toast.error(json.message || "Could not save settings");
     toast.success("Settings saved");
     onSaved();
   };

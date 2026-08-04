@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/lib/supabase/client";
+import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -43,6 +43,7 @@ interface Withdrawal {
 }
 
 const Dashboard = () => {
+  const { status } = useSession();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [earnings, setEarnings] = useState<Earning[]>([]);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
@@ -54,40 +55,33 @@ const Dashboard = () => {
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
   const router = useRouter();
 
+  const loadData = async () => {
+    const [profileRes, walletRes] = await Promise.all([fetch("/api/profile"), fetch("/api/wallet")]);
+
+    if (profileRes.status === 401) { router.push("/login"); return; }
+
+    const profileJson = await profileRes.json();
+    if (profileJson.success) {
+      if (profileJson.data.role === "admin") { router.push("/admin"); return; }
+      setProfile(profileJson.data);
+    }
+
+    const walletJson = await walletRes.json();
+    if (walletJson.success) {
+      setEarnings(walletJson.data.earnings);
+      setWithdrawals(walletJson.data.withdrawals);
+      setReferralCount(walletJson.data.referral_count);
+    }
+
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const loadData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push("/login"); return; }
-
-      // Check if admin — redirect to admin dashboard
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-
-      if (roleData) {
-        router.push("/admin");
-        return;
-      }
-
-      const { data: profileData } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
-      if (profileData) setProfile(profileData as Profile);
-
-      const { data: earningsData } = await supabase.from("referral_earnings").select("*").eq("referrer_id", user.id).order("created_at", { ascending: false });
-      if (earningsData) setEarnings(earningsData as Earning[]);
-
-      const { data: withdrawalsData } = await supabase.from("withdrawals").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-      if (withdrawalsData) setWithdrawals(withdrawalsData as Withdrawal[]);
-
-      const { count } = await supabase.from("profiles").select("id", { count: "exact", head: true }).eq("referred_by", user.id);
-      setReferralCount(count || 0);
-
-      setLoading(false);
-    };
+    if (status === "loading") return;
+    if (status === "unauthenticated") { router.push("/login"); return; }
     loadData();
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   const copyReferralLink = () => {
     if (!profile) return;
@@ -104,28 +98,29 @@ const Dashboard = () => {
     if (amt > (profile?.wallet_balance || 0)) { toast.error("Insufficient balance"); return; }
 
     setWithdrawing(true);
-    const { error } = await supabase.rpc("request_withdrawal", {
-      p_amount: amt,
-      p_upi_id: upiId.trim(),
+    const res = await fetch("/api/wallet/withdraw", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ amount: amt, upi_id: upiId.trim() }),
     });
+    const json = await res.json();
 
-    if (error) {
-      toast.error(error.message);
+    if (!res.ok || !json.success) {
+      toast.error(json.message || "Withdrawal failed");
     } else {
       toast.success("Withdrawal request submitted!");
-      setProfile(prev => prev ? { ...prev, wallet_balance: prev.wallet_balance - amt } : prev);
+      setProfile((prev) => (prev ? { ...prev, wallet_balance: prev.wallet_balance - amt } : prev));
       setUpiId("");
       setWithdrawAmount("");
       setShowWithdrawForm(false);
-      // Refresh withdrawals
-      const { data } = await supabase.from("withdrawals").select("*").eq("user_id", profile!.id).order("created_at", { ascending: false });
-      if (data) setWithdrawals(data as Withdrawal[]);
+      const walletJson = await (await fetch("/api/wallet")).json();
+      if (walletJson.success) setWithdrawals(walletJson.data.withdrawals);
     }
     setWithdrawing(false);
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut({ redirect: false });
     router.push("/");
   };
 

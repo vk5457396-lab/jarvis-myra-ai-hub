@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabase/client";
+import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
-  Shield, LogOut, Users, Wallet, TrendingUp, CheckCircle2, XCircle, Clock, ArrowDownToLine, Package, KeyRound, Bell
+  Shield, LogOut, Users, Wallet, TrendingUp, CheckCircle2, XCircle, Clock, ArrowDownToLine, Package, KeyRound, Bell, Smartphone
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
@@ -49,6 +49,7 @@ interface WithdrawalRow {
 const COLORS = ["#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
 
 const AdminDashboard = () => {
+  const { status } = useSession();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [allEarnings, setAllEarnings] = useState<Earning[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalRow[]>([]);
@@ -57,56 +58,48 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<"users" | "withdrawals" | "products" | "notifications">("users");
   const router = useRouter();
 
+  const loadOverview = async () => {
+    const res = await fetch("/api/admin/overview");
+    if (res.status === 401 || res.status === 403) { router.push("/dashboard"); return; }
+    const json = await res.json();
+    if (json.success) {
+      setUsers(json.data.users);
+      setAllEarnings(json.data.earnings);
+      setWithdrawals(json.data.withdrawals);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const loadAdmin = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push("/login"); return; }
-
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-
-      if (!roleData) { router.push("/dashboard"); return; }
-
-      const { data: usersData } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
-      if (usersData) setUsers(usersData as UserProfile[]);
-
-      const { data: earningsData } = await supabase.from("referral_earnings").select("*").order("created_at", { ascending: false });
-      if (earningsData) setAllEarnings(earningsData as Earning[]);
-
-      const { data: withdrawalsData } = await supabase.from("withdrawals").select("*").order("created_at", { ascending: false });
-      if (withdrawalsData) setWithdrawals(withdrawalsData as WithdrawalRow[]);
-
-      setLoading(false);
-    };
-    loadAdmin();
-  }, [router]);
+    if (status === "loading") return;
+    if (status === "unauthenticated") { router.push("/login"); return; }
+    loadOverview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   const processWithdrawal = async (id: string, status: "completed" | "rejected") => {
     setProcessing(id);
-    const { error } = await supabase.rpc("process_withdrawal", {
-      p_withdrawal_id: id,
-      p_status: status,
+    const res = await fetch(`/api/admin/withdrawals/${id}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ status }),
     });
-    if (error) {
-      toast.error(error.message);
+    const json = await res.json();
+    if (!res.ok || !json.success) {
+      toast.error(json.message || "Failed to update withdrawal");
     } else {
       toast.success(`Withdrawal ${status}!`);
       setWithdrawals(prev => prev.map(w => w.id === id ? { ...w, status, processed_at: new Date().toISOString() } : w));
       if (status === "rejected") {
-        // Refresh user balances
-        const { data } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
-        if (data) setUsers(data as UserProfile[]);
+        const overview = await (await fetch("/api/admin/overview")).json();
+        if (overview.success) setUsers(overview.data.users);
       }
     }
     setProcessing(null);
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut({ redirect: false });
     router.push("/");
   };
 
@@ -280,6 +273,12 @@ const AdminDashboard = () => {
               className="px-5 py-2.5 rounded-xl font-display font-bold text-sm transition-all bg-white/5 border border-white/10 text-muted-foreground hover:text-foreground"
             >
               <KeyRound size={14} className="inline mr-2" /> Licenses
+            </button>
+            <button
+              onClick={() => router.push("/admin/app-release")}
+              className="px-5 py-2.5 rounded-xl font-display font-bold text-sm transition-all bg-white/5 border border-white/10 text-muted-foreground hover:text-foreground"
+            >
+              <Smartphone size={14} className="inline mr-2" /> App Release
             </button>
             <button
               onClick={() => setActiveTab("notifications")}

@@ -5,7 +5,6 @@ import {
   optionalUrl,
   validateEnum,
   validateDeviceId,
-  validateUuid,
 } from './validation';
 
 export const TARGETS = ['all', 'premium', 'free', 'lifetime', 'device', 'user'];
@@ -35,7 +34,7 @@ export function parseNotificationPayload(
   if (!resolvedTarget) {
     resolvedTarget = validateEnum(body.target, 'target', TARGETS, 'all');
     if (resolvedTarget === 'device') resolvedValue = validateDeviceId(body.device_id);
-    if (resolvedTarget === 'user') resolvedValue = validateUuid(body.user_id, 'user_id');
+    if (resolvedTarget === 'user') resolvedValue = requireString(body.user_id, 'user_id', { min: 1, max: 128 });
   }
 
   return {

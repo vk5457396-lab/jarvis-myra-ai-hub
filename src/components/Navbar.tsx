@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, LogIn, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase/client";
+import { useSession } from "next-auth/react";
 
 const logo = "/assets/logo.png";
 
@@ -17,23 +17,15 @@ const navLinks = [
   { name: "Pricing", path: "/pricing" },
   { name: "Products", path: "/products" },
   { name: "Services", path: "/services" },
+  { name: "Download", path: "/download" },
   { name: "Contact", path: "/contact" },
 ];
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const { data: session } = useSession();
+  const user = session?.user ?? null;
   const pathname = usePathname();
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
 
   return (
     <motion.nav

@@ -97,6 +97,14 @@ export function validateEnum(
   return str;
 }
 
+export function validateEmail(value: unknown): string {
+  const str = requireString(value, 'email', { min: 3, max: 255 }).toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str)) {
+    throw ApiError.badRequest('email must be a valid email address.', 'INVALID_EMAIL');
+  }
+  return str;
+}
+
 export function optionalUrl(value: unknown, field: string): string | null {
   const str = optionalString(value, field, 2048);
   if (!str) return null;

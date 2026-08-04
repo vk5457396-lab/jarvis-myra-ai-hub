@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase/client";
 
 interface PurchaseCounts {
   jarvis: number;
@@ -13,15 +12,13 @@ export const usePurchaseCounts = () => {
   return useQuery({
     queryKey: ["purchase-counts"],
     queryFn: async (): Promise<PurchaseCounts> => {
-      const { data, error } = await supabase.rpc("get_purchase_counts");
-
-      if (error) {
-        return { jarvis: 0, myra: 0, bundle: 0, total: 0, totalRevenue: 0 };
-      }
-
       const counts = { jarvis: 0, myra: 0, bundle: 0, total: 0, totalRevenue: 0 };
 
-      (data as Array<{ product_type: string; count: number; revenue: number }> | null)?.forEach((row) => {
+      const res = await fetch("/api/purchases/stats");
+      const json = await res.json();
+      if (!json.success) return counts;
+
+      (json.data.counts as Array<{ product_type: string; count: number; revenue: number }>).forEach((row) => {
         const c = Number(row.count) || 0;
         const r = Number(row.revenue) || 0;
         counts.total += c;

@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -66,17 +65,38 @@ const LicenseList = ({ licenses, onRefresh }: Props) => {
   const toggleOne = (id: string) =>
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
 
-  const runUpdate = async (ids: string[], payload: Record<string, unknown>, message: string) => {
-    const { error } = await supabase.from("licenses").update(payload as never).in("id", ids);
-    if (error) return toast.error(error.message);
-    toast.success(message);
+  const keyOf = (id: string) => licenses.find((l) => l.id === id)?.license_key;
+
+  const runAction = async (ids: string[], action: "disable" | "enable" | "reset", message: string) => {
+    const endpoint =
+      action === "disable" ? "/api/license/deactivate" : action === "enable" ? "/api/license/enable" : "/api/license/reset";
+
+    const results = await Promise.all(
+      ids.map((id) => {
+        const license_key = keyOf(id);
+        if (!license_key) return Promise.resolve({ ok: false });
+        return fetch(endpoint, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ license_key }),
+        }).then((r) => ({ ok: r.ok }));
+      })
+    );
+
+    if (results.some((r) => !r.ok)) toast.error("Some licenses could not be updated");
+    else toast.success(message);
     setSelected([]);
     onRefresh();
   };
 
   const runDelete = async (ids: string[]) => {
-    const { error } = await supabase.from("licenses").delete().in("id", ids);
-    if (error) return toast.error(error.message);
+    const res = await fetch("/api/admin/licenses/bulk-delete", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    const json = await res.json();
+    if (!res.ok || !json.success) return toast.error(json.message || "Delete failed");
     toast.success(`${ids.length} license(s) deleted`);
     setSelected([]);
     onRefresh();
@@ -129,11 +149,11 @@ const LicenseList = ({ licenses, onRefresh }: Props) => {
         <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2">
           <span className="text-sm">{selected.length} selected</span>
           <div className="ml-auto flex flex-wrap gap-2">
-            <Button size="sm" variant="secondary" onClick={() => runUpdate(selected, { status: "disabled" }, "Licenses disabled")}>
+            <Button size="sm" variant="secondary" onClick={() => runAction(selected, "disable", "Licenses disabled")}>
               <Ban className="mr-1 h-3.5 w-3.5" /> Disable
             </Button>
             <Button size="sm" variant="secondary"
-              onClick={() => runUpdate(selected, { status: "available", device_id: null, activated_at: null, expires_at: null }, "Licenses reset")}>
+              onClick={() => runAction(selected, "reset", "Licenses reset")}>
               <RotateCcw className="mr-1 h-3.5 w-3.5" /> Reset Device
             </Button>
             <Button size="sm" variant="destructive" onClick={() => runDelete(selected)}>
@@ -189,11 +209,11 @@ const LicenseList = ({ licenses, onRefresh }: Props) => {
                         <Copy className="h-3.5 w-3.5" />
                       </Button>
                       <Button size="icon" variant="ghost" title={st === "disabled" ? "Enable" : "Disable"}
-                        onClick={() => runUpdate([l.id], { status: st === "disabled" ? "available" : "disabled" }, "Status updated")}>
+                        onClick={() => runAction([l.id], st === "disabled" ? "enable" : "disable", "Status updated")}>
                         <Ban className="h-3.5 w-3.5" />
                       </Button>
                       <Button size="icon" variant="ghost" title="Reset device"
-                        onClick={() => runUpdate([l.id], { status: "available", device_id: null, activated_at: null, expires_at: null }, "Device reset")}>
+                        onClick={() => runAction([l.id], "reset", "Device reset")}>
                         <RotateCcw className="h-3.5 w-3.5" />
                       </Button>
                       <Button size="icon" variant="ghost" title="Delete" onClick={() => runDelete([l.id])}>

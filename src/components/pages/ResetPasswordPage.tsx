@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -16,21 +15,24 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-
-  useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    if (hashParams.get("type") !== "recovery") {
-      // Allow the page to render anyway — user might arrive from email link
-    }
-  }, []);
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token") || "";
+  const email = searchParams.get("email") || "";
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
+    if (password.length < 8) { toast.error("Password must be at least 8 characters"); return; }
+    if (!token || !email) { toast.error("This reset link is invalid. Request a new one."); return; }
+
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password });
+    const res = await fetch("/api/auth/reset-password", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, token, password }),
+    });
+    const json = await res.json();
     setLoading(false);
-    if (error) { toast.error(error.message); return; }
+    if (!res.ok || !json.success) { toast.error(json.message || "Reset link is invalid or has expired."); return; }
     toast.success("Password updated successfully!");
     router.push("/login");
   };
@@ -53,7 +55,7 @@ const ResetPassword = () => {
                   <form onSubmit={handleUpdate} className="space-y-5">
                     <div className="relative">
                       <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input type={showPassword ? "text" : "password"} placeholder="New password (min 6 chars)" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-11 pr-11 h-12 rounded-xl bg-white/5 border-white/10 text-foreground" />
+                      <Input type={showPassword ? "text" : "password"} placeholder="New password (min 8 chars)" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-11 pr-11 h-12 rounded-xl bg-white/5 border-white/10 text-foreground" />
                       <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>

@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Search, Package, Download, Tag, Sparkles } from "lucide-react";
-import { supabase } from "@/lib/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
@@ -28,12 +27,9 @@ const Products = () => {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("marketplace_products")
-        .select("id, title, slug, short_description, category, price, thumbnail_url, download_count")
-        .eq("is_published", true)
-        .order("created_at", { ascending: false });
-      if (data) setProducts(data as MarketProduct[]);
+      const res = await fetch("/api/marketplace/products");
+      const json = await res.json();
+      if (json.success) setProducts(json.data.products as MarketProduct[]);
       setLoading(false);
     })();
   }, []);

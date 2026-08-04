@@ -5,7 +5,9 @@ import { NextRequest } from 'next/server';
 import { withApi, handleOptions } from '../../_lib/middleware/handler';
 import { requireAdmin } from '../../_lib/middleware/admin';
 import { success, ApiError } from '../../_lib/utils/response';
-import { getSupabase } from '../../_lib/utils/supabase';
+import { connectMongo } from '@/lib/db/mongoose';
+import { Notification } from '@/lib/db/models';
+import { toLegacyNotification } from '../../_lib/services/notificationService';
 
 export const OPTIONS = handleOptions(['GET', 'POST']);
 
@@ -16,16 +18,22 @@ async function core(req: NextRequest) {
   const limit = Math.min(Number(url.searchParams.get('limit') || 50) || 50, 200);
   const offset = Math.max(Number(url.searchParams.get('offset') || 0) || 0, 0);
 
-  const supabase = getSupabase();
-  const { data, error, count } = await supabase
-    .from('notifications')
-    .select('*', { count: 'exact' })
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+  await connectMongo();
 
-  if (error) throw ApiError.internal('Database error.', 'DB_ERROR');
+  let docs, total;
+  try {
+    [docs, total] = await Promise.all([
+      Notification.find().sort({ createdAt: -1 }).skip(offset).limit(limit).lean(),
+      Notification.countDocuments(),
+    ]);
+  } catch {
+    throw ApiError.internal('Database error.', 'DB_ERROR');
+  }
 
-  return success({ notifications: data || [], total: count || 0, limit, offset }, 'History.');
+  return success(
+    { notifications: docs.map(toLegacyNotification), total, limit, offset },
+    'History.'
+  );
 }
 
 const handler = withApi(core, { rateLimit: { scope: 'notification-history', max: 120 } });

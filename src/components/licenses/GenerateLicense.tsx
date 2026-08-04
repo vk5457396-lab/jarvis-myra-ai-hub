@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +14,7 @@ import {
 import { toast } from "sonner";
 import { Copy, Download, FileSpreadsheet, Printer, Loader2, Sparkles } from "lucide-react";
 import {
-  LicensePlan, PLAN_OPTIONS, generateUniqueKeys, downloadFile,
+  LicensePlan, PLAN_OPTIONS, downloadFile,
 } from "@/lib/licenses";
 
 interface Props {
@@ -36,23 +35,20 @@ const GenerateLicense = ({ onGenerated, settings }: Props) => {
     const qty = Math.max(1, Math.min(500, Math.floor(quantity) || 1));
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data: existing } = await supabase.from("licenses").select("license_key");
-      const taken = new Set((existing ?? []).map((r) => r.license_key));
-      const keys = generateUniqueKeys(qty, settings.prefix || "MYRA", settings.random_length || 16, taken);
+      const res = await fetch("/api/license/generate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          plan,
+          quantity: qty,
+          prefix: settings.prefix || undefined,
+          length: settings.random_length || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.message || "Failed to generate licenses");
 
-      const duration = PLAN_OPTIONS.find((p) => p.value === plan)?.duration ?? null;
-      const rows = keys.map((license_key) => ({
-        license_key,
-        plan,
-        duration,
-        status: "available",
-        created_by: user?.id ?? null,
-      }));
-
-      const { error } = await supabase.from("licenses").insert(rows);
-      if (error) throw error;
-
+      const keys: string[] = json.data.keys;
       setGenerated(keys);
       setOpen(true);
       onGenerated();

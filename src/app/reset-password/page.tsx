@@ -1,5 +1,10 @@
+import { Suspense } from "react";
 import ResetPasswordPage from "@/components/pages/ResetPasswordPage";
 
 export default function Page() {
-  return <ResetPasswordPage />;
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordPage />
+    </Suspense>
+  );
 }
