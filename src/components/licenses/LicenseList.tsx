@@ -67,7 +67,7 @@ const LicenseList = ({ licenses, onRefresh }: Props) => {
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
 
   const runUpdate = async (ids: string[], payload: Record<string, unknown>, message: string) => {
-    const { error } = await supabase.from("licenses").update(payload).in("id", ids);
+    const { error } = await supabase.from("licenses").update(payload as never).in("id", ids);
     if (error) return toast.error(error.message);
     toast.success(message);
     setSelected([]);
