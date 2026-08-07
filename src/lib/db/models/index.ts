@@ -1,4 +1,15 @@
 export { Profile, type ProfileDoc } from './Profile';
+export { User, type UserDoc } from './User';
+export { AuthAccount, type AuthAccountDoc } from './AuthAccount';
+export {
+  MyraProfile,
+  MyraDevice,
+  MyraChatHistory,
+  MyraMemory,
+  MyraUsage,
+  MyraSubscription,
+  MyraSettings,
+} from './Myra';
 export { ReferralEarning, type ReferralEarningDoc } from './ReferralEarning';
 export { Purchase, type PurchaseDoc } from './Purchase';
 export { Withdrawal, type WithdrawalDoc } from './Withdrawal';

@@ -6,7 +6,7 @@ import { withApi, handleOptions } from '../../_lib/middleware/handler';
 import { success, ApiError } from '../../_lib/utils/response';
 import { requireString, validateEmail } from '../../_lib/utils/validation';
 import { connectMongo } from '@/lib/db/mongoose';
-import { Profile } from '@/lib/db/models';
+import { Profile, User } from '@/lib/db/models';
 
 export const OPTIONS = handleOptions(['POST']);
 
@@ -29,7 +29,24 @@ export const POST = withApi(
       throw ApiError.badRequest('Reset link is invalid or has expired.', 'INVALID_RESET_TOKEN');
     }
 
-    profile.passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 10);
+    const existingUser = await User.findOne({ email }).select('+passwordHash');
+    const authProvider = existingUser?.googleId ? 'both' : 'credentials';
+
+    await User.findOneAndUpdate(
+      { email },
+      {
+        $set: {
+          passwordHash,
+          authProvider,
+          name: existingUser?.name || profile.fullName || null,
+        },
+        $setOnInsert: { email },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    profile.passwordHash = null;
     profile.resetToken = null;
     profile.resetTokenExpiresAt = null;
     await profile.save();

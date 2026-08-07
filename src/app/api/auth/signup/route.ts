@@ -6,7 +6,7 @@ import { withApi, handleOptions } from '../../_lib/middleware/handler';
 import { success, ApiError } from '../../_lib/utils/response';
 import { requireString, validateEmail, optionalString } from '../../_lib/utils/validation';
 import { connectMongo } from '@/lib/db/mongoose';
-import { Profile } from '@/lib/db/models';
+import { Profile, User } from '@/lib/db/models';
 
 export const OPTIONS = handleOptions(['POST']);
 
@@ -14,7 +14,7 @@ function adminEmails(): Set<string> {
   return new Set(
     (process.env.ADMIN_EMAILS || '')
       .split(',')
-      .map((e) => e.trim().toLowerCase())
+      .map((email) => email.trim().toLowerCase())
       .filter(Boolean)
   );
 }
@@ -29,8 +29,11 @@ export const POST = withApi(
 
     await connectMongo();
 
-    const existing = await Profile.findOne({ email });
-    if (existing) {
+    const [existingUser, existingProfile] = await Promise.all([
+      User.findOne({ email }).select('_id'),
+      Profile.findOne({ email }),
+    ]);
+    if (existingUser || existingProfile) {
       throw ApiError.conflict('An account with this email already exists.', 'EMAIL_TAKEN');
     }
 
@@ -41,17 +44,28 @@ export const POST = withApi(
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-
-    const profile = await Profile.create({
+    const user = await User.create({
       email,
-      userId: email,
-      fullName,
+      name: fullName,
       passwordHash,
-      referredBy,
-      role: adminEmails().has(email) ? 'admin' : 'user',
+      authProvider: 'credentials',
+      lastLogin: null,
     });
 
-    return success({ email: profile.email }, 'Account created.', 201);
+    try {
+      await Profile.create({
+        email,
+        userId: email,
+        fullName,
+        referredBy,
+        role: adminEmails().has(email) ? 'admin' : 'user',
+      });
+    } catch (error) {
+      await User.deleteOne({ _id: user._id });
+      throw error;
+    }
+
+    return success({ email: user.email }, 'Account created.', 201);
   },
   { rateLimit: { scope: 'auth-signup', max: 20 } }
 );

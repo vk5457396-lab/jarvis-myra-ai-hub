@@ -50,6 +50,7 @@
     "embla-carousel-react": "^8.6.0",
     "firebase-admin": "^14.2.0",
     "framer-motion": "^12.23.26",
+    "google-auth-library": "^11.0.0",
     "input-otp": "^1.4.2",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.462.0",

@@ -2,37 +2,8 @@ import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import Google from 'next-auth/providers/google';
 import { MongoDBAdapter } from '@auth/mongodb-adapter';
-import bcrypt from 'bcryptjs';
 import clientPromise from '@/lib/db/mongodbClient';
-import { connectMongo } from '@/lib/db/mongoose';
-import { Profile } from '@/lib/db/models';
-
-function adminEmails(): Set<string> {
-  return new Set(
-    (process.env.ADMIN_EMAILS || '')
-      .split(',')
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean)
-  );
-}
-
-/** Mirrors the old handle_new_user / assign_admin_on_signup triggers — ensures every
- * logged-in identity (Google or Credentials) has a corresponding Profile document,
- * and bootstraps the admin role from ADMIN_EMAILS on first creation. */
-async function ensureProfile(email: string, fullName?: string | null) {
-  await connectMongo();
-  const normalizedEmail = email.toLowerCase();
-  let profile = await Profile.findOne({ email: normalizedEmail });
-  if (!profile) {
-    profile = await Profile.create({
-      email: normalizedEmail,
-      fullName: fullName || null,
-      userId: normalizedEmail,
-      role: adminEmails().has(normalizedEmail) ? 'admin' : 'user',
-    });
-  }
-  return profile;
-}
+import { authenticateCredentials, syncAdapterUser } from '@/lib/auth/users';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: MongoDBAdapter(clientPromise),
@@ -53,34 +24,39 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = String(credentials?.password || '');
         if (!email || !password) return null;
 
-        await connectMongo();
-        const profile = await Profile.findOne({ email });
-        if (!profile?.passwordHash) return null;
-
-        const valid = await bcrypt.compare(password, profile.passwordHash);
-        if (!valid) return null;
+        const result = await authenticateCredentials(email, password);
+        if (!result) return null;
 
         return {
-          id: profile._id.toString(),
-          email: profile.email,
-          name: profile.fullName || undefined,
+          id: result.profile._id.toString(),
+          email: result.user.email,
+          name: result.user.name || result.profile.fullName || undefined,
+          image: result.user.profilePhoto || result.user.image || undefined,
         };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user?.email) {
-        const profile = await ensureProfile(user.email, user.name);
-        token.profileId = profile._id.toString();
-        token.role = profile.role;
-        token.sub = profile._id.toString();
+        const identity = await syncAdapterUser({
+          id: account?.provider === 'google' ? user.id : null,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+          googleId: account?.provider === 'google' ? account.providerAccountId : null,
+        });
+        token.authUserId = identity.user._id.toString();
+        token.profileId = identity.profile._id.toString();
+        token.role = identity.profile.role;
+        token.sub = identity.profile._id.toString();
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = String(token.profileId || token.sub);
+        session.user.authUserId = String(token.authUserId || '');
         session.user.role = (token.role as 'admin' | 'user') || 'user';
       }
       return session;
