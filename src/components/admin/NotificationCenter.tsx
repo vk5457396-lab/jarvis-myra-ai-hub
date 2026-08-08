@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { upload } from "@vercel/blob/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +13,7 @@ import {
 import { toast } from "sonner";
 import {
   Bell, Send, Loader2, RefreshCw, Trash2, RotateCcw, Users, Crown, Gift,
-  Smartphone, User as UserIcon, Image as ImageIcon, Link2,
+  Smartphone, User as UserIcon, Image as ImageIcon, Link2, UploadCloud, X,
 } from "lucide-react";
 
 type Target = "all" | "premium" | "free" | "lifetime" | "device" | "user";
@@ -75,9 +76,33 @@ const NotificationCenter = () => {
   const [sending, setSending] = useState(false);
   const [history, setHistory] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const set = <K extends keyof typeof emptyForm>(key: K, value: (typeof emptyForm)[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const pathname = `notifications/${Date.now()}-${file.name}`;
+      const blob = await upload(pathname, file, {
+        access: "private",
+        handleUploadUrl: "/api/admin/blob/upload",
+      });
+      // Absolute URL: the FCM payload has to be fetchable by the Android app, and
+      // the send API's image_url validation requires a real http(s) URL anyway.
+      const assetUrl = `${window.location.origin}/api/marketplace/asset?path=${encodeURIComponent(blob.url)}`;
+      set("image_url", assetUrl);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Image upload failed");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const loadHistory = useCallback(async () => {
     setLoading(true);
@@ -272,8 +297,38 @@ const NotificationCenter = () => {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="image_url"><ImageIcon size={12} className="mr-1 inline" />Image URL</Label>
-                <Input id="image_url" value={form.image_url} onChange={(e) => set("image_url", e.target.value)} placeholder="https://..." />
+                <Label><ImageIcon size={12} className="mr-1 inline" />Image</Label>
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+                {form.image_url ? (
+                  <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-1.5 pr-2">
+                    <img src={form.image_url} alt="" className="h-9 w-9 shrink-0 rounded-lg object-cover" />
+                    <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">Image attached</span>
+                    <button
+                      type="button"
+                      onClick={() => set("image_url", "")}
+                      className="shrink-0 rounded-lg p-1 text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                      aria-label="Remove image"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={uploadingImage}
+                    className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-white/10 bg-white/5 text-xs text-muted-foreground hover:border-cyan-400/50 hover:text-foreground disabled:opacity-60"
+                  >
+                    {uploadingImage ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />}
+                    {uploadingImage ? "Uploading..." : "Upload image"}
+                  </button>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="deep_link"><Link2 size={12} className="mr-1 inline" />Deep Link</Label>
