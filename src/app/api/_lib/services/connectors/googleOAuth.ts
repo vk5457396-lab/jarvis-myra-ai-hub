@@ -1,5 +1,6 @@
 import { ApiError } from '../../utils/response';
 import logger from '../../utils/logger';
+import type { ProviderAdapter } from './types';
 
 /** Endpoints per Google's current OAuth 2.0 / OpenID Connect documentation. Stable for years. */
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
@@ -93,3 +94,29 @@ export async function fetchGoogleUserInfo(accessToken: string): Promise<{ sub: s
   const payload = await response.json();
   return { sub: payload.sub, email: payload.email };
 }
+
+export const googleAdapter: ProviderAdapter = {
+  async exchangeCode(code, codeVerifier, redirectUri) {
+    const tokens = await exchangeGoogleCode(code, codeVerifier, redirectUri);
+    return {
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      expiresInSeconds: tokens.expires_in,
+      scope: tokens.scope,
+    };
+  },
+  async refreshToken(refreshToken) {
+    const tokens = await refreshGoogleToken(refreshToken);
+    return {
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      expiresInSeconds: tokens.expires_in,
+      scope: tokens.scope,
+    };
+  },
+  revokeToken: revokeGoogleToken,
+  async fetchUserInfo(accessToken) {
+    const info = await fetchGoogleUserInfo(accessToken);
+    return { id: info.sub, label: info.email };
+  },
+};

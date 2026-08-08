@@ -9,12 +9,7 @@ import {
   listConnectorIds,
 } from './connectors/registry';
 import { encryptToken, decryptToken } from '../utils/tokenCrypto';
-import {
-  exchangeGoogleCode,
-  refreshGoogleToken,
-  revokeGoogleToken,
-  fetchGoogleUserInfo,
-} from './connectors/googleOAuth';
+import { getProviderAdapter } from './connectors/adapters';
 
 const STATE_TTL_MS = 10 * 60 * 1000;
 
@@ -109,34 +104,33 @@ export async function handleOAuthCallback(
 
   const meta = getConnectorMetadata(connectorId);
   if (!meta) return { ok: false, reason: 'unknown_connector' };
+  const adapter = getProviderAdapter(meta.provider);
+  if (!adapter) return { ok: false, reason: 'unsupported_provider' };
 
   try {
-    if (meta.provider === 'google') {
-      const tokens = await exchangeGoogleCode(code, stateDoc.codeVerifier, callbackRedirectUri(connectorId));
-      const info = await fetchGoogleUserInfo(tokens.access_token);
+    const tokens = await adapter.exchangeCode(code, stateDoc.codeVerifier, callbackRedirectUri(connectorId));
+    const info = await adapter.fetchUserInfo(tokens.accessToken);
 
-      const update: Record<string, unknown> = {
-        provider: meta.provider,
-        providerAccountId: info.sub,
-        accountLabel: info.email,
-        accessTokenEncrypted: encryptToken(tokens.access_token),
-        scopes: tokens.scope.split(' ').filter(Boolean),
-        expiresAt: new Date(Date.now() + tokens.expires_in * 1000),
-        status: 'connected',
-      };
-      // Google only returns a refresh_token on first consent unless prompt=consent forced
-      // one - don't overwrite an existing stored one with nothing on a no-op reconnect.
-      if (tokens.refresh_token) {
-        update.refreshTokenEncrypted = encryptToken(tokens.refresh_token);
-      }
-
-      await UserConnection.findOneAndUpdate({ userId: stateDoc.userId, connectorId }, update, {
-        upsert: true,
-        setDefaultsOnInsert: true,
-      });
-      return { ok: true };
+    const update: Record<string, unknown> = {
+      provider: meta.provider,
+      providerAccountId: info.id,
+      accountLabel: info.label,
+      accessTokenEncrypted: encryptToken(tokens.accessToken),
+      scopes: (tokens.scope ?? '').split(' ').filter(Boolean),
+      expiresAt: tokens.expiresInSeconds ? new Date(Date.now() + tokens.expiresInSeconds * 1000) : null,
+      status: 'connected',
+    };
+    // Some providers (Google) only return a refresh_token on first consent - don't overwrite
+    // an existing stored one with nothing on a no-op reconnect.
+    if (tokens.refreshToken) {
+      update.refreshTokenEncrypted = encryptToken(tokens.refreshToken);
     }
-    return { ok: false, reason: 'unsupported_provider' };
+
+    await UserConnection.findOneAndUpdate({ userId: stateDoc.userId, connectorId }, update, {
+      upsert: true,
+      setDefaultsOnInsert: true,
+    });
+    return { ok: true };
   } catch {
     return { ok: false, reason: 'exchange_failed' };
   }
@@ -150,11 +144,12 @@ export async function disconnectConnector(userId: string, connectorId: string): 
   if (!conn) return;
 
   const meta = getConnectorMetadata(connectorId);
-  if (meta?.provider === 'google') {
+  const adapter = meta ? getProviderAdapter(meta.provider) : null;
+  if (adapter) {
     const tokenToRevoke = conn.refreshTokenEncrypted
       ? decryptToken(conn.refreshTokenEncrypted)
       : decryptToken(conn.accessTokenEncrypted);
-    await revokeGoogleToken(tokenToRevoke);
+    await adapter.revokeToken(tokenToRevoke);
   }
   await UserConnection.deleteOne({ _id: conn._id });
 }
@@ -173,30 +168,33 @@ export async function getValidAccessToken(userId: string, connectorId: string): 
   const meta = getConnectorMetadata(connectorId);
   if (!meta) throw ApiError.notFound('Unknown connector.', 'CONNECTOR_NOT_FOUND');
 
+  // No expiresAt at all means the provider's tokens don't expire (e.g. classic GitHub OAuth
+  // App tokens) - always "still valid" until a real API call reports otherwise.
   const stillValid = !conn.expiresAt || conn.expiresAt.getTime() > Date.now() + 60_000;
   if (stillValid) return decryptToken(conn.accessTokenEncrypted);
 
-  if (!conn.refreshTokenEncrypted) {
+  const adapter = getProviderAdapter(meta.provider);
+  if (!conn.refreshTokenEncrypted || !adapter?.refreshToken) {
     conn.status = 'expired';
     await conn.save();
     throw ApiError.unauthorized('Connection expired. Please reconnect.', 'CONNECTOR_REAUTH_REQUIRED');
   }
 
-  if (meta.provider === 'google') {
-    try {
-      const refreshed = await refreshGoogleToken(decryptToken(conn.refreshTokenEncrypted));
-      conn.accessTokenEncrypted = encryptToken(refreshed.access_token);
-      conn.expiresAt = new Date(Date.now() + refreshed.expires_in * 1000);
-      conn.status = 'connected';
-      await conn.save();
-      return refreshed.access_token;
-    } catch (error) {
-      conn.status = 'expired';
-      await conn.save();
-      throw error;
+  try {
+    const refreshed = await adapter.refreshToken(decryptToken(conn.refreshTokenEncrypted));
+    conn.accessTokenEncrypted = encryptToken(refreshed.accessToken);
+    conn.expiresAt = refreshed.expiresInSeconds ? new Date(Date.now() + refreshed.expiresInSeconds * 1000) : null;
+    if (refreshed.refreshToken) {
+      conn.refreshTokenEncrypted = encryptToken(refreshed.refreshToken);
     }
+    conn.status = 'connected';
+    await conn.save();
+    return refreshed.accessToken;
+  } catch (error) {
+    conn.status = 'expired';
+    await conn.save();
+    throw error;
   }
-  throw ApiError.internal('Unsupported connector provider.', 'CONNECTOR_UNSUPPORTED');
 }
 
 /** Manual "Reconnect"/refresh nudge from the app - just forces the refresh path above. */
@@ -238,6 +236,39 @@ export async function executeConnectorTool(
     if (!res.ok) throw ApiError.internal('Could not read Google Drive.', 'GOOGLE_DRIVE_FAILED');
     const data = await res.json();
     return { files: data.files || [] };
+  }
+
+  if (connectorId === 'github' && toolId === 'list_repositories') {
+    const url = new URL('https://api.github.com/user/repos');
+    url.searchParams.set('sort', 'updated');
+    url.searchParams.set('per_page', '5');
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/vnd.github+json' },
+    });
+    if (!res.ok) throw ApiError.internal('Could not read GitHub repositories.', 'GITHUB_REPOS_FAILED');
+    const data = await res.json();
+    const repositories = (data || []).map((r: any) => ({
+      name: r.full_name,
+      private: r.private,
+      url: r.html_url,
+      updated_at: r.updated_at,
+    }));
+    return { repositories };
+  }
+
+  if (connectorId === 'canva' && toolId === 'list_designs') {
+    const url = new URL('https://api.canva.com/rest/v1/designs');
+    url.searchParams.set('limit', '10');
+    url.searchParams.set('sort_by', 'modified_descending');
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (!res.ok) throw ApiError.internal('Could not read Canva designs.', 'CANVA_DESIGNS_FAILED');
+    const data = await res.json();
+    const designs = (data.items || []).map((d: any) => ({
+      title: d.title || '(untitled)',
+      url: d.urls?.edit_url,
+      updated_at: d.updated_at,
+    }));
+    return { designs };
   }
 
   throw ApiError.badRequest('Unknown tool for this connector.', 'CONNECTOR_TOOL_NOT_FOUND');

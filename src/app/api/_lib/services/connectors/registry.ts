@@ -41,6 +41,29 @@ export const CONNECTOR_METADATA: Record<string, ConnectorMetadata> = {
     ],
     scopes: ['openid', 'email', 'profile', 'https://www.googleapis.com/auth/drive.file'],
   },
+  // GitHub classic OAuth Apps don't offer a clean read-only repo scope - `repo` is the
+  // standard scope every GitHub integration requests for repository access (see
+  // githubOAuth.ts's comment on why there's no refresh - tokens don't expire by default).
+  github: {
+    id: 'github',
+    provider: 'github',
+    name: 'GitHub',
+    description: 'List your GitHub repositories.',
+    category: 'productivity',
+    capabilities: [{ id: 'repo_read', label: 'List your repositories' }],
+    scopes: ['read:user', 'repo'],
+  },
+  // Canva mandates PKCE and per-capability scopes (asset:write doesn't imply asset:read,
+  // etc.) - design:meta:read is the minimum for listing designs (canva.dev/docs/connect).
+  canva: {
+    id: 'canva',
+    provider: 'canva',
+    name: 'Canva',
+    description: 'List your Canva designs.',
+    category: 'creative',
+    capabilities: [{ id: 'design_list', label: 'List your Canva designs' }],
+    scopes: ['design:meta:read'],
+  },
 };
 
 export const OAUTH_PROVIDERS: Record<string, OAuthProviderConfig> = {
@@ -57,6 +80,23 @@ export const OAUTH_PROVIDERS: Record<string, OAuthProviderConfig> = {
       access_type: 'offline',
       prompt: 'consent',
     },
+  },
+  github: {
+    authorizeUrl: 'https://github.com/login/oauth/authorize',
+    tokenUrl: 'https://github.com/login/oauth/access_token',
+    clientIdEnv: 'GITHUB_CLIENT_ID',
+    clientSecretEnv: 'GITHUB_CLIENT_SECRET',
+    // Classic GitHub OAuth Apps don't support/require PKCE.
+    usesPkce: false,
+  },
+  canva: {
+    authorizeUrl: 'https://www.canva.com/api/oauth/authorize',
+    tokenUrl: 'https://api.canva.com/rest/v1/oauth/token',
+    revokeUrl: 'https://api.canva.com/rest/v1/oauth/revoke',
+    clientIdEnv: 'CANVA_CLIENT_ID',
+    clientSecretEnv: 'CANVA_CLIENT_SECRET',
+    // Canva's Connect API mandates PKCE (S256) - see canva.dev/docs/connect/authentication.
+    usesPkce: true,
   },
 };
 

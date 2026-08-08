@@ -31,3 +31,28 @@ export interface OAuthProviderConfig {
    *  builder so it stays provider-agnostic. */
   extraAuthorizeParams?: Record<string, string>;
 }
+
+export interface TokenResult {
+  accessToken: string;
+  refreshToken?: string;
+  /** undefined/null = token doesn't expire (e.g. classic GitHub OAuth App tokens). */
+  expiresInSeconds?: number | null;
+  scope?: string;
+}
+
+export interface ProviderUserInfo {
+  /** Stable per-provider account id - stored as providerAccountId. */
+  id: string;
+  /** Human-readable label shown in the app ("Account: <label>") - email or username. */
+  label: string;
+}
+
+/** One provider's token lifecycle, isolated behind a uniform interface so
+ *  connectorService.ts never branches on `provider === 'x'` itself. */
+export interface ProviderAdapter {
+  exchangeCode(code: string, codeVerifier: string, redirectUri: string): Promise<TokenResult>;
+  /** Omitted entirely for providers whose tokens don't expire/refresh (e.g. GitHub). */
+  refreshToken?(refreshToken: string): Promise<TokenResult>;
+  revokeToken(token: string): Promise<void>;
+  fetchUserInfo(accessToken: string): Promise<ProviderUserInfo>;
+}
