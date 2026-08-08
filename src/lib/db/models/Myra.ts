@@ -33,10 +33,15 @@ const myraDeviceSchema = new Schema(
     pushToken: { type: String, default: null },
     isCurrentDevice: { type: Boolean, default: true },
     refreshTokenHash: { type: String, default: null, select: false },
+    webHandoffHash: { type: String, select: false },
   },
   { timestamps: true, collection: 'myra_devices' }
 );
 myraDeviceSchema.index({ userId: 1, deviceId: 1 }, { unique: true });
+myraDeviceSchema.index(
+  { webHandoffHash: 1 },
+  { unique: true, partialFilterExpression: { webHandoffHash: { $type: 'string' } } }
+);
 
 const myraChatHistorySchema = new Schema(
   {

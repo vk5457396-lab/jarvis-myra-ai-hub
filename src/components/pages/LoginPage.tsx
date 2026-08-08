@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,10 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isMyraLogin = searchParams.get("redirect") === "myra://auth";
+  const successUrl = isMyraLogin ? "/auth/myra" : "/dashboard";
+  const signupUrl = isMyraLogin ? "/signup?redirect=myra%3A%2F%2Fauth" : "/signup";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +36,7 @@ const Login = () => {
       toast.error("Invalid email or password");
     } else {
       toast.success("Welcome back!");
-      router.push("/dashboard");
+      router.push(successUrl);
     }
   };
 
@@ -134,7 +138,7 @@ const Login = () => {
                       type="button"
                       variant="outline"
                       className="w-full h-12 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 gap-3 font-display"
-                      onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                      onClick={() => signIn("google", { callbackUrl: successUrl })}
                     >
                       <svg className="w-5 h-5" viewBox="0 0 24 24">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -149,7 +153,7 @@ const Login = () => {
                   <div className="mt-6 text-center">
                     <p className="text-muted-foreground text-sm">
                       Don't have an account?{" "}
-                      <Link href="/signup" className="text-primary font-semibold hover:underline">Sign Up</Link>
+                      <Link href={signupUrl} className="text-primary font-semibold hover:underline">Sign Up</Link>
                     </p>
                   </div>
                 </div>

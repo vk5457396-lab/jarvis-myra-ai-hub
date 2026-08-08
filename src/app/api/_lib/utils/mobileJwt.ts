@@ -4,8 +4,10 @@ import { ApiError } from './response';
 
 const ISSUER = 'codeninjavik-auth';
 const AUDIENCE = 'myra-android';
+const WEB_HANDOFF_AUDIENCE = 'myra-android-auth-handoff';
 const ACCESS_TTL_SECONDS = 15 * 60;
 const REFRESH_TTL_SECONDS = 30 * 24 * 60 * 60;
+const WEB_HANDOFF_TTL_SECONDS = 2 * 60;
 
 export type MobileAccessClaims = {
   sub: string;
@@ -20,6 +22,15 @@ export type MobileRefreshClaims = {
   sub: string;
   device_id: string;
   type: 'refresh';
+  iat: number;
+  exp: number;
+};
+
+export type MobileWebHandoffClaims = {
+  sub: string;
+  email: string;
+  role: 'admin' | 'user';
+  type: 'web_handoff';
   iat: number;
   exp: number;
 };
@@ -74,6 +85,28 @@ export function signMobileTokenPair({
   };
 }
 
+export function signMobileWebHandoffToken({
+  userId,
+  email,
+  role,
+}: {
+  userId: string;
+  email: string;
+  role: 'admin' | 'user';
+}) {
+  return jwt.sign(
+    { email, role, type: 'web_handoff' },
+    authSecret(),
+    {
+      issuer: ISSUER,
+      audience: WEB_HANDOFF_AUDIENCE,
+      subject: userId,
+      expiresIn: WEB_HANDOFF_TTL_SECONDS,
+      jwtid: crypto.randomUUID(),
+    }
+  );
+}
+
 function verifyToken<T>(token: string, expectedType: string): T {
   try {
     const payload = jwt.verify(token, authSecret(), {
@@ -99,6 +132,25 @@ export function verifyMobileAccessToken(token: string): MobileAccessClaims {
 
 export function verifyMobileRefreshToken(token: string): MobileRefreshClaims {
   return verifyToken<MobileRefreshClaims>(token, 'refresh');
+}
+
+export function verifyMobileWebHandoffToken(token: string): MobileWebHandoffClaims {
+  try {
+    const payload = jwt.verify(token, authSecret(), {
+      issuer: ISSUER,
+      audience: WEB_HANDOFF_AUDIENCE,
+    }) as jwt.JwtPayload;
+    if (payload.type !== 'web_handoff' || !payload.sub || !payload.email) {
+      throw ApiError.unauthorized('Invalid authentication handoff.', 'INVALID_WEB_HANDOFF');
+    }
+    return payload as MobileWebHandoffClaims;
+  } catch (error: any) {
+    if (error instanceof ApiError) throw error;
+    if (error?.name === 'TokenExpiredError') {
+      throw ApiError.unauthorized('Authentication handoff expired.', 'WEB_HANDOFF_EXPIRED');
+    }
+    throw ApiError.unauthorized('Invalid authentication handoff.', 'INVALID_WEB_HANDOFF');
+  }
 }
 
 export function hashRefreshToken(token: string): string {

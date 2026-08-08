@@ -22,6 +22,9 @@ const Signup = () => {
   const router = useRouter();
 
   const referralCode = searchParams.get("ref") || "";
+  const isMyraLogin = searchParams.get("redirect") === "myra://auth";
+  const successUrl = isMyraLogin ? "/auth/myra" : "/dashboard";
+  const loginUrl = isMyraLogin ? "/login?redirect=myra%3A%2F%2Fauth" : "/login";
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,12 +53,12 @@ const Signup = () => {
       const result = await signIn("credentials", { email, password, redirect: false });
       if (result?.error) {
         toast.success("Account created! Please sign in.");
-        router.push("/login");
+        router.push(loginUrl);
         return;
       }
 
       toast.success("Account created!");
-      router.push("/dashboard");
+      router.push(successUrl);
     } finally {
       setLoading(false);
     }
@@ -172,7 +175,7 @@ const Signup = () => {
                       type="button"
                       variant="outline"
                       className="w-full h-12 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 gap-3 font-display"
-                      onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                      onClick={() => signIn("google", { callbackUrl: successUrl })}
                     >
                       <svg className="w-5 h-5" viewBox="0 0 24 24">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -187,7 +190,7 @@ const Signup = () => {
                   <div className="mt-6 text-center">
                     <p className="text-muted-foreground text-sm">
                       Already have an account?{" "}
-                      <Link href="/login" className="text-secondary font-semibold hover:underline">Sign In</Link>
+                      <Link href={loginUrl} className="text-secondary font-semibold hover:underline">Sign In</Link>
                     </p>
                   </div>
                 </div>
