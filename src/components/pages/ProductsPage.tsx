@@ -15,6 +15,7 @@ interface MarketProduct {
   short_description: string | null;
   category: string | null;
   price: number;
+  original_price: number | null;
   thumbnail_url: string | null;
   download_count: number;
 }
@@ -141,10 +142,20 @@ const Products = () => {
                                 {p.category}
                               </span>
                             )}
-                            <span className={`text-xs font-display font-bold px-2.5 py-0.5 rounded-full ${p.price === 0 ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"}`}>
-                              {p.price === 0 ? "FREE" : `₹${p.price}`}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              {p.original_price != null && p.original_price > p.price && (
+                                <span className="text-[10px] font-display font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300">
+                                  {Math.round((1 - p.price / p.original_price) * 100)}% OFF
+                                </span>
+                              )}
+                              <span className={`text-xs font-display font-bold px-2.5 py-0.5 rounded-full ${p.price === 0 ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"}`}>
+                                {p.price === 0 ? "FREE" : `₹${p.price}`}
+                              </span>
+                            </div>
                           </div>
+                          {p.original_price != null && p.original_price > p.price && (
+                            <p className="text-xs text-muted-foreground line-through -mt-1 mb-1">₹{p.original_price}</p>
+                          )}
                           <h3 className="font-display font-bold text-lg text-foreground group-hover:text-cyan-300 transition-colors line-clamp-1">
                             {p.title}
                           </h3>

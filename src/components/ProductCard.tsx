@@ -2,7 +2,8 @@
 
 import { useState, useRef } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Check, Users, ArrowRight, Cpu, Zap, Heart, Sparkles, Crown, Flame, Shield } from "lucide-react";
+import { Check, Users, ArrowRight, Cpu, Zap, Heart, Sparkles, Crown, Flame, Shield, Smartphone, DownloadCloud } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 import ContactFormModal from "@/components/ContactFormModal";
@@ -13,10 +14,14 @@ import CurrencySelector from "@/components/CurrencySelector";
 interface ProductCardProps {
   name: string;
   tagline: string;
-  price: number;
+  price?: number;
   features: string[];
-  variant: "jarvis" | "myra" | "aria";
+  variant: "jarvis" | "myra" | "aria" | "myra_android";
   delay?: number;
+  /** Shown above the feature list instead of the price block when set (free/download products). */
+  thumbnailUrl?: string;
+  /** If set, the CTA becomes a "Download" link instead of the paid Buy/checkout flow. */
+  downloadHref?: string;
 }
 
 const variantStyles = {
@@ -62,9 +67,23 @@ const variantStyles = {
     ringColor: "hsla(160,70%,50%,0.15)",
     popularBadge: false,
   },
+  myra_android: {
+    productId: "myra_android",
+    gradient: "from-emerald-400 via-green-500 to-teal-600",
+    priceGradient: "from-emerald-300 to-green-400",
+    badgeLabel: "📱 ANDROID APP",
+    badgeIcon: Smartphone,
+    includesText: "Includes: APK File",
+    includesDesc: "Voice assistant for your phone — free to install",
+    buttonVariant: "neonCyan" as const,
+    accent: { h: 152, s: 70, l: 50 },
+    accent2: { h: 168, s: 75, l: 45 },
+    ringColor: "hsla(152,70%,50%,0.15)",
+    popularBadge: false,
+  },
 };
 
-const ProductCard = ({ name, tagline, price, features, variant, delay = 0 }: ProductCardProps) => {
+const ProductCard = ({ name, tagline, price, features, variant, delay = 0, thumbnailUrl, downloadHref }: ProductCardProps) => {
   const s = variantStyles[variant];
   const [showPaymentSelector, setShowPaymentSelector] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
@@ -202,22 +221,39 @@ const ProductCard = ({ name, tagline, price, features, variant, delay = 0 }: Pro
               </div>
             </div>
 
-            {/* Price */}
-            <div className="mb-2">
-              <motion.span
-                className={`font-display text-5xl md:text-6xl font-black bg-gradient-to-r ${s.priceGradient} bg-clip-text text-transparent tracking-tighter`}
-                style={{ textShadow: `0 0 60px hsla(${hsl}, 0.25)` }}
-              >
-                {formatPrice(price)}
-              </motion.span>
-            </div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-display font-black px-3 py-1.5 rounded-full border" style={{ background: `hsla(${hsl}, 0.06)`, borderColor: `hsla(${hsl}, 0.15)`, color: `hsla(${hsl}, 0.8)` }}>
-                <Shield size={9} className="inline mr-1" />ONE-TIME PURCHASE
-              </span>
-            </div>
-            <CurrencySelector currentCode={countryCode} onSelect={setSelectedCountry} currency={currency} />
-            <div className="mb-8" />
+            {/* Thumbnail (free/download products) or Price (paid products) */}
+            {downloadHref ? (
+              <>
+                {thumbnailUrl && (
+                  <div className="mb-5 rounded-2xl overflow-hidden border" style={{ borderColor: `hsla(${hsl}, 0.15)` }}>
+                    <img src={thumbnailUrl} alt={name} className="w-full aspect-video object-cover" loading="lazy" />
+                  </div>
+                )}
+                <div className="flex items-center gap-2 mb-8">
+                  <span className="text-[10px] font-display font-black px-3 py-1.5 rounded-full border" style={{ background: `hsla(${hsl}, 0.06)`, borderColor: `hsla(${hsl}, 0.15)`, color: `hsla(${hsl}, 0.8)` }}>
+                    <Shield size={9} className="inline mr-1" />FREE TO INSTALL
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="mb-2">
+                  <motion.span
+                    className={`font-display text-5xl md:text-6xl font-black bg-gradient-to-r ${s.priceGradient} bg-clip-text text-transparent tracking-tighter`}
+                    style={{ textShadow: `0 0 60px hsla(${hsl}, 0.25)` }}
+                  >
+                    {formatPrice(price ?? 0)}
+                  </motion.span>
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[10px] font-display font-black px-3 py-1.5 rounded-full border" style={{ background: `hsla(${hsl}, 0.06)`, borderColor: `hsla(${hsl}, 0.15)`, color: `hsla(${hsl}, 0.8)` }}>
+                    <Shield size={9} className="inline mr-1" />ONE-TIME PURCHASE
+                  </span>
+                </div>
+                <CurrencySelector currentCode={countryCode} onSelect={setSelectedCountry} currency={currency} />
+                <div className="mb-8" />
+              </>
+            )}
 
             {/* Divider */}
             <div className="h-px w-full mb-8" style={{ background: `linear-gradient(to right, transparent 5%, hsla(${hsl}, 0.2) 50%, transparent 95%)` }} />
@@ -247,26 +283,48 @@ const ProductCard = ({ name, tagline, price, features, variant, delay = 0 }: Pro
 
             {/* CTA Button */}
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-              <Button
-                variant={s.buttonVariant}
-                size="xl"
-                className="w-full group/btn font-black text-base tracking-wide relative overflow-hidden rounded-2xl"
-                onClick={() => setShowContactForm(true)}
-              >
-                <motion.div
-                  className="absolute inset-0 opacity-0 group-hover/btn:opacity-100"
-                  animate={{ x: ["-100%", "200%"] }}
-                  transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
-                  style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)", width: "40%" }}
-                />
-                <Zap size={16} className="mr-2 relative z-10" />
-                <span className="relative z-10">Buy {name} Now</span>
-                <ArrowRight size={16} className="ml-2 group-hover/btn:translate-x-2 transition-transform duration-300 relative z-10" />
-              </Button>
+              {downloadHref ? (
+                <Link href={downloadHref} className="block">
+                  <Button
+                    variant={s.buttonVariant}
+                    size="xl"
+                    className="w-full group/btn font-black text-base tracking-wide relative overflow-hidden rounded-2xl"
+                  >
+                    <motion.div
+                      className="absolute inset-0 opacity-0 group-hover/btn:opacity-100"
+                      animate={{ x: ["-100%", "200%"] }}
+                      transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
+                      style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)", width: "40%" }}
+                    />
+                    <DownloadCloud size={16} className="mr-2 relative z-10" />
+                    <span className="relative z-10">Download {name}</span>
+                    <ArrowRight size={16} className="ml-2 group-hover/btn:translate-x-2 transition-transform duration-300 relative z-10" />
+                  </Button>
+                </Link>
+              ) : (
+                <Button
+                  variant={s.buttonVariant}
+                  size="xl"
+                  className="w-full group/btn font-black text-base tracking-wide relative overflow-hidden rounded-2xl"
+                  onClick={() => setShowContactForm(true)}
+                >
+                  <motion.div
+                    className="absolute inset-0 opacity-0 group-hover/btn:opacity-100"
+                    animate={{ x: ["-100%", "200%"] }}
+                    transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
+                    style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)", width: "40%" }}
+                  />
+                  <Zap size={16} className="mr-2 relative z-10" />
+                  <span className="relative z-10">Buy {name} Now</span>
+                  <ArrowRight size={16} className="ml-2 group-hover/btn:translate-x-2 transition-transform duration-300 relative z-10" />
+                </Button>
+              )}
             </motion.div>
 
             <p className="text-center text-[10px] text-muted-foreground mt-5 tracking-wider font-display">
-              ⚡ Instant delivery • ♾️ Lifetime access • 🔄 Free updates
+              {downloadHref
+                ? "📱 Android 8.0+ • 🔒 Secure login • 🔄 Free updates"
+                : "⚡ Instant delivery • ♾️ Lifetime access • 🔄 Free updates"}
             </p>
           </div>
 

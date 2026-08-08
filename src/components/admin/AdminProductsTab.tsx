@@ -17,6 +17,7 @@ interface AdminProduct {
   description: string | null;
   category: string | null;
   price: number;
+  original_price: number | null;
   thumbnail_url: string | null;
   banner_url: string | null;
   screenshots: string[];
@@ -53,6 +54,7 @@ const emptyDraft = () => ({
   description: "",
   category: "general",
   price: 0,
+  original_price: "",
   thumbnail_url: "",
   banner_url: "",
   screenshots: [] as string[],
@@ -104,6 +106,7 @@ const AdminProductsTab = () => {
       description: p.description ?? "",
       category: p.category ?? "general",
       price: p.price,
+      original_price: p.original_price != null ? String(p.original_price) : "",
       thumbnail_url: p.thumbnail_url ?? "",
       banner_url: p.banner_url ?? "",
       screenshots: p.screenshots ?? [],
@@ -186,6 +189,7 @@ const AdminProductsTab = () => {
       description: editing.description || null,
       category: editing.category || "general",
       price: Number(editing.price) || 0,
+      original_price: editing.original_price ? Number(editing.original_price) : null,
       thumbnail_url: editing.thumbnail_url || null,
       banner_url: editing.banner_url || null,
       screenshots: editing.screenshots,
@@ -372,6 +376,16 @@ const AdminProductsTab = () => {
                     type="number"
                     value={editing.price}
                     onChange={(e) => setEditing({ ...editing, price: Number(e.target.value) })}
+                    min={0}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Was-price (optional, shows a discount badge)</label>
+                  <Input
+                    type="number"
+                    placeholder="blank = no discount shown"
+                    value={editing.original_price}
+                    onChange={(e) => setEditing({ ...editing, original_price: e.target.value })}
                     min={0}
                   />
                 </div>

@@ -19,6 +19,7 @@ function toAdmin(p: any) {
     description: p.description,
     category: p.category,
     price: p.price,
+    original_price: p.originalPrice ?? null,
     thumbnail_url: p.thumbnailUrl,
     banner_url: p.bannerUrl,
     screenshots: p.screenshots || [],
@@ -44,6 +45,9 @@ export const PUT = withApi(
     if (body.description !== undefined) set.description = optionalString(body.description, 'description', 10000);
     if (body.category !== undefined) set.category = optionalString(body.category, 'category', 40) || 'general';
     if (body.price !== undefined) set.price = Number(body.price) || 0;
+    if (body.original_price !== undefined) {
+      set.originalPrice = body.original_price ? Number(body.original_price) : null;
+    }
     if (body.thumbnail_url !== undefined) set.thumbnailUrl = optionalString(body.thumbnail_url, 'thumbnail_url', 2048);
     if (body.banner_url !== undefined) set.bannerUrl = optionalString(body.banner_url, 'banner_url', 2048);
     if (body.screenshots !== undefined) set.screenshots = Array.isArray(body.screenshots) ? body.screenshots.slice(0, 20) : [];

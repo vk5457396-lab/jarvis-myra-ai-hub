@@ -24,6 +24,7 @@ export const GET = withApi(async (req) => {
     description: p.description,
     category: p.category,
     price: p.price,
+    original_price: p.originalPrice ?? null,
     thumbnail_url: p.thumbnailUrl,
     banner_url: p.bannerUrl,
     screenshots: p.screenshots || [],

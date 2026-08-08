@@ -16,6 +16,7 @@ function toPublic(p: any) {
     short_description: p.shortDescription,
     category: p.category,
     price: p.price,
+    original_price: p.originalPrice ?? null,
     thumbnail_url: p.thumbnailUrl,
     download_count: p.downloadCount,
   };

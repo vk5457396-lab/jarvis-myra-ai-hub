@@ -81,6 +81,15 @@ export const myraFeatures = [
   "Smart Task Management",
 ];
 
+export const myraAndroidFeatures = [
+  "Voice-controlled phone automation",
+  "Calls, WhatsApp & SMS on command",
+  "Screen reading & app control",
+  "Remembers your preferences",
+  "Same account as codeninjavik.in",
+  "Free to install, plans inside the app",
+];
+
 
 export const ariaFeatures = [
   "AI Music & Creative Assistant",

@@ -8,6 +8,8 @@ const marketplaceProductSchema = new Schema(
     description: { type: String, default: null },
     category: { type: String, default: 'general' },
     price: { type: Number, default: 0 },
+    // Struck-through "was" price for a discount badge. Only shown when higher than price.
+    originalPrice: { type: Number, default: null },
     thumbnailUrl: { type: String, default: null },
     bannerUrl: { type: String, default: null },
     screenshots: { type: [String], default: [] },

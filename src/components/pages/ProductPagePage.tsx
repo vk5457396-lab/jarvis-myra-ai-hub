@@ -19,6 +19,7 @@ interface MarketProduct {
   description: string | null;
   category: string | null;
   price: number;
+  original_price: number | null;
   thumbnail_url: string | null;
   banner_url: string | null;
   screenshots: string[];
@@ -254,8 +255,16 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
                     ) : (
                       <>
                         <span className="font-display text-4xl font-black bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text text-transparent">₹{product.price}</span>
+                        {product.original_price != null && product.original_price > product.price && (
+                          <span className="text-base text-muted-foreground line-through">₹{product.original_price}</span>
+                        )}
                         <span className="text-xs text-muted-foreground">one-time</span>
                       </>
+                    )}
+                    {product.original_price != null && product.original_price > product.price && (
+                      <span className="text-[10px] font-display font-bold px-2 py-1 rounded-full bg-red-500/20 text-red-300">
+                        {Math.round((1 - product.price / product.original_price) * 100)}% OFF
+                      </span>
                     )}
                   </div>
 
