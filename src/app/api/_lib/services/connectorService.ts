@@ -210,8 +210,9 @@ export async function getValidAccessToken(userId: string, connectorId: string): 
     throw ApiError.unauthorized('Connection expired. Please reconnect.', 'CONNECTOR_REAUTH_REQUIRED');
   }
 
+  const refreshTokenUsed = conn.refreshTokenEncrypted;
   try {
-    const refreshed = await adapter.refreshToken(decryptToken(conn.refreshTokenEncrypted));
+    const refreshed = await adapter.refreshToken(decryptToken(refreshTokenUsed));
     conn.accessTokenEncrypted = encryptToken(refreshed.accessToken);
     conn.expiresAt = refreshed.expiresInSeconds ? new Date(Date.now() + refreshed.expiresInSeconds * 1000) : null;
     if (refreshed.refreshToken) {
@@ -221,6 +222,21 @@ export async function getValidAccessToken(userId: string, connectorId: string): 
     await conn.save();
     return refreshed.accessToken;
   } catch (error) {
+    // Providers like Canva issue single-use refresh tokens - two near-simultaneous calls to
+    // this function (e.g. two connector tool calls in flight at once) can both read the same
+    // refresh token before either writes back, so the loser's refresh legitimately fails
+    // (invalid_grant) even though the connection is fine. Before declaring it dead, re-check
+    // whether a concurrent call already won that race and stored a newer refresh token - if
+    // so, use what it left behind instead of forcing the user to fully reconnect.
+    const latest = await UserConnection.findById(conn._id).select('+accessTokenEncrypted +refreshTokenEncrypted');
+    if (latest && latest.status === 'connected' && latest.refreshTokenEncrypted !== refreshTokenUsed) {
+      logger.warn('Canva/OAuth refresh raced with a concurrent refresh - using the winner\'s token', {
+        connectorId,
+        provider: meta.provider,
+      });
+      return decryptToken(latest.accessTokenEncrypted);
+    }
+
     conn.status = 'expired';
     await conn.save();
     throw error;

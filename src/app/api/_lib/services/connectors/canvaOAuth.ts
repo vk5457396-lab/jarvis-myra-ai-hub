@@ -12,8 +12,14 @@ interface CanvaTokenResponse {
   refresh_token?: string;
   expires_in?: number;
   scope?: string;
-  error?: string;
-  error_description?: string;
+  // Canva's OAuth token endpoint deliberately does NOT use the RFC 6749 error shape
+  // (`error`/`error_description`) - it returns its REST API's own `code`/`message` shape
+  // for every failure (400 invalid_grant/invalid_client/unsupported_grant_type, 401
+  // invalid_client/unauthorized_user - see canva.dev/docs/connect/api-reference/
+  // authentication/generate-access-token). Logging `error`/`error_description` here would
+  // always log `undefined` for a real Canva failure.
+  code?: string;
+  message?: string;
 }
 
 function basicAuthHeader(): string {
@@ -40,15 +46,16 @@ export const canvaAdapter: ProviderAdapter = {
       body,
     });
     const json: CanvaTokenResponse = await response.json();
-    if (!response.ok || json.error || !json.access_token) {
+    if (!response.ok || json.code || !json.access_token) {
       // Deliberately logs redirect_uri and client_id length (never the secret) alongside
-      // Canva's real error - `invalid_client` here almost always means the CANVA_CLIENT_ID
-      // value or this exact redirect_uri doesn't match what's registered for the integration
-      // in the Canva Developer Portal, not a bug in how the request is built.
+      // Canva's real error. `code: "invalid_client"` here means the CANVA_CLIENT_ID/SECRET
+      // pair doesn't match what's registered for the integration in the Canva Developer
+      // Portal; `code: "invalid_grant"` on this step usually means redirect_uri isn't
+      // registered for the integration, or the code/code_verifier round trip didn't match.
       logger.error('Canva token exchange failed', {
         status: response.status,
-        error: json.error,
-        error_description: json.error_description,
+        code: json.code,
+        message: json.message,
         redirect_uri: redirectUri,
         client_id_length: (process.env.CANVA_CLIENT_ID || '').length,
       });
@@ -70,12 +77,15 @@ export const canvaAdapter: ProviderAdapter = {
       body,
     });
     const json: CanvaTokenResponse = await response.json();
-    if (!response.ok || json.error || !json.access_token) {
+    if (!response.ok || json.code || !json.access_token) {
       logger.error('Canva token refresh failed', {
         status: response.status,
-        error: json.error,
-        error_description: json.error_description,
+        code: json.code,
+        message: json.message,
       });
+      // code: "invalid_grant" here is expected/benign if two requests raced to refresh the
+      // same single-use refresh token - connectorService.getValidAccessToken retries once
+      // against whatever the winner of that race just persisted before giving up.
       throw ApiError.unauthorized('Canva connection expired. Please reconnect.', 'CANVA_REAUTH_REQUIRED');
     }
     return {
@@ -89,11 +99,15 @@ export const canvaAdapter: ProviderAdapter = {
   /** Best-effort - revoking a refresh token also invalidates its whole lineage of access tokens. */
   async revokeToken(token) {
     try {
-      await fetch(REVOKE_URL, {
+      const response = await fetch(REVOKE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', Authorization: basicAuthHeader() },
         body: new URLSearchParams({ token }),
       });
+      if (!response.ok) {
+        const json: CanvaTokenResponse = await response.json().catch(() => ({}));
+        logger.error('Canva token revoke failed', { status: response.status, code: json.code, message: json.message });
+      }
     } catch (error) {
       logger.error('Canva token revoke failed', { detail: (error as Error)?.message });
     }
@@ -104,6 +118,8 @@ export const canvaAdapter: ProviderAdapter = {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     if (!response.ok) {
+      const json: CanvaTokenResponse = await response.json().catch(() => ({}));
+      logger.error('Canva userinfo fetch failed', { status: response.status, code: json.code, message: json.message });
       throw ApiError.internal('Could not read the connected Canva account.', 'CANVA_USERINFO_FAILED');
     }
     const payload = await response.json();
