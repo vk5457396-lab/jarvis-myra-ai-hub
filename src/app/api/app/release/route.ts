@@ -3,26 +3,25 @@ export const maxDuration = 30;
 
 import { withApi, handleOptions } from '../../_lib/middleware/handler';
 import { success, ApiError } from '../../_lib/utils/response';
-import { getCurrentAppRelease } from '../../_lib/services/appReleaseService';
+import { connectMongo } from '@/lib/db/mongoose';
+import { AppRelease, APP_RELEASE_ID } from '@/lib/db/models';
 
 export const OPTIONS = handleOptions(['GET']);
 
-/**
- * Public: current MYRA release metadata. Sourced from the Products admin
- * (the product flagged "is_app_release") so there is one upload flow for
- * both the website's downloadable products and the Android app itself.
- */
+/** Public: returns release metadata only — never the GitHub asset URL. */
 export const GET = withApi(async () => {
-  const product = await getCurrentAppRelease();
-  if (!product) throw ApiError.notFound('No release configured yet.', 'RELEASE_NOT_CONFIGURED');
+  await connectMongo();
+  const doc = await AppRelease.findById(APP_RELEASE_ID)
+    .select('versionName versionCode releaseNotes fileSizeMb updatedAt')
+    .lean();
+
+  if (!doc) throw ApiError.notFound('No release configured yet.', 'RELEASE_NOT_CONFIGURED');
 
   return success({
-    product_id: (product as any)._id.toString(),
-    version_name: product.versionName,
-    version_code: product.versionCode,
-    release_notes: product.description || product.shortDescription,
-    file_size_mb: product.fileSize ? Number((product.fileSize / (1024 * 1024)).toFixed(2)) : null,
-    thumbnail_url: product.thumbnailUrl,
-    updated_at: product.updatedAt,
+    version_name: doc.versionName,
+    version_code: doc.versionCode,
+    release_notes: doc.releaseNotes,
+    file_size_mb: doc.fileSizeMb,
+    updated_at: doc.updatedAt,
   });
 });
