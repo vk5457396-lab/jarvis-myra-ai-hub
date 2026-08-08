@@ -25,6 +25,9 @@ interface AdminProduct {
   file_size: number | null;
   is_published: boolean;
   download_count: number;
+  version_name: string | null;
+  version_code: number | null;
+  is_app_release: boolean;
   created_at: string;
 }
 
@@ -60,6 +63,9 @@ const emptyDraft = () => ({
   file_name: "",
   file_size: 0,
   is_published: true,
+  version_name: "",
+  version_code: "",
+  is_app_release: false,
 });
 
 type Draft = ReturnType<typeof emptyDraft>;
@@ -111,6 +117,9 @@ const AdminProductsTab = () => {
       file_name: p.file_name ?? "",
       file_size: p.file_size ?? 0,
       is_published: p.is_published,
+      version_name: p.version_name ?? "",
+      version_code: p.version_code != null ? String(p.version_code) : "",
+      is_app_release: p.is_app_release,
     });
 
   const handleImage = async (
@@ -177,6 +186,10 @@ const AdminProductsTab = () => {
       toast.error("Please upload a downloadable file");
       return;
     }
+    if (editing.is_app_release && (!editing.version_name.trim() || !editing.version_code.trim())) {
+      toast.error("Version name and version code are required for the MYRA app release");
+      return;
+    }
     setSaving(true);
     const slug = (editing.slug || slugify(editing.title)) || `product-${Date.now()}`;
     const payload = {
@@ -193,6 +206,9 @@ const AdminProductsTab = () => {
       file_name: editing.file_name,
       file_size: editing.file_size,
       is_published: editing.is_published,
+      version_name: editing.version_name || null,
+      version_code: editing.version_code ? Number(editing.version_code) : null,
+      is_app_release: editing.is_app_release,
     };
 
     const res = editing.id
@@ -290,9 +306,16 @@ const AdminProductsTab = () => {
               <div className="p-4 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-display font-bold text-foreground line-clamp-1">{p.title}</h3>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${p.price === 0 ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"}`}>
-                    {p.price === 0 ? "FREE" : `₹${p.price}`}
-                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {p.is_app_release && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 whitespace-nowrap">
+                        MYRA v{p.version_name}
+                      </span>
+                    )}
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${p.price === 0 ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"}`}>
+                      {p.price === 0 ? "FREE" : `₹${p.price}`}
+                    </span>
+                  </div>
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-2 min-h-[2rem]">
                   {p.short_description || "—"}
@@ -504,6 +527,47 @@ const AdminProductsTab = () => {
                 />
                 <span className="text-sm">Published (visible on /products)</span>
               </label>
+
+              {/* MYRA app release */}
+              <div className="rounded-xl border border-cyan-400/20 bg-cyan-500/5 p-4 space-y-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editing.is_app_release}
+                    onChange={(e) => setEditing({ ...editing, is_app_release: e.target.checked })}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm font-semibold text-cyan-300">
+                    This is the current MYRA Android app release
+                  </span>
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  Only one product can be the active release. Setting this unflags any previous one, and
+                  the Android app + /download page will start offering this file. Saving a new version
+                  number here also pushes an update notification to every device.
+                </p>
+                {editing.is_app_release && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Version name *</label>
+                      <Input
+                        value={editing.version_name}
+                        onChange={(e) => setEditing({ ...editing, version_name: e.target.value })}
+                        placeholder="1.0.14"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Version code *</label>
+                      <Input
+                        type="number"
+                        value={editing.version_code}
+                        onChange={(e) => setEditing({ ...editing, version_code: e.target.value })}
+                        placeholder="14"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="flex gap-3 pt-2">
                 <Button onClick={save} disabled={saving} className="gap-2 flex-1">

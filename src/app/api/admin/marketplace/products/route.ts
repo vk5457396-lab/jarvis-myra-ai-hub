@@ -7,6 +7,7 @@ import { success, ApiError } from '../../../_lib/utils/response';
 import { requireString, optionalString } from '../../../_lib/utils/validation';
 import { connectMongo } from '@/lib/db/mongoose';
 import { MarketplaceProduct } from '@/lib/db/models';
+import { notifyNewAppRelease } from '../../../_lib/services/appReleaseService';
 
 export const OPTIONS = handleOptions(['GET', 'POST']);
 
@@ -27,6 +28,9 @@ function toAdmin(p: any) {
     file_size: p.fileSize,
     is_published: p.isPublished,
     download_count: p.downloadCount,
+    version_name: p.versionName ?? null,
+    version_code: p.versionCode ?? null,
+    is_app_release: !!p.isAppRelease,
     created_at: p.createdAt,
   };
 }
@@ -53,6 +57,12 @@ export const POST = withApi(
     const existing = await MarketplaceProduct.findOne({ slug });
     if (existing) throw ApiError.conflict('A product with this slug already exists.', 'SLUG_TAKEN');
 
+    const isAppRelease = Boolean(body.is_app_release);
+    if (isAppRelease) {
+      // Exactly one product can represent the current MYRA app release.
+      await MarketplaceProduct.updateMany({ isAppRelease: true }, { $set: { isAppRelease: false } });
+    }
+
     const product = await MarketplaceProduct.create({
       title,
       slug,
@@ -67,7 +77,14 @@ export const POST = withApi(
       fileName: optionalString(body.file_name, 'file_name', 255),
       fileSize: Number(body.file_size) || 0,
       isPublished: body.is_published !== false,
+      versionName: optionalString(body.version_name, 'version_name', 32),
+      versionCode: body.version_code !== undefined && body.version_code !== null ? Number(body.version_code) : null,
+      isAppRelease,
     });
+
+    if (isAppRelease && product.isPublished && product.versionName) {
+      void notifyNewAppRelease(product);
+    }
 
     return success({ product: toAdmin(product) }, 'Product created.', 201);
   },

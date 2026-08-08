@@ -17,6 +17,11 @@ const marketplaceProductSchema = new Schema(
     isPublished: { type: Boolean, default: true },
     downloadCount: { type: Number, default: 0 },
     createdBy: { type: Schema.Types.ObjectId, ref: 'Profile', default: null },
+    // Set only on the one product that represents the official MYRA Android APK —
+    // lets the app-update system reuse this same upload flow instead of a second admin page.
+    versionName: { type: String, default: null },
+    versionCode: { type: Number, default: null },
+    isAppRelease: { type: Boolean, default: false, index: true },
   },
   { timestamps: true }
 );

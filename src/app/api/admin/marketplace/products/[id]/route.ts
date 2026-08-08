@@ -7,6 +7,7 @@ import { success, ApiError } from '../../../../_lib/utils/response';
 import { optionalString } from '../../../../_lib/utils/validation';
 import { connectMongo } from '@/lib/db/mongoose';
 import { MarketplaceProduct } from '@/lib/db/models';
+import { notifyNewAppRelease } from '../../../../_lib/services/appReleaseService';
 
 export const OPTIONS = handleOptions(['PUT', 'DELETE']);
 
@@ -27,6 +28,9 @@ function toAdmin(p: any) {
     file_size: p.fileSize,
     is_published: p.isPublished,
     download_count: p.downloadCount,
+    version_name: p.versionName ?? null,
+    version_code: p.versionCode ?? null,
+    is_app_release: !!p.isAppRelease,
     created_at: p.createdAt,
   };
 }
@@ -51,10 +55,29 @@ export const PUT = withApi(
     if (body.file_name !== undefined) set.fileName = optionalString(body.file_name, 'file_name', 255);
     if (body.file_size !== undefined) set.fileSize = Number(body.file_size) || 0;
     if (body.is_published !== undefined) set.isPublished = Boolean(body.is_published);
+    if (body.version_name !== undefined) set.versionName = optionalString(body.version_name, 'version_name', 32);
+    if (body.version_code !== undefined) {
+      set.versionCode = body.version_code === null || body.version_code === '' ? null : Number(body.version_code);
+    }
+    const settingAsRelease = body.is_app_release !== undefined && Boolean(body.is_app_release);
+    if (body.is_app_release !== undefined) set.isAppRelease = Boolean(body.is_app_release);
 
     await connectMongo();
+    const before = await MarketplaceProduct.findById(id).select('versionCode').lean();
+    if (!before) throw ApiError.notFound('Product not found.', 'PRODUCT_NOT_FOUND');
+
+    if (settingAsRelease) {
+      // Exactly one product can represent the current MYRA app release.
+      await MarketplaceProduct.updateMany({ _id: { $ne: id }, isAppRelease: true }, { $set: { isAppRelease: false } });
+    }
+
     const product = await MarketplaceProduct.findByIdAndUpdate(id, { $set: set }, { new: true });
     if (!product) throw ApiError.notFound('Product not found.', 'PRODUCT_NOT_FOUND');
+
+    const versionChanged = (before as any).versionCode !== product.versionCode;
+    if (product.isAppRelease && product.isPublished && product.versionName && versionChanged) {
+      void notifyNewAppRelease(product);
+    }
 
     return success({ product: toAdmin(product) }, 'Product updated.');
   },

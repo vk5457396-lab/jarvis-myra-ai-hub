@@ -11,6 +11,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 interface ReleaseInfo {
+  product_id: string;
   version_name: string;
   version_code: number;
   release_notes: string | null;
@@ -36,14 +37,19 @@ const DownloadPage = () => {
 
   const handleDownload = async () => {
     if (!session?.user) { router.push("/login"); return; }
+    if (!release?.product_id) return;
 
     setDownloading(true);
     try {
-      const res = await fetch("/api/app/release/download");
+      const res = await fetch("/api/marketplace/download", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ product_id: release.product_id }),
+      });
 
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        toast.error(body?.message || "Download failed. Try again.");
+        toast.error(body?.message || body?.error || "Download failed. Try again.");
         return;
       }
 
@@ -51,7 +57,7 @@ const DownloadPage = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `CodeNinjaVik-${release?.version_name || "app"}.apk`;
+      a.download = `MYRA-${release?.version_name || "app"}.apk`;
       document.body.appendChild(a);
       a.click();
       a.remove();
