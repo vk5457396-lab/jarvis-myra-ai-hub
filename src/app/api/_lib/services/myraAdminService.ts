@@ -92,6 +92,8 @@ export async function generateMyraAccessKeys({
   credits,
   note,
   createdBy,
+  assignedEmail,
+  paymentId,
 }: {
   plan: string;
   count: number;
@@ -99,10 +101,17 @@ export async function generateMyraAccessKeys({
   credits?: number | null;
   note?: string | null;
   createdBy?: string | null;
+  assignedEmail?: string | null;
+  paymentId?: string | null;
 }) {
   if (!MYRA_PLANS[plan]) {
     throw ApiError.badRequest(`plan must be one of: ${Object.keys(MYRA_PLANS).join(', ')}.`, 'INVALID_PLAN');
   }
+  const normalizedEmail = assignedEmail ? assignedEmail.trim().toLowerCase() : null;
+  if (normalizedEmail && count > 1) {
+    throw ApiError.badRequest('An email-assigned key can only be generated one at a time.', 'INVALID_COUNT');
+  }
+
   await connectMongo();
   const existing = await MyraAccessKey.find({}, { key: 1 }).lean();
   const taken = new Set(existing.map((k: any) => k.key as string));
@@ -116,6 +125,8 @@ export async function generateMyraAccessKeys({
       credits: credits ?? null,
       note: note || null,
       createdBy: createdBy || null,
+      assignedEmail: normalizedEmail,
+      paymentId: paymentId || null,
     }))
   );
 }
@@ -131,16 +142,28 @@ export async function redeemMyraAccessKey({
 }) {
   await connectMongo();
   const normalizedKey = key.trim().toUpperCase();
+  const userEmail = user.email.toLowerCase();
 
-  // Atomic claim: only one caller can flip an "available" key to "redeemed".
+  // Atomic claim: only one caller can flip an "available" key to "redeemed", and
+  // an email-assigned key can only be claimed by that exact account.
   const record = await MyraAccessKey.findOneAndUpdate(
-    { key: normalizedKey, status: 'available' },
+    {
+      key: normalizedKey,
+      status: 'available',
+      $or: [{ assignedEmail: null }, { assignedEmail: userEmail }],
+    },
     { $set: { status: 'redeemed', redeemedBy: user._id, redeemedAt: new Date() } },
     { new: true }
   );
   if (!record) {
     const existing = await MyraAccessKey.findOne({ key: normalizedKey });
     if (!existing) throw ApiError.notFound('Access key not found.', 'ACCESS_KEY_NOT_FOUND');
+    if (existing.assignedEmail && existing.assignedEmail !== userEmail) {
+      throw ApiError.forbidden(
+        'This access key is assigned to a different account. Log in with the email it was issued to.',
+        'ACCESS_KEY_WRONG_ACCOUNT'
+      );
+    }
     throw ApiError.conflict('This access key has already been used or disabled.', 'ACCESS_KEY_ALREADY_USED');
   }
 

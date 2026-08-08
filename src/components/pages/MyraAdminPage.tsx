@@ -48,6 +48,7 @@ interface AccessKeyRow {
   status: string;
   redeemed_by: string | null;
   redeemed_at: string | null;
+  assigned_email: string | null;
   note: string | null;
   created_at: string;
 }
@@ -81,6 +82,7 @@ const MyraAdminPage = () => {
 
   const [keyPlan, setKeyPlan] = useState("premium");
   const [keyCount, setKeyCount] = useState(1);
+  const [keyAssignedEmail, setKeyAssignedEmail] = useState("");
   const [keys, setKeys] = useState<AccessKeyRow[]>([]);
   const [generatingKeys, setGeneratingKeys] = useState(false);
   const [loadingKeys, setLoadingKeys] = useState(false);
@@ -158,14 +160,16 @@ const MyraAdminPage = () => {
   };
 
   const generateKeys = async () => {
+    const assignedEmail = keyAssignedEmail.trim();
+    const qty = assignedEmail ? 1 : Math.max(1, Math.min(100, Math.floor(keyCount) || 1));
     setGeneratingKeys(true);
     try {
-      const qty = Math.max(1, Math.min(100, Math.floor(keyCount) || 1));
       await api("/api/admin/myra/access-keys", {
         method: "POST",
-        body: JSON.stringify({ plan: keyPlan, count: qty }),
+        body: JSON.stringify({ plan: keyPlan, count: qty, assigned_email: assignedEmail || undefined }),
       });
       toast.success(`${qty} access key${qty > 1 ? "s" : ""} generated`);
+      setKeyAssignedEmail("");
       await loadKeys();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to generate keys");
@@ -384,7 +388,18 @@ const MyraAdminPage = () => {
                 max={100}
                 className="w-24"
                 value={keyCount}
+                disabled={!!keyAssignedEmail.trim()}
                 onChange={(e) => setKeyCount(Number(e.target.value))}
+              />
+            </div>
+            <div>
+              <Label className="mb-1 block text-xs">Assign to email (optional)</Label>
+              <Input
+                type="email"
+                placeholder="only this account can redeem"
+                className="w-56"
+                value={keyAssignedEmail}
+                onChange={(e) => setKeyAssignedEmail(e.target.value)}
               />
             </div>
             <Button onClick={generateKeys} disabled={generatingKeys}>
@@ -403,6 +418,7 @@ const MyraAdminPage = () => {
                   <th className="p-2 text-left">Key</th>
                   <th className="p-2 text-left">Plan</th>
                   <th className="p-2 text-left">Status</th>
+                  <th className="p-2 text-left">Assigned to</th>
                   <th className="p-2 text-left">Redeemed</th>
                   <th className="p-2 text-right">Actions</th>
                 </tr>
@@ -420,6 +436,7 @@ const MyraAdminPage = () => {
                         {k.status}
                       </span>
                     </td>
+                    <td className="p-2 text-xs text-muted-foreground">{k.assigned_email ?? "anyone"}</td>
                     <td className="p-2 text-xs text-muted-foreground">
                       {k.redeemed_at ? new Date(k.redeemed_at).toLocaleString() : "—"}
                     </td>
@@ -438,7 +455,7 @@ const MyraAdminPage = () => {
                   </tr>
                 ))}
                 {keys.length === 0 && (
-                  <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">No access keys yet.</td></tr>
+                  <tr><td colSpan={6} className="p-4 text-center text-muted-foreground">No access keys yet.</td></tr>
                 )}
               </tbody>
             </table>

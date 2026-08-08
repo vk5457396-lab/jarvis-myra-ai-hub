@@ -121,9 +121,14 @@ const myraAccessKeySchema = new Schema(
     redeemedAt: { type: Date, default: null },
     note: { type: String, default: null },
     createdBy: { type: String, default: null },
+    // If set, only this email can redeem the key - e.g. issued for one specific purchase.
+    assignedEmail: { type: String, default: null, index: true },
+    // Razorpay payment_id that generated this key, when self-purchased on the website.
+    paymentId: { type: String, default: null },
   },
   { timestamps: true, collection: 'myra_access_keys' }
 );
+myraAccessKeySchema.index({ paymentId: 1 }, { unique: true, sparse: true });
 
 export const MyraProfile: Model<any> =
   models.MyraProfile || model('MyraProfile', myraProfileSchema);

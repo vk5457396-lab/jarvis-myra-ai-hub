@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   Wallet, Users, Copy, LogOut, TrendingUp, Gift, Shield,
-  ArrowDownToLine, IndianRupee, Clock, CheckCircle2, XCircle
+  ArrowDownToLine, IndianRupee, Clock, CheckCircle2, XCircle,
+  Smartphone, KeyRound, Loader2, Sparkles,
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -42,6 +43,38 @@ interface Withdrawal {
   processed_at: string | null;
 }
 
+interface MyraKey {
+  key: string;
+  plan: string;
+  status: string;
+  redeemed_at: string | null;
+  created_at: string;
+}
+
+const MYRA_PLAN_OPTIONS: { value: string; label: string; price: number }[] = [
+  { value: "basic", label: "Basic", price: 299 },
+  { value: "premium", label: "Premium", price: 349 },
+  { value: "elite", label: "Elite", price: 449 },
+  { value: "elite_pro", label: "Elite Pro", price: 559 },
+  { value: "membership", label: "Membership (Unlimited)", price: 999 },
+];
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
+const loadRazorpayScript = () =>
+  new Promise<boolean>((resolve) => {
+    if (window.Razorpay) return resolve(true);
+    const s = document.createElement("script");
+    s.src = "https://checkout.razorpay.com/v1/checkout.js";
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.body.appendChild(s);
+  });
+
 const Dashboard = () => {
   const { status } = useSession();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -53,7 +86,76 @@ const Dashboard = () => {
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawing, setWithdrawing] = useState(false);
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
+  const [myraKeys, setMyraKeys] = useState<MyraKey[]>([]);
+  const [buyingPlan, setBuyingPlan] = useState<string | null>(null);
   const router = useRouter();
+
+  const loadMyraKeys = async () => {
+    const res = await fetch("/api/myra/website-purchase/keys");
+    const json = await res.json();
+    if (json.success) setMyraKeys(json.data.keys);
+  };
+
+  const buyMyraPlan = async (plan: string) => {
+    setBuyingPlan(plan);
+    try {
+      const scriptOk = await loadRazorpayScript();
+      if (!scriptOk) { toast.error("Could not load payment gateway."); return; }
+
+      const orderRes = await fetch("/api/myra/website-purchase/order", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
+      const orderJson = await orderRes.json();
+      if (!orderRes.ok || !orderJson.success) {
+        toast.error(orderJson.message || "Could not start payment");
+        return;
+      }
+      const order = orderJson.data;
+
+      const checkout = new window.Razorpay({
+        key: order.key_id,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.order_id,
+        name: "MYRA",
+        description: `MYRA ${plan} plan access key`,
+        prefill: { email: profile?.email || "" },
+        theme: { color: "#10b981" },
+        handler: async (response: any) => {
+          const verifyRes = await fetch("/api/myra/website-purchase/verify", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              plan,
+              order_id: response.razorpay_order_id,
+              payment_id: response.razorpay_payment_id,
+              signature: response.razorpay_signature,
+            }),
+          });
+          const verifyJson = await verifyRes.json();
+          if (!verifyRes.ok || !verifyJson.success) {
+            toast.error(verifyJson.message || "Payment succeeded but key issuance failed. Contact support.");
+            return;
+          }
+          toast.success(`Access key issued: ${verifyJson.data.key}`);
+          loadMyraKeys();
+        },
+        modal: { ondismiss: () => setBuyingPlan(null) },
+      });
+      checkout.open();
+    } catch {
+      toast.error("Could not start payment. Try again.");
+    } finally {
+      setBuyingPlan(null);
+    }
+  };
+
+  const copyMyraKey = (key: string) => {
+    navigator.clipboard.writeText(key);
+    toast.success("Key copied");
+  };
 
   const loadData = async () => {
     const [profileRes, walletRes] = await Promise.all([fetch("/api/profile"), fetch("/api/wallet")]);
@@ -80,6 +182,7 @@ const Dashboard = () => {
     if (status === "loading") return;
     if (status === "unauthenticated") { router.push("/login"); return; }
     loadData();
+    loadMyraKeys();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
@@ -254,6 +357,71 @@ const Dashboard = () => {
                     <Copy size={14} /> Copy Link
                   </Button>
                 </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* MYRA Android Access Keys */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.42 }} className="mb-10">
+            <div className="relative rounded-2xl overflow-hidden">
+              <div className="absolute inset-0 rounded-2xl p-px overflow-hidden">
+                <div className="absolute inset-[-200%]" style={{ background: "conic-gradient(from 0deg, hsla(160,70%,50%,0.3), transparent 40%, hsla(38,92%,55%,0.3), transparent 80%)" }} />
+              </div>
+              <div className="relative rounded-[calc(1rem-1px)] m-px p-6" style={{ background: "linear-gradient(165deg, hsla(160,70%,50%,0.04) 0%, hsla(220,20%,6%,0.97) 100%)" }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <Smartphone size={20} className="text-emerald-400" />
+                  <h2 className="font-display text-lg font-bold text-foreground">MYRA Android App Access</h2>
+                </div>
+                <p className="text-muted-foreground text-sm mb-4">
+                  Buy a plan to get an access key here — redeem it inside the MYRA app (Account → License Key) to
+                  activate it, using this same email.
+                </p>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+                  {MYRA_PLAN_OPTIONS.map((p) => (
+                    <button
+                      key={p.value}
+                      onClick={() => buyMyraPlan(p.value)}
+                      disabled={buyingPlan !== null}
+                      className="rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 p-4 text-center transition-colors disabled:opacity-50"
+                    >
+                      <p className="text-xs text-muted-foreground font-display tracking-wider mb-1">{p.label.toUpperCase()}</p>
+                      <p className="text-xl font-display font-black text-foreground">₹{p.price}</p>
+                      <div className="mt-2 flex items-center justify-center gap-1 text-xs text-emerald-400">
+                        {buyingPlan === p.value ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                        Buy
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {myraKeys.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground font-display tracking-wider mb-2">YOUR ACCESS KEYS</p>
+                    {myraKeys.map((k) => (
+                      <div key={k.key} className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/5">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <KeyRound size={16} className="text-amber-400 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-mono text-foreground truncate">{k.key}</p>
+                            <p className="text-xs text-muted-foreground">{k.plan} · {new Date(k.created_at).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${
+                            k.status === "available" ? "bg-emerald-500/20 text-emerald-400" :
+                            k.status === "redeemed" ? "bg-white/10 text-muted-foreground" : "bg-red-500/20 text-red-400"
+                          }`}>
+                            {k.status.toUpperCase()}
+                          </span>
+                          <Button size="sm" variant="ghost" onClick={() => copyMyraKey(k.key)}>
+                            <Copy size={12} />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

@@ -4,7 +4,7 @@ export const maxDuration = 30;
 import { withApi, handleOptions } from '../../../_lib/middleware/handler';
 import { requireAdmin } from '../../../_lib/middleware/admin';
 import { success, ApiError } from '../../../_lib/utils/response';
-import { optionalString } from '../../../_lib/utils/validation';
+import { optionalString, validateEmail } from '../../../_lib/utils/validation';
 import { connectMongo } from '@/lib/db/mongoose';
 import { MyraAccessKey } from '@/lib/db/models';
 import { MYRA_PLANS } from '../../../_lib/services/myraService';
@@ -22,6 +22,7 @@ function publicAccessKey(k: any) {
     status: k.status,
     redeemed_by: k.redeemedBy ? k.redeemedBy.toString() : null,
     redeemed_at: k.redeemedAt,
+    assigned_email: k.assignedEmail || null,
     note: k.note,
     created_by: k.createdBy,
     created_at: k.createdAt,
@@ -50,6 +51,7 @@ export const POST = withApi(
       body.duration_days !== undefined && body.duration_days !== null ? Number(body.duration_days) : undefined;
     const credits = body.credits !== undefined && body.credits !== null ? Number(body.credits) : undefined;
     const note = optionalString(body.note, 'note', 256);
+    const assignedEmail = body.assigned_email ? validateEmail(body.assigned_email) : null;
 
     const docs = await generateMyraAccessKeys({
       plan,
@@ -57,6 +59,7 @@ export const POST = withApi(
       durationDays,
       credits,
       note,
+      assignedEmail,
       createdBy: admin.via === 'session' ? admin.userId || 'admin_session' : 'admin_api_key',
     });
 
