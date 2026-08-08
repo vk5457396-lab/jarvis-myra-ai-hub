@@ -1,50 +1,43 @@
 export const runtime = 'nodejs';
-export const maxDuration = 120;
 
-import { put } from '@vercel/blob';
-import { withApi, handleOptions } from '../../../_lib/middleware/handler';
+import { NextResponse, type NextRequest } from 'next/server';
+import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
+import { handleOptions } from '../../../_lib/middleware/handler';
 import { requireAdmin } from '../../../_lib/middleware/admin';
-import { success, ApiError } from '../../../_lib/utils/response';
+import { rateLimit } from '../../../_lib/middleware/rateLimit';
 
 export const OPTIONS = handleOptions(['POST']);
 
 /**
- * Admin-only file upload proxy to Vercel Blob — replaces direct browser uploads
- * to Supabase Storage.
+ * Admin-only token exchange for direct browser -> Vercel Blob uploads.
  *
- * The store backing this project is configured private-only (Vercel rejects any
- * `access: 'public'` put with "Cannot use public access on a private store"), so
- * every blob is written with `access: 'private'` regardless of what the caller
- * asks for. The `access` field is kept only as an *intent* signal for the
- * response shape:
- *  - "public" (thumbnails/banners/screenshots): returned as a URL through
- *    /api/marketplace/asset, so <img> tags can render it with no auth.
- *  - "private" (the paid downloadable product file): returned as the raw blob
- *    URL, unchanged — /api/marketplace/download already reads that directly
- *    via the Blob SDK's own `get()`, which needs the blob URL/pathname, not
- *    our proxy's URL.
+ * Only a short-lived upload token round-trips through this serverless
+ * function; the file bytes go straight from the browser to Blob storage.
+ * This route used to `put()` the file itself, which meant the whole upload
+ * was buffered through this function first - Vercel's Node.js Serverless
+ * Functions cap request bodies at 4.5MB, so anything APK-sized (50-70MB)
+ * silently failed the connection before the body finished sending, and the
+ * client's missing error handling left the "Uploading..." spinner stuck
+ * forever (fixed alongside this in AdminProductsTab.tsx).
  */
-export const POST = withApi(
-  async (req) => {
-    await requireAdmin(req);
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  const body = (await request.json()) as HandleUploadBody;
 
-    const form = await req.formData();
-    const file = form.get('file');
-    const folder = String(form.get('folder') || 'uploads').replace(/[^a-z0-9/_-]/gi, '');
-    const isPublicIntent = form.get('access') !== 'private';
-
-    if (!(file instanceof File)) {
-      throw ApiError.badRequest('file is required.', 'MISSING_FIELD', { field: 'file' });
-    }
-
-    const pathname = `${folder}/${Date.now()}-${file.name}`;
-    const blob = await put(pathname, file, { access: 'private', addRandomSuffix: true });
-
-    const url = isPublicIntent
-      ? `/api/marketplace/asset?path=${encodeURIComponent(blob.url)}`
-      : blob.url;
-
-    return success({ url, pathname: blob.pathname }, 'Uploaded.', 201);
-  },
-  { rateLimit: { scope: 'admin-blob-upload', max: 60 } }
-);
+  try {
+    const jsonResponse = await handleUpload({
+      body,
+      request,
+      onBeforeGenerateToken: async () => {
+        await requireAdmin(request);
+        rateLimit(request, { scope: 'admin-blob-upload', max: 60 });
+        return { addRandomSuffix: true };
+      },
+    });
+    return NextResponse.json(jsonResponse);
+  } catch (error) {
+    return NextResponse.json(
+      { error: (error as Error).message || 'Upload authorization failed.' },
+      { status: 400 }
+    );
+  }
+}

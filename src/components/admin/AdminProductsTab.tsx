@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { upload } from "@vercel/blob/client";
 import {
   Plus, UploadCloud, Trash2, ImageIcon, Loader2, Save, X, Edit3, Package, Search,
 } from "lucide-react";
@@ -33,17 +34,24 @@ const slugify = (s: string) =>
   s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 80);
 
 const uploadToBlob = async (file: File, folder: string, access: "public" | "private"): Promise<string | null> => {
-  const form = new FormData();
-  form.append("file", file);
-  form.append("folder", folder);
-  form.append("access", access);
-  const res = await fetch("/api/admin/blob/upload", { method: "POST", body: form });
-  const json = await res.json();
-  if (!res.ok || !json.success) {
-    toast.error(json.message || "Upload failed");
+  try {
+    // Uploads go straight from the browser to Blob storage (bypasses the
+    // ~4.5MB body limit on Vercel serverless functions, which broke
+    // anything APK-sized when proxied through an API route). The store is
+    // private-only, so access is always requested as "private" here; the
+    // `access` intent still controls how the resulting URL is shaped below.
+    const pathname = `${folder}/${Date.now()}-${file.name}`;
+    const blob = await upload(pathname, file, {
+      access: "private",
+      handleUploadUrl: "/api/admin/blob/upload",
+    });
+    return access === "private"
+      ? blob.url
+      : `/api/marketplace/asset?path=${encodeURIComponent(blob.url)}`;
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : "Upload failed");
     return null;
   }
-  return json.data.url as string;
 };
 
 const emptyDraft = () => ({
@@ -123,39 +131,48 @@ const AdminProductsTab = () => {
     const file = e.target.files?.[0];
     if (!file || !editing) return;
     setUploadingField(field);
-    const url = await uploadToBlob(file, field, "public");
-    if (url) setEditing({ ...editing, [field]: url });
-    setUploadingField(null);
-    e.target.value = "";
+    try {
+      const url = await uploadToBlob(file, field, "public");
+      if (url) setEditing({ ...editing, [field]: url });
+    } finally {
+      setUploadingField(null);
+      e.target.value = "";
+    }
   };
 
   const handleScreenshots = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     if (!files.length || !editing) return;
     setUploadingField("screenshots");
-    const urls: string[] = [];
-    for (const f of files) {
-      const u = await uploadToBlob(f, "screenshots", "public");
-      if (u) urls.push(u);
+    try {
+      const urls: string[] = [];
+      for (const f of files) {
+        const u = await uploadToBlob(f, "screenshots", "public");
+        if (u) urls.push(u);
+      }
+      setEditing({ ...editing, screenshots: [...editing.screenshots, ...urls] });
+    } finally {
+      setUploadingField(null);
+      e.target.value = "";
     }
-    setEditing({ ...editing, screenshots: [...editing.screenshots, ...urls] });
-    setUploadingField(null);
-    e.target.value = "";
   };
 
   const handleFile = async (file: File) => {
     if (!editing) return;
     setUploadingField("file");
-    const url = await uploadToBlob(file, "products", "private");
-    if (url) {
-      setEditing({
-        ...editing,
-        file_path: url,
-        file_name: file.name,
-        file_size: file.size,
-      });
+    try {
+      const url = await uploadToBlob(file, "products", "private");
+      if (url) {
+        setEditing({
+          ...editing,
+          file_path: url,
+          file_name: file.name,
+          file_size: file.size,
+        });
+      }
+    } finally {
+      setUploadingField(null);
     }
-    setUploadingField(null);
   };
 
   const onDrop = (e: React.DragEvent) => {
