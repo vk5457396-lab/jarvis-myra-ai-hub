@@ -7,8 +7,22 @@ import { ApiError } from '../../../_lib/utils/response';
 import { connectMongo } from '@/lib/db/mongoose';
 import { AppRelease, APP_RELEASE_ID, AppReleaseDownload } from '@/lib/db/models';
 import { auth } from '@/lib/auth/config';
+import { requireMobileUser } from '../../../_lib/middleware/mobileAuth';
 
 export const OPTIONS = handleOptions(['GET']);
+
+/** Accepts either a website session (browser /download page) or a mobile JWT (Android app). */
+async function resolveUserId(req: NextRequest): Promise<string> {
+  const session = await auth();
+  if (session?.user?.id) return session.user.id;
+
+  if (req.headers.get('authorization')) {
+    const { user } = await requireMobileUser(req);
+    return user._id.toString();
+  }
+
+  throw ApiError.unauthorized('Login required to download.', 'AUTH_REQUIRED');
+}
 
 /**
  * Streams the APK from the private GitHub release to a logged-in user.
@@ -17,10 +31,7 @@ export const OPTIONS = handleOptions(['GET']);
  */
 export const GET = withApi(
   async (req: NextRequest) => {
-    const session = await auth();
-    if (!session?.user) {
-      throw ApiError.unauthorized('Login required to download.', 'AUTH_REQUIRED');
-    }
+    const userId = await resolveUserId(req);
 
     await connectMongo();
     const release = await AppRelease.findById(APP_RELEASE_ID).select('versionName apkAssetUrl').lean();
@@ -46,7 +57,7 @@ export const GET = withApi(
 
     try {
       await AppReleaseDownload.create({
-        userId: session.user.id,
+        userId,
         versionName: release.versionName,
         ip: req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
         userAgent: req.headers.get('user-agent') || null,

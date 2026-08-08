@@ -7,6 +7,8 @@ import { success, ApiError } from '../../../_lib/utils/response';
 import { optionalString, optionalUrl, validatePositiveInt, requireString } from '../../../_lib/utils/validation';
 import { connectMongo } from '@/lib/db/mongoose';
 import { AppRelease, APP_RELEASE_ID } from '@/lib/db/models';
+import { dispatchNotification } from '../../../_lib/services/notificationService';
+import logger from '../../../_lib/utils/logger';
 
 export const OPTIONS = handleOptions(['GET', 'PUT']);
 
@@ -51,6 +53,8 @@ export const PUT = withApi(
     }
 
     await connectMongo();
+    const previous = await AppRelease.findById(APP_RELEASE_ID).select('versionCode').lean();
+
     const doc = await AppRelease.findByIdAndUpdate(
       APP_RELEASE_ID,
       {
@@ -65,6 +69,18 @@ export const PUT = withApi(
       },
       { new: true, upsert: true }
     );
+
+    if (!previous || versionCode > previous.versionCode) {
+      dispatchNotification({
+        title: `MYRA v${versionName} is available`,
+        body: releaseNotes || "Tap to see what's new and update.",
+        notification_type: 'app_update',
+        priority: 'high',
+        target: 'all',
+      }).catch((error) => {
+        logger.error('Failed to push app-update notification', { detail: (error as Error)?.message });
+      });
+    }
 
     return success(
       {
