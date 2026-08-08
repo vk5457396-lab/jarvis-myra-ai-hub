@@ -3,7 +3,7 @@ import { getMessaging } from 'firebase-admin/messaging';
 import logger from './logger';
 import { ApiError } from './response';
 import { connectMongo } from '@/lib/db/mongoose';
-import { Device } from '@/lib/db/models';
+import { MyraDevice } from '@/lib/db/models';
 
 let app: App | null = null;
 
@@ -85,7 +85,7 @@ function buildMessage(payload: any) {
 async function removeInvalidTokens(tokens: string[]) {
   if (!tokens.length) return;
   await connectMongo();
-  await Device.updateMany({ fcmToken: { $in: tokens } }, { $set: { fcmToken: null } });
+  await MyraDevice.updateMany({ pushToken: { $in: tokens } }, { $set: { pushToken: null } });
   logger.warn('Removed invalid FCM tokens', { count: tokens.length });
 }
 

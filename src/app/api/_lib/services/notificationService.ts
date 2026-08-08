@@ -1,9 +1,8 @@
 import { ApiError } from '../utils/response';
 import logger from '../utils/logger';
 import { sendToTokens } from '../utils/fcm';
-import { normalizePlan } from '../utils/plan';
 import { connectMongo } from '@/lib/db/mongoose';
-import { License, Device, Notification, NotificationDelivery } from '@/lib/db/models';
+import { MyraDevice, MyraProfile, Notification, NotificationDelivery } from '@/lib/db/models';
 
 export function toLegacyNotification(doc: any) {
   if (!doc) return null;
@@ -30,30 +29,47 @@ export function toLegacyNotification(doc: any) {
   };
 }
 
-/** Devices whose bound license is currently active (not expired / disabled). */
-async function activeLicenseDeviceIds(planFilter: string | null) {
-  await connectMongo();
-  const licenses = await License.find({ deviceId: { $ne: null } })
-    .select('deviceId plan status expiresAt')
-    .lean();
-
-  const now = Date.now();
-  return licenses
-    .filter((l: any) => l.status !== 'disabled')
-    .filter((l: any) => !l.expiresAt || new Date(l.expiresAt).getTime() > now)
-    .filter((l: any) => (planFilter ? normalizePlan(l.plan) === planFilter : true))
-    .map((l: any) => l.deviceId);
+/** True for a MyraProfile with a currently-active paid plan (not free, not cancelled/expired,
+ *  and not past subscriptionExpiry). Mirrors the freemium check the Android app itself uses. */
+function hasActivePaidPlan(profile: any): boolean {
+  if (!profile.subscriptionType || profile.subscriptionType === 'free') return false;
+  if (profile.subscriptionStatus === 'cancelled' || profile.subscriptionStatus === 'expired') return false;
+  if (profile.subscriptionExpiry && new Date(profile.subscriptionExpiry).getTime() <= Date.now()) return false;
+  return true;
 }
 
-/** Resolves the audience into a list of { device_id, fcm_token } targets. */
+/** deviceIds of MyraDevices (with a push token) belonging to users whose MyraProfile passes
+ *  `filter` - the MYRA-native equivalent of a plan-based device audience. */
+async function myraDeviceIdsForProfileFilter(filter: (profile: any) => boolean): Promise<Set<string>> {
+  await connectMongo();
+  const profiles = await MyraProfile.find({})
+    .select('userId subscriptionType subscriptionStatus subscriptionExpiry')
+    .lean();
+  const matchingUserIds = profiles.filter(filter).map((p: any) => p.userId.toString());
+  if (!matchingUserIds.length) return new Set();
+
+  const devices = await MyraDevice.find({
+    userId: { $in: matchingUserIds },
+    pushToken: { $ne: null },
+  })
+    .select('deviceId')
+    .lean();
+  return new Set(devices.map((d: any) => d.deviceId));
+}
+
+/** Resolves the audience into a list of { device_id, fcm_token } targets, sourced from
+ *  MyraDevice - the collection the MYRA Android app actually registers its push token into
+ *  (see myraService.ts's upsertMyraDevice). The legacy `Device`/`License` collections track
+ *  other codeninjavik marketplace products activated by license key, not MYRA app installs -
+ *  using them here meant this notification system could never actually reach a MYRA user. */
 export async function resolveTargets({ target, targetValue }: { target: string; targetValue?: string | null }) {
   await connectMongo();
 
   const toTargets = (docs: any[]) =>
-    docs.map((d) => ({ device_id: d.deviceId, fcm_token: d.fcmToken, user_id: d.userId }));
+    docs.map((d) => ({ device_id: d.deviceId, fcm_token: d.pushToken, user_id: d.userId?.toString() ?? null }));
 
   if (target === 'device') {
-    const docs = await Device.find({ deviceId: targetValue, fcmToken: { $ne: null } }).lean();
+    const docs = await MyraDevice.find({ deviceId: targetValue, pushToken: { $ne: null } }).lean();
     if (!docs.length) {
       throw ApiError.notFound('No registered device with a push token.', 'DEVICE_NOT_FOUND');
     }
@@ -61,30 +77,33 @@ export async function resolveTargets({ target, targetValue }: { target: string; 
   }
 
   if (target === 'user') {
-    const docs = await Device.find({ userId: targetValue, fcmToken: { $ne: null } }).lean();
+    const docs = await MyraDevice.find({ userId: targetValue, pushToken: { $ne: null } }).lean();
     if (!docs.length) {
       throw ApiError.notFound('No devices found for this user.', 'USER_DEVICES_NOT_FOUND');
     }
     return toTargets(docs);
   }
 
-  const allDevices = await Device.find({ fcmToken: { $ne: null } }).lean();
+  const allDevices = await MyraDevice.find({ pushToken: { $ne: null } }).lean();
   const devices = toTargets(allDevices);
 
   if (target === 'all') return devices;
 
   if (target === 'premium') {
-    const ids = new Set(await activeLicenseDeviceIds(null));
+    const ids = await myraDeviceIdsForProfileFilter(hasActivePaidPlan);
     return devices.filter((d) => ids.has(d.device_id));
   }
 
+  // "Lifetime" is MYRA_PLANS' `membership` plan (₹999, unlimited, no expiry).
   if (target === 'lifetime') {
-    const ids = new Set(await activeLicenseDeviceIds('lifetime'));
+    const ids = await myraDeviceIdsForProfileFilter(
+      (p) => hasActivePaidPlan(p) && p.subscriptionType === 'membership'
+    );
     return devices.filter((d) => ids.has(d.device_id));
   }
 
   if (target === 'free') {
-    const ids = new Set(await activeLicenseDeviceIds(null));
+    const ids = await myraDeviceIdsForProfileFilter(hasActivePaidPlan);
     return devices.filter((d) => !ids.has(d.device_id));
   }
 
