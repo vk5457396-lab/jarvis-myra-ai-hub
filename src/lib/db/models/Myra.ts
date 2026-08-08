@@ -89,7 +89,11 @@ const myraSubscriptionSchema = new Schema(
     plan: { type: String, default: 'free' },
     startDate: { type: Date, default: () => new Date() },
     expiryDate: { type: Date, default: null },
-    paymentId: { type: String, default: null },
+    // No `default: null` here on purpose: a sparse unique index only skips documents
+    // where the field is absent, not ones where it's explicitly null. Giving this a
+    // default would make every free-plan upsert write `paymentId: null` and collide
+    // on the unique index below after the first one.
+    paymentId: { type: String },
     orderId: { type: String, default: null },
     status: { type: String, default: 'active' },
   },
@@ -124,7 +128,8 @@ const myraAccessKeySchema = new Schema(
     // If set, only this email can redeem the key - e.g. issued for one specific purchase.
     assignedEmail: { type: String, default: null, index: true },
     // Razorpay payment_id that generated this key, when self-purchased on the website.
-    paymentId: { type: String, default: null },
+    // No `default: null` here either - see the same note on myraSubscriptionSchema.
+    paymentId: { type: String },
   },
   { timestamps: true, collection: 'myra_access_keys' }
 );

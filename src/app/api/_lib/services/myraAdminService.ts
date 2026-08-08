@@ -126,7 +126,9 @@ export async function generateMyraAccessKeys({
       note: note || null,
       createdBy: createdBy || null,
       assignedEmail: normalizedEmail,
-      paymentId: paymentId || null,
+      // Omit rather than null - paymentId has a sparse unique index, and a sparse index
+      // only skips documents where the field is absent, not ones where it's null.
+      ...(paymentId ? { paymentId } : {}),
     }))
   );
 }
