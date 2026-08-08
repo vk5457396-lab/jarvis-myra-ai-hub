@@ -41,7 +41,17 @@ export const canvaAdapter: ProviderAdapter = {
     });
     const json: CanvaTokenResponse = await response.json();
     if (!response.ok || json.error || !json.access_token) {
-      logger.error('Canva token exchange failed', { status: response.status, detail: json.error });
+      // Deliberately logs redirect_uri and client_id length (never the secret) alongside
+      // Canva's real error - `invalid_client` here almost always means the CANVA_CLIENT_ID
+      // value or this exact redirect_uri doesn't match what's registered for the integration
+      // in the Canva Developer Portal, not a bug in how the request is built.
+      logger.error('Canva token exchange failed', {
+        status: response.status,
+        error: json.error,
+        error_description: json.error_description,
+        redirect_uri: redirectUri,
+        client_id_length: (process.env.CANVA_CLIENT_ID || '').length,
+      });
       throw ApiError.internal('Could not complete Canva sign-in.', 'CANVA_TOKEN_EXCHANGE_FAILED');
     }
     return {
@@ -61,7 +71,11 @@ export const canvaAdapter: ProviderAdapter = {
     });
     const json: CanvaTokenResponse = await response.json();
     if (!response.ok || json.error || !json.access_token) {
-      logger.error('Canva token refresh failed', { status: response.status, detail: json.error });
+      logger.error('Canva token refresh failed', {
+        status: response.status,
+        error: json.error,
+        error_description: json.error_description,
+      });
       throw ApiError.unauthorized('Canva connection expired. Please reconnect.', 'CANVA_REAUTH_REQUIRED');
     }
     return {

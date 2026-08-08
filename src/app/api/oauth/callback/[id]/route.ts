@@ -2,6 +2,7 @@ export const runtime = 'nodejs';
 
 import { NextRequest } from 'next/server';
 import { handleOAuthCallback } from '../../../_lib/services/connectorService';
+import logger from '../../../_lib/utils/logger';
 
 /**
  * Public - the provider's OAuth server redirects the user's browser here directly, with no
@@ -26,8 +27,19 @@ export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get('code');
   const state = req.nextUrl.searchParams.get('state');
   const providerError = req.nextUrl.searchParams.get('error');
+  const providerErrorDescription = req.nextUrl.searchParams.get('error_description');
 
   if (providerError) {
+    // The provider (e.g. Canva) redirected back with an error instead of a code - most
+    // commonly invalid_client/unauthorized_client (client id or redirect_uri isn't what's
+    // registered for this app) or access_denied (user declined). Logged in full here since
+    // this is the one place that ever sees the provider's real error string - the deep
+    // link back to the app only ever gets a generic reason code, never this detail.
+    logger.error('OAuth authorize redirected back with a provider error', {
+      connectorId,
+      error: providerError,
+      error_description: providerErrorDescription,
+    });
     return redirectToApp(connectorId, 'error', providerError === 'access_denied' ? 'denied' : 'provider_error');
   }
   if (!code || !state) {

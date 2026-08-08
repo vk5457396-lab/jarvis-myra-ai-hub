@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { ApiError } from '../utils/response';
+import logger from '../utils/logger';
 import { connectMongo } from '@/lib/db/mongoose';
 import { UserConnection, OAuthState } from '@/lib/db/models';
 import {
@@ -55,7 +56,13 @@ export async function createConnectSession(userId: string, connectorId: string):
   const meta = getConnectorMetadata(connectorId);
   if (!meta) throw ApiError.notFound('Unknown connector.', 'CONNECTOR_NOT_FOUND');
   const provider = getProviderConfig(meta.provider);
-  if (!provider || !process.env[provider.clientIdEnv]) {
+  const clientId = provider ? process.env[provider.clientIdEnv] : undefined;
+  if (!provider || !clientId) {
+    logger.error('OAuth connect blocked - client id env var missing at runtime', {
+      connectorId,
+      provider: meta.provider,
+      expected_env_var: provider?.clientIdEnv ?? null,
+    });
     throw ApiError.internal(`${meta.name} is not configured.`, 'CONNECTOR_NOT_CONFIGURED');
   }
 
@@ -71,9 +78,10 @@ export async function createConnectSession(userId: string, connectorId: string):
     expiresAt: new Date(Date.now() + STATE_TTL_MS),
   });
 
+  const redirectUri = callbackRedirectUri(connectorId);
   const url = new URL(provider.authorizeUrl);
-  url.searchParams.set('client_id', process.env[provider.clientIdEnv]!);
-  url.searchParams.set('redirect_uri', callbackRedirectUri(connectorId));
+  url.searchParams.set('client_id', clientId);
+  url.searchParams.set('redirect_uri', redirectUri);
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('scope', meta.scopes.join(' '));
   url.searchParams.set('state', state);
@@ -84,6 +92,19 @@ export async function createConnectSession(userId: string, connectorId: string):
   for (const [key, value] of Object.entries(provider.extraAuthorizeParams ?? {})) {
     url.searchParams.set(key, value);
   }
+
+  // Never logs the client_id/secret values - only shapes useful for diagnosing a
+  // provider-side "invalid_client"/redirect_uri mismatch (env var length, redirect_uri
+  // actually sent) without putting a real credential in Vercel's log stream.
+  logger.info('OAuth connect session created', {
+    connectorId,
+    provider: meta.provider,
+    redirect_uri: redirectUri,
+    client_id_length: clientId.length,
+    uses_pkce: provider.usesPkce,
+    scopes: meta.scopes,
+  });
+
   return url.toString();
 }
 
@@ -131,7 +152,16 @@ export async function handleOAuthCallback(
       setDefaultsOnInsert: true,
     });
     return { ok: true };
-  } catch {
+  } catch (error) {
+    // Adapters (e.g. canvaOAuth.ts) already log the provider's raw error response for their
+    // own step; this catches anything else in the exchange (fetchUserInfo, DB write) so a
+    // failure here is never silent in Vercel's logs, without ever logging the code/tokens.
+    logger.error('OAuth callback exchange failed', {
+      connectorId,
+      provider: meta.provider,
+      error_code: error instanceof ApiError ? error.errorCode : null,
+      detail: error instanceof Error ? error.message : String(error),
+    });
     return { ok: false, reason: 'exchange_failed' };
   }
 }
