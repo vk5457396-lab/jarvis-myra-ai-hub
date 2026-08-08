@@ -110,6 +110,21 @@ const myraSettingsSchema = new Schema(
   { timestamps: true, collection: 'myra_settings' }
 );
 
+const myraAccessKeySchema = new Schema(
+  {
+    key: { type: String, required: true, unique: true },
+    plan: { type: String, required: true },
+    credits: { type: Number, default: null },
+    durationDays: { type: Number, default: null },
+    status: { type: String, default: 'available', index: true }, // available | redeemed | disabled
+    redeemedBy: { type: objectId, ref: 'User', default: null, index: true },
+    redeemedAt: { type: Date, default: null },
+    note: { type: String, default: null },
+    createdBy: { type: String, default: null },
+  },
+  { timestamps: true, collection: 'myra_access_keys' }
+);
+
 export const MyraProfile: Model<any> =
   models.MyraProfile || model('MyraProfile', myraProfileSchema);
 export const MyraDevice: Model<any> =
@@ -124,3 +139,5 @@ export const MyraSubscription: Model<any> =
   models.MyraSubscription || model('MyraSubscription', myraSubscriptionSchema);
 export const MyraSettings: Model<any> =
   models.MyraSettings || model('MyraSettings', myraSettingsSchema);
+export const MyraAccessKey: Model<any> =
+  models.MyraAccessKey || model('MyraAccessKey', myraAccessKeySchema);

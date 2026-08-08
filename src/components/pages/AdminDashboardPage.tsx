@@ -7,7 +7,7 @@ import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
-  Shield, LogOut, Users, Wallet, TrendingUp, CheckCircle2, XCircle, Clock, ArrowDownToLine, Package, KeyRound, Bell, Smartphone
+  Shield, LogOut, Users, Wallet, TrendingUp, CheckCircle2, XCircle, Clock, ArrowDownToLine, Package, KeyRound, Bell, Smartphone, Sparkles
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
@@ -273,6 +273,12 @@ const AdminDashboard = () => {
               className="px-5 py-2.5 rounded-xl font-display font-bold text-sm transition-all bg-white/5 border border-white/10 text-muted-foreground hover:text-foreground"
             >
               <KeyRound size={14} className="inline mr-2" /> Licenses
+            </button>
+            <button
+              onClick={() => router.push("/admin/myra")}
+              className="px-5 py-2.5 rounded-xl font-display font-bold text-sm transition-all bg-white/5 border border-white/10 text-muted-foreground hover:text-foreground"
+            >
+              <Sparkles size={14} className="inline mr-2" /> MYRA
             </button>
             <button
               onClick={() => router.push("/admin/app-release")}
