@@ -59,7 +59,7 @@ const AdminAppReleasePage = () => {
   }, [router, status]);
 
   const handleSave = async () => {
-    if (!form.apk_asset_url.trim()) { toast.error("GitHub asset URL daalo"); return; }
+    if (!form.apk_asset_url.trim()) { toast.error("Direct download URL daalo"); return; }
     if (!form.version_name.trim()) { toast.error("Version name daalo"); return; }
 
     setSaving(true);
@@ -145,16 +145,18 @@ const AdminAppReleasePage = () => {
               </div>
 
               <div>
-                <label className="text-xs text-muted-foreground font-display tracking-wider mb-1.5 block">GITHUB RELEASE ASSET URL</label>
+                <label className="text-xs text-muted-foreground font-display tracking-wider mb-1.5 block">APK DIRECT DOWNLOAD URL</label>
                 <input
                   type="text"
-                  placeholder="https://api.github.com/repos/owner/repo/releases/assets/123456"
+                  placeholder="https://download####.mediafire.com/.../MYRA.apk"
                   value={form.apk_asset_url}
                   onChange={(e) => setForm({ ...form, apk_asset_url: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm font-mono focus:outline-none focus:border-cyan-500/50"
                 />
                 <p className="text-xs text-muted-foreground mt-1.5">
-                  Private repo asset API URL (not the browser_download_url) — the server uses GITHUB_TOKEN to fetch it.
+                  Must be a <span className="text-foreground/80">direct</span> file link (MediaFire &quot;direct download&quot; link, Drive/Dropbox
+                  raw link, etc.) that returns the APK bytes immediately — <span className="text-red-300/80">not</span> a share/preview page.
+                  The Android app&apos;s in-app updater downloads this exact URL, so a wrong link breaks auto-update for every user.
                 </p>
               </div>
 
