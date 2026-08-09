@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { get } from '@vercel/blob';
 import { withApi, handleOptions } from '../../_lib/middleware/handler';
 import { ApiError } from '../../_lib/utils/response';
+import { toBlobApiError } from '../../_lib/utils/blobErrors';
+import logger from '../../_lib/utils/logger';
 
 export const OPTIONS = handleOptions(['GET']);
 
@@ -22,8 +24,9 @@ export const GET = withApi(async (req: NextRequest) => {
   let result;
   try {
     result = await get(path, { access: 'private' });
-  } catch {
-    throw ApiError.notFound('Asset not found.', 'ASSET_NOT_FOUND');
+  } catch (error) {
+    logger.error('Blob asset fetch failed', { path, detail: (error as Error)?.message });
+    throw toBlobApiError(error);
   }
   if (!result || result.statusCode !== 200 || !result.stream) {
     throw ApiError.notFound('Asset not found.', 'ASSET_NOT_FOUND');

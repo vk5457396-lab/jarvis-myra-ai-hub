@@ -11,7 +11,8 @@ import ApiResourcesSection from "@/components/ApiResourcesSection";
 import WebsiteServiceCard from "@/components/WebsiteServiceCard";
 
 import MyraInstallSection from "@/components/MyraInstallSection";
-import { features, jarvisFeatures, myraFeatures, myraAndroidFeatures } from "@/data/features";
+import MyraAndroidDownload from "@/components/MyraAndroidDownload";
+import { features, jarvisFeatures, myraFeatures } from "@/data/features";
 import { ChevronRight, Shield, Zap, Clock } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,9 @@ const IndexPage = () => {
 
       {/* MYRA Desktop Install - Featured at top */}
       <MyraInstallSection />
+
+      {/* MYRA Android APK download */}
+      <MyraAndroidDownload className="py-16 md:py-24" />
 
       {/* Features Overview */}
       <section className="py-20 md:py-32 relative">
@@ -99,14 +103,14 @@ const IndexPage = () => {
               CHOOSE YOUR ASSISTANT
             </span>
             <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-              Meet <span className="text-primary text-glow-cyan">Jarvis</span>, <span className="text-secondary text-glow-purple">{myraName}</span> & MYRA Android
+              Meet <span className="text-primary text-glow-cyan">Jarvis</span> & <span className="text-secondary text-glow-purple">{myraName}</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Three ways to run MYRA — on your PC, or right on your phone. Choose the one that fits your lifestyle.
+              Two desktop assistants for your PC. Pick the one that fits how you work.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <ProductCard
               name="Jarvis"
               tagline="AI System Assistant for power users"
@@ -122,15 +126,6 @@ const IndexPage = () => {
               features={myraFeatures}
               variant="myra"
               delay={0.2}
-            />
-            <ProductCard
-              name="MYRA Android"
-              tagline="Your voice assistant, right on your phone"
-              features={myraAndroidFeatures}
-              variant="myra_android"
-              thumbnailUrl="/assets/thumb-myra.png"
-              downloadHref="/download"
-              delay={0.3}
             />
           </div>
 

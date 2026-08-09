@@ -3,7 +3,14 @@ import ProductPagePage from "@/components/pages/ProductPagePage";
 import { connectMongo } from "@/lib/db/mongoose";
 import { MarketplaceProduct } from "@/lib/db/models";
 
-const SITE_URL = "https://jarvis-myra-ai-hub.lovable.app";
+// Must match the canonical host in app/layout.tsx — this used to point at the
+// dead lovable.app preview domain, which sent every product page's canonical,
+// OG and JSON-LD URL somewhere that 404s.
+const SITE_URL = "https://www.codeninjavik.in";
+
+/** OG/JSON-LD images must be absolute; thumbnails are stored as `/api/...` paths. */
+const absoluteUrl = (path: string | null): string | undefined =>
+  !path ? undefined : path.startsWith("http") ? path : `${SITE_URL}${path}`;
 
 interface MarketProductMeta {
   title: string;
@@ -60,7 +67,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: product.title,
       description: (product.short_description || "").slice(0, 158),
       url,
-      images: product.thumbnail_url ? [{ url: product.thumbnail_url }] : undefined,
+      images: absoluteUrl(product.thumbnail_url) ? [{ url: absoluteUrl(product.thumbnail_url)! }] : undefined,
     },
     twitter: {
       card: "summary_large_image",
@@ -80,7 +87,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         "@type": "Product",
         name: product.title,
         description: product.short_description || product.description || product.title,
-        image: product.thumbnail_url || undefined,
+        image: absoluteUrl(product.thumbnail_url),
         category: product.category || undefined,
         url: `${SITE_URL}/products/${product.slug}`,
         offers: {

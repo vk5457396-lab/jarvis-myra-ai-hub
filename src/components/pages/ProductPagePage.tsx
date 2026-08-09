@@ -58,6 +58,8 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
   const [activeShot, setActiveShot] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [showContact, setShowContact] = useState(false);
+  // Blob-backed image that failed to load — fall back to the placeholder icon.
+  const [shotFailed, setShotFailed] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -203,8 +205,13 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
             <div className="lg:col-span-3">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 className="relative rounded-2xl overflow-hidden border border-white/10 bg-background/40 backdrop-blur-md aspect-video">
-                {activeShot ? (
-                  <img src={activeShot} alt={product.title} className="w-full h-full object-cover" />
+                {activeShot && !shotFailed ? (
+                  <img
+                    src={activeShot}
+                    alt={product.title}
+                    className="w-full h-full object-cover"
+                    onError={() => setShotFailed(true)}
+                  />
                 ) : (
                   <div className="flex items-center justify-center h-full">
                     <Package size={80} className="text-cyan-400/30" />
@@ -219,7 +226,10 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
                     .map((s, i) => (
                       <button
                         key={i}
-                        onClick={() => setActiveShot(s)}
+                        onClick={() => {
+                          setShotFailed(false);
+                          setActiveShot(s);
+                        }}
                         className={`aspect-video rounded-lg overflow-hidden border-2 transition-all ${
                           activeShot === s ? "border-cyan-400" : "border-white/10 hover:border-white/30"
                         }`}

@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { get } from '@vercel/blob';
 import { withApi, handleOptions } from '../../_lib/middleware/handler';
+import { toBlobApiError } from '../../_lib/utils/blobErrors';
 import logger from '../../_lib/utils/logger';
 import { connectMongo } from '@/lib/db/mongoose';
 import { MarketplaceProduct, MarketplaceDownload } from '@/lib/db/models';
@@ -53,7 +54,11 @@ export const POST = withApi(
       result = await get(product.filePath, { access: 'private' });
     } catch (error) {
       logger.error('Blob fetch failed', { detail: (error as Error)?.message });
-      return NextResponse.json({ error: 'Failed to load download file' }, { status: 502 });
+      const apiError = toBlobApiError(error);
+      return NextResponse.json(
+        { error: apiError.message, error_code: apiError.errorCode },
+        { status: apiError.statusCode }
+      );
     }
     if (!result || result.statusCode !== 200) {
       return NextResponse.json({ error: 'Download file is not available' }, { status: 404 });

@@ -25,6 +25,9 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("all");
+  // Thumbnails live in Blob storage behind /api/marketplace/asset; if that read
+  // fails we show the same placeholder as a product with no image at all.
+  const [brokenThumbs, setBrokenThumbs] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     (async () => {
@@ -127,8 +130,14 @@ const Products = () => {
                       </div>
                       <div className="relative rounded-[calc(1rem-1px)] m-px overflow-hidden" style={{ background: "linear-gradient(165deg, hsla(220,20%,8%,0.6) 0%, hsla(220,20%,4%,0.95) 100%)", backdropFilter: "blur(12px)" }}>
                         <div className="aspect-video bg-gradient-to-br from-cyan-500/10 to-violet-500/10 overflow-hidden">
-                          {p.thumbnail_url ? (
-                            <img src={p.thumbnail_url} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                          {p.thumbnail_url && !brokenThumbs.has(p.id) ? (
+                            <img
+                              src={p.thumbnail_url}
+                              alt={p.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              loading="lazy"
+                              onError={() => setBrokenThumbs((prev) => new Set(prev).add(p.id))}
+                            />
                           ) : (
                             <div className="flex items-center justify-center h-full">
                               <Package size={56} className="text-cyan-400/30" />
