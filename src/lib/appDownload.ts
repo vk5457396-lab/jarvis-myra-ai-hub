@@ -1,11 +1,12 @@
 /**
- * Client-side APK download helper.
+ * Client-side download helpers for large/externally-hosted files (the MYRA
+ * APK, and any marketplace product with an external download link).
  *
- * The old flow buffered the whole APK with `res.blob()` before saving it, which
- * ran out of memory (or timed out) on plenty of real phones — that is the
- * "download failed" users were hitting. Now we only ask the API for a direct
- * link and hand it to the browser's own download manager, which streams it,
- * shows progress, and can resume on a flaky mobile connection.
+ * The old flow buffered the whole file with `res.blob()` before saving it,
+ * which ran out of memory (or timed out) on plenty of real phones — that is
+ * the "download failed" users were hitting. Now the API only ever hands back
+ * a direct link, and the browser's own download manager streams it (with
+ * progress, and resume on a flaky mobile connection).
  */
 
 export interface AppDownloadResult {

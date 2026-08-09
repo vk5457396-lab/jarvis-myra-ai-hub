@@ -5,6 +5,7 @@ import { Smartphone } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MyraAndroidDownload from "@/components/MyraAndroidDownload";
+import MyraAppGalleryCard from "@/components/MyraAppGalleryCard";
 
 const steps = [
   { title: "Sign in", desc: "Use the same codeninjavik.in account you use on the website." },
@@ -28,6 +29,19 @@ const DownloadPage = () => {
               Download MYRA for Android
             </h1>
             <p className="text-muted-foreground text-sm mt-2">Android APK — direct from our official release.</p>
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="pb-12 md:pb-16">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-xl mx-auto"
+          >
+            <MyraAppGalleryCard />
           </motion.div>
         </div>
       </section>

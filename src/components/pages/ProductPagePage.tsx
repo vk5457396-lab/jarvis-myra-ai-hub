@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ContactFormModal from "@/components/ContactFormModal";
+import { openDownload } from "@/lib/appDownload";
 
 interface MarketProduct {
   id: string;
@@ -86,6 +87,19 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
       const errJson = await res.json().catch(() => null);
       toast.error(errJson?.error || "Download failed");
       return false;
+    }
+
+    // Externally-hosted files (MediaFire, Drive, ...) come back as a JSON
+    // { url } instead of the file bytes — hand the link straight to the
+    // browser's own download manager instead of buffering it in memory here.
+    if (res.headers.get("content-type")?.includes("application/json")) {
+      const json = await res.json();
+      if (!json?.url) {
+        toast.error("Download link is not available");
+        return false;
+      }
+      openDownload(json.url);
+      return true;
     }
 
     const blob = await res.blob();

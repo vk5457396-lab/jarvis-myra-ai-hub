@@ -31,7 +31,9 @@ export const POST = withApi(
     await connectMongo();
     const product = await MarketplaceProduct.findById(product_id).catch(() => null);
     if (!product || !product.isPublished) return NextResponse.json({ error: 'Product not found' }, { status: 400 });
-    if (!product.filePath) return NextResponse.json({ error: 'Download file is not available yet' }, { status: 400 });
+    if (!product.filePath && !product.externalDownloadUrl) {
+      return NextResponse.json({ error: 'Download file is not available yet' }, { status: 400 });
+    }
 
     const session = await auth();
     const userId = session?.user?.id || null;
@@ -49,6 +51,36 @@ export const POST = withApi(
       }
     }
 
+    const logDownload = async () => {
+      try {
+        await MarketplaceDownload.create({
+          productId: product._id,
+          userId,
+          customerEmail: customer_email ?? null,
+          customerName: customer_name ?? null,
+          amount: product.price,
+          paymentId: razorpay_payment_id ?? null,
+          razorpayOrderId: razorpay_order_id ?? null,
+        });
+        await MarketplaceProduct.findByIdAndUpdate(product._id, { $inc: { downloadCount: 1 } });
+      } catch (error) {
+        logger.error('Download logging failed', { detail: (error as Error)?.message });
+      }
+    };
+
+    // Externally-hosted file (MediaFire, Drive, Dropbox, ...) — nothing to
+    // proxy, just hand the client the direct link. Keeps large files off our
+    // own Blob storage/bandwidth entirely.
+    if (product.externalDownloadUrl) {
+      await logDownload();
+      return NextResponse.json({
+        success: true,
+        external: true,
+        url: product.externalDownloadUrl,
+        filename: product.fileName || `${product.slug}.zip`,
+      });
+    }
+
     let result;
     try {
       result = await get(product.filePath, { access: 'private' });
@@ -64,20 +96,7 @@ export const POST = withApi(
       return NextResponse.json({ error: 'Download file is not available' }, { status: 404 });
     }
 
-    try {
-      await MarketplaceDownload.create({
-        productId: product._id,
-        userId,
-        customerEmail: customer_email ?? null,
-        customerName: customer_name ?? null,
-        amount: product.price,
-        paymentId: razorpay_payment_id ?? null,
-        razorpayOrderId: razorpay_order_id ?? null,
-      });
-      await MarketplaceProduct.findByIdAndUpdate(product._id, { $inc: { downloadCount: 1 } });
-    } catch (error) {
-      logger.error('Download logging failed', { detail: (error as Error)?.message });
-    }
+    await logDownload();
 
     return new NextResponse(result.stream, {
       status: 200,

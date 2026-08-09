@@ -14,6 +14,10 @@ const marketplaceProductSchema = new Schema(
     bannerUrl: { type: String, default: null },
     screenshots: { type: [String], default: [] },
     filePath: { type: String, default: null },
+    // Direct download link on an external host (MediaFire, Drive, Dropbox, etc.).
+    // When set, the download route redirects here instead of streaming filePath
+    // from Blob storage — keeps large files off our own storage/bandwidth.
+    externalDownloadUrl: { type: String, default: null },
     fileName: { type: String, default: null },
     fileSize: { type: Number, default: 0 },
     isPublished: { type: Boolean, default: true },

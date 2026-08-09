@@ -4,7 +4,7 @@ export const maxDuration = 30;
 import { withApi, handleOptions } from '../../../_lib/middleware/handler';
 import { requireAdmin } from '../../../_lib/middleware/admin';
 import { success, ApiError } from '../../../_lib/utils/response';
-import { requireString, optionalString } from '../../../_lib/utils/validation';
+import { requireString, optionalString, optionalUrl } from '../../../_lib/utils/validation';
 import { connectMongo } from '@/lib/db/mongoose';
 import { MarketplaceProduct } from '@/lib/db/models';
 
@@ -24,6 +24,7 @@ function toAdmin(p: any) {
     banner_url: p.bannerUrl,
     screenshots: p.screenshots || [],
     file_path: p.filePath,
+    external_download_url: p.externalDownloadUrl,
     file_name: p.fileName,
     file_size: p.fileSize,
     is_published: p.isPublished,
@@ -47,7 +48,15 @@ export const POST = withApi(
 
     const title = requireString(body.title, 'title', { min: 1, max: 200 });
     const slug = requireString(body.slug, 'slug', { min: 1, max: 100 });
-    const filePath = requireString(body.file_path, 'file_path', { min: 1, max: 2048 });
+    const filePath = optionalString(body.file_path, 'file_path', 2048);
+    const externalDownloadUrl = optionalUrl(body.external_download_url, 'external_download_url');
+    if (!filePath && !externalDownloadUrl) {
+      throw ApiError.badRequest(
+        'Either upload a file or provide a direct download link.',
+        'MISSING_FIELD',
+        { field: 'file_path' }
+      );
+    }
 
     await connectMongo();
 
@@ -66,6 +75,7 @@ export const POST = withApi(
       bannerUrl: optionalString(body.banner_url, 'banner_url', 2048),
       screenshots: Array.isArray(body.screenshots) ? body.screenshots.slice(0, 20) : [],
       filePath,
+      externalDownloadUrl,
       fileName: optionalString(body.file_name, 'file_name', 255),
       fileSize: Number(body.file_size) || 0,
       isPublished: body.is_published !== false,

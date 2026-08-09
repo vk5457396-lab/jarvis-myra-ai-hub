@@ -4,7 +4,7 @@ export const maxDuration = 30;
 import { withApi, handleOptions } from '../../../../_lib/middleware/handler';
 import { requireAdmin } from '../../../../_lib/middleware/admin';
 import { success, ApiError } from '../../../../_lib/utils/response';
-import { optionalString } from '../../../../_lib/utils/validation';
+import { optionalString, optionalUrl } from '../../../../_lib/utils/validation';
 import { connectMongo } from '@/lib/db/mongoose';
 import { MarketplaceProduct } from '@/lib/db/models';
 
@@ -24,6 +24,7 @@ function toAdmin(p: any) {
     banner_url: p.bannerUrl,
     screenshots: p.screenshots || [],
     file_path: p.filePath,
+    external_download_url: p.externalDownloadUrl,
     file_name: p.fileName,
     file_size: p.fileSize,
     is_published: p.isPublished,
@@ -52,6 +53,9 @@ export const PUT = withApi(
     if (body.banner_url !== undefined) set.bannerUrl = optionalString(body.banner_url, 'banner_url', 2048);
     if (body.screenshots !== undefined) set.screenshots = Array.isArray(body.screenshots) ? body.screenshots.slice(0, 20) : [];
     if (body.file_path !== undefined) set.filePath = optionalString(body.file_path, 'file_path', 2048);
+    if (body.external_download_url !== undefined) {
+      set.externalDownloadUrl = optionalUrl(body.external_download_url, 'external_download_url');
+    }
     if (body.file_name !== undefined) set.fileName = optionalString(body.file_name, 'file_name', 255);
     if (body.file_size !== undefined) set.fileSize = Number(body.file_size) || 0;
     if (body.is_published !== undefined) set.isPublished = Boolean(body.is_published);

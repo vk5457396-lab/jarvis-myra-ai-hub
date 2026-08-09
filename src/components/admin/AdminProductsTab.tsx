@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { upload } from "@vercel/blob/client";
 import {
-  Plus, UploadCloud, Trash2, ImageIcon, Loader2, Save, X, Edit3, Package, Search,
+  Plus, UploadCloud, Trash2, ImageIcon, Loader2, Save, X, Edit3, Package, Search, Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ interface AdminProduct {
   banner_url: string | null;
   screenshots: string[];
   file_path: string | null;
+  external_download_url: string | null;
   file_name: string | null;
   file_size: number | null;
   is_published: boolean;
@@ -66,7 +67,9 @@ const emptyDraft = () => ({
   thumbnail_url: "",
   banner_url: "",
   screenshots: [] as string[],
+  file_source: "upload" as "upload" | "link",
   file_path: "",
+  external_download_url: "",
   file_name: "",
   file_size: 0,
   is_published: true,
@@ -118,7 +121,9 @@ const AdminProductsTab = () => {
       thumbnail_url: p.thumbnail_url ?? "",
       banner_url: p.banner_url ?? "",
       screenshots: p.screenshots ?? [],
+      file_source: p.external_download_url ? "link" : "upload",
       file_path: p.file_path ?? "",
+      external_download_url: p.external_download_url ?? "",
       file_name: p.file_name ?? "",
       file_size: p.file_size ?? 0,
       is_published: p.is_published,
@@ -193,8 +198,12 @@ const AdminProductsTab = () => {
       toast.error("Title is required");
       return;
     }
-    if (!editing.file_path) {
-      toast.error("Please upload a downloadable file");
+    if (editing.file_source === "link" ? !editing.external_download_url.trim() : !editing.file_path) {
+      toast.error(
+        editing.file_source === "link"
+          ? "Please paste a direct download link"
+          : "Please upload a downloadable file"
+      );
       return;
     }
     setSaving(true);
@@ -210,8 +219,9 @@ const AdminProductsTab = () => {
       thumbnail_url: editing.thumbnail_url || null,
       banner_url: editing.banner_url || null,
       screenshots: editing.screenshots,
-      file_path: editing.file_path,
-      file_name: editing.file_name,
+      file_path: editing.file_source === "upload" ? editing.file_path || null : null,
+      external_download_url: editing.file_source === "link" ? editing.external_download_url.trim() : null,
+      file_name: editing.file_name || null,
       file_size: editing.file_size,
       is_published: editing.is_published,
     };
@@ -483,47 +493,91 @@ const AdminProductsTab = () => {
                 </div>
               </div>
 
-              {/* File upload */}
+              {/* File source: upload to Blob, or link out to an external host */}
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Downloadable file *</label>
-                <div
-                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                  onDragLeave={() => setDragOver(false)}
-                  onDrop={onDrop}
-                  className={`rounded-xl border-2 border-dashed p-6 text-center transition-colors cursor-pointer ${
-                    dragOver ? "border-cyan-400 bg-cyan-500/5" : "border-white/10 bg-background/40 hover:border-white/30"
-                  }`}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {uploadingField === "file" ? (
-                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                      <Loader2 className="animate-spin" size={16} /> Uploading...
-                    </div>
-                  ) : editing.file_path ? (
-                    <div>
-                      <p className="text-foreground font-mono text-sm break-all">{editing.file_name}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {((editing.file_size || 0) / 1024 / 1024).toFixed(2)} MB · Click or drop to replace
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                      <UploadCloud size={32} />
-                      <p className="text-sm">Drag & drop a file here, or click to browse</p>
-                      <p className="text-xs">ZIP, PDF, EXE, MP4 — any file type</p>
-                    </div>
-                  )}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) handleFile(f);
-                      e.target.value = "";
-                    }}
-                  />
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs text-muted-foreground block">Downloadable file *</label>
+                  <div className="flex rounded-lg border border-white/10 overflow-hidden text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setEditing({ ...editing, file_source: "upload" })}
+                      className={`px-3 py-1.5 flex items-center gap-1.5 transition-colors ${
+                        editing.file_source === "upload" ? "bg-cyan-500/20 text-cyan-300" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <UploadCloud size={12} /> Upload
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditing({ ...editing, file_source: "link" })}
+                      className={`px-3 py-1.5 flex items-center gap-1.5 transition-colors border-l border-white/10 ${
+                        editing.file_source === "link" ? "bg-cyan-500/20 text-cyan-300" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <Link2 size={12} /> External link
+                    </button>
+                  </div>
                 </div>
+
+                {editing.file_source === "link" ? (
+                  <div className="space-y-2">
+                    <Input
+                      value={editing.external_download_url}
+                      onChange={(e) => setEditing({ ...editing, external_download_url: e.target.value })}
+                      placeholder="https://download####.mediafire.com/.../file.zip"
+                      className="font-mono text-sm"
+                    />
+                    <Input
+                      value={editing.file_name}
+                      onChange={(e) => setEditing({ ...editing, file_name: e.target.value })}
+                      placeholder="File name shown to users (optional), e.g. MYRA.apk"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Must be a <span className="text-foreground/80">direct</span> file link (MediaFire &quot;direct download&quot; link, Drive/Dropbox
+                      raw link, etc.) that returns the file immediately — <span className="text-red-300/80">not</span> a share/preview page.
+                      Nothing is uploaded to or stored on this site — users are sent straight to that link.
+                    </p>
+                  </div>
+                ) : (
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={onDrop}
+                    className={`rounded-xl border-2 border-dashed p-6 text-center transition-colors cursor-pointer ${
+                      dragOver ? "border-cyan-400 bg-cyan-500/5" : "border-white/10 bg-background/40 hover:border-white/30"
+                    }`}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {uploadingField === "file" ? (
+                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                        <Loader2 className="animate-spin" size={16} /> Uploading...
+                      </div>
+                    ) : editing.file_path ? (
+                      <div>
+                        <p className="text-foreground font-mono text-sm break-all">{editing.file_name}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {((editing.file_size || 0) / 1024 / 1024).toFixed(2)} MB · Click or drop to replace
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <UploadCloud size={32} />
+                        <p className="text-sm">Drag & drop a file here, or click to browse</p>
+                        <p className="text-xs">Small files only — big files (APKs, videos) should use an external link instead</p>
+                      </div>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleFile(f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               <label className="flex items-center gap-2 cursor-pointer">
