@@ -47,6 +47,13 @@ const INVALID_TOKEN_CODES = new Set([
   'messaging/invalid-registration-token',
   'messaging/registration-token-not-registered',
   'messaging/invalid-argument',
+  // The token was minted by an Android build pointed at a different Firebase
+  // project than this Admin SDK credential (e.g. a stale APK still holding a
+  // token from before the app's google-services.json had a com.myra.voice
+  // client entry). It will never succeed - clear it so the device re-registers
+  // a fresh token on next app open instead of failing forever, silently.
+  'messaging/mismatched-credential',
+  'messaging/sender-id-mismatch',
 ]);
 
 const RETRYABLE_CODES = new Set([
@@ -56,8 +63,22 @@ const RETRYABLE_CODES = new Set([
   'messaging/quota-exceeded',
 ]);
 
+/**
+ * Data-only on purpose. A message carrying a `notification` block is drawn by the Android
+ * system tray whenever the app is backgrounded, and MyraFirebaseMessagingService.onMessageReceived
+ * is then never called — so announcements never reached the in-app Notification Center, and the
+ * tray used whatever channel id we named here (`myra_default`, which the app does not create).
+ * Data-only hands every message to the app, which builds the notification on its own
+ * `myra_push_notifications` channel and writes it to the local history.
+ *
+ * Keys must match what MyraFirebaseMessagingService reads. All values must be strings.
+ */
 function buildMessage(payload: any) {
-  const data: Record<string, string> = {};
+  const data: Record<string, string> = {
+    title: String(payload.title ?? ''),
+    message: String(payload.body ?? ''),
+  };
+  if (payload.image_url) data.image_url = payload.image_url;
   if (payload.deep_link) data.deep_link = payload.deep_link;
   if (payload.action) data.action = payload.action;
   if (payload.custom_url) data.custom_url = payload.custom_url;
@@ -65,19 +86,9 @@ function buildMessage(payload: any) {
   if (payload.notification_id) data.notification_id = payload.notification_id;
 
   return {
-    notification: {
-      title: payload.title,
-      body: payload.body,
-      ...(payload.image_url ? { imageUrl: payload.image_url } : {}),
-    },
     data,
     android: {
       priority: payload.priority === 'normal' ? ('normal' as const) : ('high' as const),
-      notification: {
-        ...(payload.image_url ? { imageUrl: payload.image_url } : {}),
-        channelId: 'myra_default',
-        sound: 'default',
-      },
     },
   };
 }

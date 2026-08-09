@@ -147,11 +147,21 @@ export async function dispatchNotification(payload: any) {
   }
 
   if (!targets.length) {
-    await Notification.findByIdAndUpdate(record._id, {
-      status: 'failed',
-      errorMessage: 'No devices matched this audience.',
-    });
-    throw ApiError.notFound('No devices matched this audience.', 'NO_TARGETS');
+    // "No devices matched" on its own is unactionable — the usual cause is that devices are
+    // registered but none has a push token yet (an app build older than the one that registers
+    // its FCM token against MyraDevice, or users who never reopened the app after logging in).
+    // Say which of the two it is.
+    const [totalDevices, withToken] = await Promise.all([
+      MyraDevice.countDocuments({}),
+      MyraDevice.countDocuments({ pushToken: { $ne: null } }),
+    ]);
+    const message = withToken
+      ? `No devices matched this audience (${withToken} of ${totalDevices} registered devices have a push token).`
+      : `None of the ${totalDevices} registered devices has a push token yet, so there is nobody to send to. ` +
+        `Devices register their token on app start once they are signed in.`;
+
+    await Notification.findByIdAndUpdate(record._id, { status: 'failed', errorMessage: message });
+    throw ApiError.notFound(message, 'NO_TARGETS');
   }
 
   let outcome;
