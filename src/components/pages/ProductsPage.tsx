@@ -20,6 +20,10 @@ interface MarketProduct {
   download_count: number;
 }
 
+// See ProductPagePage.tsx for why this one product's image is hardcoded
+// instead of read from thumbnail_url (Blob-backed, unreliable).
+const MYRA_THUMB = "/assets/myra-app/promo-thumb.png";
+
 const Products = () => {
   const [products, setProducts] = useState<MarketProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -130,9 +134,9 @@ const Products = () => {
                       </div>
                       <div className="relative rounded-[calc(1rem-1px)] m-px overflow-hidden" style={{ background: "linear-gradient(165deg, hsla(220,20%,8%,0.6) 0%, hsla(220,20%,4%,0.95) 100%)", backdropFilter: "blur(12px)" }}>
                         <div className="aspect-video bg-gradient-to-br from-cyan-500/10 to-violet-500/10 overflow-hidden">
-                          {p.thumbnail_url && !brokenThumbs.has(p.id) ? (
+                          {p.slug === "myra-android-apk" || (p.thumbnail_url && !brokenThumbs.has(p.id)) ? (
                             <img
-                              src={p.thumbnail_url}
+                              src={p.slug === "myra-android-apk" ? MYRA_THUMB : p.thumbnail_url!}
                               alt={p.title}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                               loading="lazy"

@@ -35,6 +35,16 @@ declare global {
   }
 }
 
+// The MYRA product's DB-stored images point at a Blob store that has been
+// unreliable (suspended, upload failures) — this one product's gallery is
+// hardcoded to static files shipped with the site instead, so it always
+// renders regardless of Blob/Mongo state.
+const MYRA_SLUG = "myra-android-apk";
+const MYRA_GALLERY = {
+  banner: "/assets/myra-app/promo-banner.png",
+  screenshots: ["/assets/myra-app/screens-app.png", "/assets/myra-app/screens-auth.png"],
+};
+
 const formatSize = (bytes?: number | null) => {
   if (!bytes) return "—";
   const mb = bytes / (1024 * 1024);
@@ -70,7 +80,9 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
       if (json.success) {
         const p = json.data as MarketProduct;
         setProduct(p);
-        setActiveShot(p.banner_url || p.screenshots[0] || p.thumbnail_url || null);
+        setActiveShot(
+          p.slug === MYRA_SLUG ? MYRA_GALLERY.banner : p.banner_url || p.screenshots[0] || p.thumbnail_url || null
+        );
       }
       setLoading(false);
     })();
@@ -233,9 +245,17 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
                 )}
               </motion.div>
 
-              {product.screenshots.length > 0 && (
+              {(() => {
+                const galleryShots =
+                  product.slug === MYRA_SLUG
+                    ? [MYRA_GALLERY.banner, ...MYRA_GALLERY.screenshots]
+                    : product.banner_url
+                      ? [product.banner_url, ...product.screenshots]
+                      : product.screenshots;
+                if (galleryShots.length === 0) return null;
+                return (
                 <div className="grid grid-cols-4 gap-3 mt-4">
-                  {(product.banner_url ? [product.banner_url, ...product.screenshots] : product.screenshots)
+                  {galleryShots
                     .slice(0, 8)
                     .map((s, i) => (
                       <button
@@ -252,7 +272,8 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
                       </button>
                     ))}
                 </div>
-              )}
+                );
+              })()}
             </div>
 
             {/* Right: details */}
