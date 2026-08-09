@@ -1,5 +1,5 @@
 export const runtime = 'nodejs';
-export const maxDuration = 30;
+export const maxDuration = 300;
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withApi, handleOptions } from '../../../_lib/middleware/handler';
@@ -27,21 +27,27 @@ async function resolveUserId(req: NextRequest): Promise<string> {
 }
 
 /**
- * Hands a logged-in user the APK link.
+ * Hands a logged-in user the APK.
  *
  * `apkAssetUrl` is set from the admin panel to either a MediaFire share page
  * (mediafire.com/file/.../file — stable, never expires) or a direct link on
- * another host (Drive, Dropbox, ...). Nothing is uploaded to or proxied
- * through this project, so there is no storage/bandwidth to run out of here.
- * MediaFire share pages are resolved to a fresh CDN link on every request —
- * MediaFire's actual download link is session-scoped and expires after a few
- * hours, so storing that resolved link instead of the share page (as this
- * route used to) meant installs silently started failing a few hours after
- * every release once the stored link went stale.
+ * another host (Drive, Dropbox, ...). MediaFire share pages are resolved to a
+ * fresh CDN link on every request — MediaFire's actual download link is
+ * session-scoped and expires after a few hours, so storing that resolved
+ * link instead of the share page (as this route used to) meant installs
+ * silently started failing a few hours after every release once the stored
+ * link went stale.
  *
- * - `?mode=url` → JSON `{ url }` for the website's download button.
- * - default     → 302 redirect to the resolved URL, which the Android app's
- *   OkHttp client follows automatically.
+ * - `?mode=url` → JSON `{ url }` for the website's download button, which
+ *   hands the link to the browser's own download manager — browsers follow
+ *   cross-origin redirects and resume downloads far better than a mobile
+ *   HTTP client, so this is left as a direct link rather than proxied.
+ * - default     → the Android app's in-app updater. This is *proxied*
+ *   through our server rather than redirected: OkHttp on-device either
+ *   failed to follow MediaFire's redirect or MediaFire rejected a request
+ *   coming from a different IP than the one that resolved the link (its
+ *   anti-leech check) — either way, "Install Update" produced nothing.
+ *   Proxying means the Android app only ever talks to codeninjavik.in.
  */
 export const GET = withApi(
   async (req: NextRequest) => {
@@ -82,9 +88,25 @@ export const GET = withApi(
       });
     }
 
-    const res = NextResponse.redirect(directUrl, 302);
-    res.headers.set('Cache-Control', 'no-store');
-    return res;
+    const upstream = await fetch(directUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+      cache: 'no-store',
+    });
+    if (!upstream.ok || !upstream.body) {
+      logger.error('APK proxy fetch failed', { status: upstream.status });
+      throw ApiError.internal('Failed to fetch the APK from storage. Try again in a moment.', 'DOWNLOAD_UPSTREAM_FAILED');
+    }
+
+    const filename = `MYRA-${release.versionName}.apk`;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/vnd.android.package-archive',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Cache-Control': 'no-store',
+    };
+    const length = upstream.headers.get('content-length');
+    if (length) headers['Content-Length'] = length;
+
+    return new NextResponse(upstream.body, { status: 200, headers });
   },
   { rateLimit: { scope: 'app-download', max: 60 } }
 );
