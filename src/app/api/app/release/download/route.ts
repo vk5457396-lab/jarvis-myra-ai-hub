@@ -8,6 +8,8 @@ import { connectMongo } from '@/lib/db/mongoose';
 import { AppRelease, APP_RELEASE_ID, AppReleaseDownload } from '@/lib/db/models';
 import { auth } from '@/lib/auth/config';
 import { requireMobileUser } from '../../../_lib/middleware/mobileAuth';
+import { toFreshDirectLink } from '@/lib/mediafire';
+import logger from '../../../_lib/utils/logger';
 
 export const OPTIONS = handleOptions(['GET']);
 
@@ -27,15 +29,18 @@ async function resolveUserId(req: NextRequest): Promise<string> {
 /**
  * Hands a logged-in user the APK link.
  *
- * `apkAssetUrl` is a direct-download link on an external host (MediaFire,
- * Google Drive, Dropbox, etc.) set from the admin panel — nothing is uploaded
- * to or proxied through this project, so there is no storage/bandwidth to run
- * out of here. It must be a link that serves the APK bytes directly (no
- * share/interstitial page): the Android app's in-app auto-updater streams
- * this same URL and needs real APK bytes, not HTML.
+ * `apkAssetUrl` is set from the admin panel to either a MediaFire share page
+ * (mediafire.com/file/.../file — stable, never expires) or a direct link on
+ * another host (Drive, Dropbox, ...). Nothing is uploaded to or proxied
+ * through this project, so there is no storage/bandwidth to run out of here.
+ * MediaFire share pages are resolved to a fresh CDN link on every request —
+ * MediaFire's actual download link is session-scoped and expires after a few
+ * hours, so storing that resolved link instead of the share page (as this
+ * route used to) meant installs silently started failing a few hours after
+ * every release once the stored link went stale.
  *
  * - `?mode=url` → JSON `{ url }` for the website's download button.
- * - default     → 302 redirect to the same URL, which the Android app's
+ * - default     → 302 redirect to the resolved URL, which the Android app's
  *   OkHttp client follows automatically.
  */
 export const GET = withApi(
@@ -47,6 +52,14 @@ export const GET = withApi(
 
     if (!release?.apkAssetUrl) {
       throw ApiError.notFound('APK is not available right now.', 'RELEASE_NOT_CONFIGURED');
+    }
+
+    let directUrl: string;
+    try {
+      directUrl = await toFreshDirectLink(release.apkAssetUrl);
+    } catch (error) {
+      logger.error('Failed to resolve APK download link', { detail: (error as Error)?.message });
+      throw ApiError.internal('Could not prepare the download link. Try again in a moment.', 'LINK_RESOLVE_FAILED');
     }
 
     try {
@@ -62,14 +75,14 @@ export const GET = withApi(
 
     if (req.nextUrl.searchParams.get('mode') === 'url') {
       return success({
-        url: release.apkAssetUrl,
+        url: directUrl,
         filename: `MYRA-${release.versionName}.apk`,
         direct: true,
         version_name: release.versionName,
       });
     }
 
-    const res = NextResponse.redirect(release.apkAssetUrl, 302);
+    const res = NextResponse.redirect(directUrl, 302);
     res.headers.set('Cache-Control', 'no-store');
     return res;
   },

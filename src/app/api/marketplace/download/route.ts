@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
 import { get } from '@vercel/blob';
 import { withApi, handleOptions } from '../../_lib/middleware/handler';
 import { toBlobApiError } from '../../_lib/utils/blobErrors';
+import { toFreshDirectLink } from '@/lib/mediafire';
 import logger from '../../_lib/utils/logger';
 import { connectMongo } from '@/lib/db/mongoose';
 import { MarketplaceProduct, MarketplaceDownload } from '@/lib/db/models';
@@ -72,11 +73,18 @@ export const POST = withApi(
     // proxy, just hand the client the direct link. Keeps large files off our
     // own Blob storage/bandwidth entirely.
     if (product.externalDownloadUrl) {
+      let directUrl: string;
+      try {
+        directUrl = await toFreshDirectLink(product.externalDownloadUrl);
+      } catch (error) {
+        logger.error('Failed to resolve product download link', { detail: (error as Error)?.message });
+        return NextResponse.json({ error: 'Could not prepare the download link. Try again in a moment.' }, { status: 502 });
+      }
       await logDownload();
       return NextResponse.json({
         success: true,
         external: true,
-        url: product.externalDownloadUrl,
+        url: directUrl,
         filename: product.fileName || `${product.slug}.zip`,
       });
     }

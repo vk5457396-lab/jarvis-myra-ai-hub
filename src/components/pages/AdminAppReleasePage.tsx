@@ -145,18 +145,20 @@ const AdminAppReleasePage = () => {
               </div>
 
               <div>
-                <label className="text-xs text-muted-foreground font-display tracking-wider mb-1.5 block">APK DIRECT DOWNLOAD URL</label>
+                <label className="text-xs text-muted-foreground font-display tracking-wider mb-1.5 block">APK LINK (MEDIAFIRE FILE PAGE)</label>
                 <input
                   type="text"
-                  placeholder="https://download####.mediafire.com/.../MYRA.apk"
+                  placeholder="https://www.mediafire.com/file/xxxxx/app-release.apk/file"
                   value={form.apk_asset_url}
                   onChange={(e) => setForm({ ...form, apk_asset_url: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm font-mono focus:outline-none focus:border-cyan-500/50"
                 />
                 <p className="text-xs text-muted-foreground mt-1.5">
-                  Must be a <span className="text-foreground/80">direct</span> file link (MediaFire &quot;direct download&quot; link, Drive/Dropbox
-                  raw link, etc.) that returns the APK bytes immediately — <span className="text-red-300/80">not</span> a share/preview page.
-                  The Android app&apos;s in-app updater downloads this exact URL, so a wrong link breaks auto-update for every user.
+                  Paste the normal MediaFire <span className="text-foreground/80">file page</span> link (the one you land on after uploading —
+                  ends in <span className="font-mono">/file</span>). The server resolves a fresh download link from it on every request, since
+                  MediaFire&apos;s own &quot;direct download&quot; link expires after a few hours and would silently break installs later.
+                  Other hosts (Drive/Dropbox raw links) still need to be a <span className="text-foreground/80">direct</span> link, not a share page —
+                  <span className="text-red-300/80"> api.github.com</span> asset URLs won&apos;t work here (private repo, needs auth this route no longer sends).
                 </p>
               </div>
 

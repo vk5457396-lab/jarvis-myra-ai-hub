@@ -524,7 +524,7 @@ const AdminProductsTab = () => {
                     <Input
                       value={editing.external_download_url}
                       onChange={(e) => setEditing({ ...editing, external_download_url: e.target.value })}
-                      placeholder="https://download####.mediafire.com/.../file.zip"
+                      placeholder="https://www.mediafire.com/file/xxxxx/file.zip/file"
                       className="font-mono text-sm"
                     />
                     <Input
@@ -533,8 +533,10 @@ const AdminProductsTab = () => {
                       placeholder="File name shown to users (optional), e.g. MYRA.apk"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Must be a <span className="text-foreground/80">direct</span> file link (MediaFire &quot;direct download&quot; link, Drive/Dropbox
-                      raw link, etc.) that returns the file immediately — <span className="text-red-300/80">not</span> a share/preview page.
+                      For MediaFire, paste the normal <span className="text-foreground/80">file page</span> link (ends in{" "}
+                      <span className="font-mono">/file</span>) — the server resolves a fresh download link on every request, since
+                      MediaFire&apos;s own direct link expires after a few hours. Other hosts (Drive/Dropbox raw links) need to be a{" "}
+                      <span className="text-foreground/80">direct</span> file link, not a share/preview page.
                       Nothing is uploaded to or stored on this site — users are sent straight to that link.
                     </p>
                   </div>
