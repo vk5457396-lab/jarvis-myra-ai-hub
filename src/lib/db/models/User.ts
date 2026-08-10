@@ -3,10 +3,10 @@ import { Schema, model, models, type Model, type InferSchemaType } from 'mongoos
 const userSchema = new Schema(
   {
     name: { type: String, default: null },
-    email: { type: String, required: true, lowercase: true, trim: true, index: true },
+    email: { type: String, required: true, lowercase: true, trim: true },
     emailVerified: { type: Date, default: null },
     image: { type: String, default: null },
-    googleId: { type: String, default: null, index: true },
+    googleId: { type: String, default: null },
     passwordHash: { type: String, default: null, select: false },
     profilePhoto: { type: String, default: null },
     authProvider: {

@@ -9,6 +9,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: MongoDBAdapter(clientPromise),
   session: { strategy: 'jwt' },
   pages: { signIn: '/login' },
+  // Auth.js's default logger only prints `error.cause` when it's shaped as `{ err: Error }`,
+  // but checks.ts (the PKCE/state cookie validator) throws `InvalidCheck(msg, { cause: error })`
+  // where `cause` IS the raw underlying error - so the default logger's cause-printing branch
+  // never fires for InvalidCheck, and Vercel's logs only ever show a useless internal stack
+  // trace instead of the real reason (expired cookie, decrypt failure, etc). This surfaces it.
+  logger: {
+    error(error) {
+      console.error(`[auth][error] ${error.name}: ${error.message}`);
+      const cause = (error as { cause?: unknown }).cause;
+      if (cause instanceof Error) {
+        console.error(`[auth][cause] ${cause.name}: ${cause.message}`);
+      } else if (cause) {
+        console.error('[auth][cause]', cause);
+      }
+    },
+  },
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
