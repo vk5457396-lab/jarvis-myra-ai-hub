@@ -8,6 +8,12 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // Turbopack's bundler mis-resolves firebase-admin/auth's transitive dep chain
+  // (jwks-rsa -> jose), pulling in jose's ESM build via require() and throwing
+  // ERR_REQUIRE_ESM at runtime on every route that imports firebase-admin/auth
+  // (e.g. /api/myra/firebase-token). Keeping it external skips bundling it and
+  // lets Node resolve it from node_modules normally, avoiding the ESM/CJS clash.
+  serverExternalPackages: ["firebase-admin", "jwks-rsa", "jose"],
   // Auth.js's `NEXTAUTH_URL` (set to the bare apex domain) forces every internal
   // redirect_uri to `codeninjavik.in`, but the PKCE verifier cookie is bound by the
   // browser to whichever host actually served the response (no Domain= attribute is
