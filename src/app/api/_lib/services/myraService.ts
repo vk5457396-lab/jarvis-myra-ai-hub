@@ -40,6 +40,9 @@ export async function ensureMyraState(user: any, websiteProfile?: any) {
         $setOnInsert: {
           userId,
           username,
+          chatHandle: '',
+          chatHandleLower: '',
+          bio: '',
           avatar,
           language: 'en',
           voice: 'default',
@@ -100,6 +103,12 @@ export function publicMyraProfile(profile: any) {
     id: profile._id.toString(),
     user_id: profile.userId.toString(),
     username: profile.username,
+    chat_handle: profile.chatHandle || '',
+    // True only once the user has claimed a unique @handle via /api/myra/username. Separate
+    // from `username` above, which is auto-filled from their name/email on account creation,
+    // is not unique, and is edited independently via PATCH /api/myra/profile.
+    has_chat_handle: Boolean(profile.chatHandleLower),
+    bio: profile.bio || '',
     avatar: profile.avatar,
     language: profile.language,
     voice: profile.voice,

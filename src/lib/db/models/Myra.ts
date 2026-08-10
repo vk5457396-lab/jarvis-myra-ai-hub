@@ -5,7 +5,19 @@ const objectId = Schema.Types.ObjectId;
 const myraProfileSchema = new Schema(
   {
     userId: { type: objectId, ref: 'User', required: true, unique: true, index: true },
+    // Free-text display name (not unique) - set from the account name at signup and editable
+    // via the plain profile-edit screen. Deliberately NOT the same field as chatHandle below.
     username: { type: String, default: '' },
+    // The unique @handle used for chat identity/search (WhatsApp/Telegram-style). Separate
+    // from `username` on purpose: `username` is free text with no uniqueness constraint, so
+    // reusing it here would let a later free-text profile edit silently steal/orphan someone's
+    // chat handle without going through the availability check.
+    chatHandle: { type: String, default: '' },
+    // Lowercased mirror of chatHandle, kept in sync on every write. The unique index lives on
+    // this field so uniqueness is case-insensitive (Vikash/vikash can't both be taken) while
+    // chatHandle preserves the casing the user picked.
+    chatHandleLower: { type: String, default: '' },
+    bio: { type: String, default: '' },
     avatar: { type: String, default: null },
     language: { type: String, default: 'en' },
     voice: { type: String, default: 'default' },
@@ -18,6 +30,10 @@ const myraProfileSchema = new Schema(
     preferences: { type: Schema.Types.Mixed, default: {} },
   },
   { timestamps: true, collection: 'myra_profiles' }
+);
+myraProfileSchema.index(
+  { chatHandleLower: 1 },
+  { unique: true, partialFilterExpression: { chatHandleLower: { $type: 'string', $ne: '' } } }
 );
 
 const myraDeviceSchema = new Schema(

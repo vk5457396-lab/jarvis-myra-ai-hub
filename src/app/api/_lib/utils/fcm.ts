@@ -1,47 +1,8 @@
-import { initializeApp, getApps, cert, type App, type ServiceAccount } from 'firebase-admin/app';
 import { getMessaging } from 'firebase-admin/messaging';
 import logger from './logger';
-import { ApiError } from './response';
 import { connectMongo } from '@/lib/db/mongoose';
 import { MyraDevice } from '@/lib/db/models';
-
-let app: App | null = null;
-
-function serviceAccount(): ServiceAccount | null {
-  const raw =
-    process.env.FIREBASE_SERVICE_ACCOUNT ||
-    process.env.FIREBASE_SERVICE_ACCOUNT_JSON ||
-    process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
-
-  if (!raw) return null;
-
-  const text = raw.trim().startsWith('{') ? raw : Buffer.from(raw, 'base64').toString('utf8');
-
-  try {
-    const parsed = JSON.parse(text);
-    if (parsed.private_key) parsed.private_key = parsed.private_key.replace(/\\n/g, '\n');
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-function getApp(): App {
-  if (app) return app;
-  const existing = getApps();
-  if (existing.length) {
-    app = existing[0]!;
-    return app;
-  }
-
-  const credentials = serviceAccount();
-  if (!credentials) {
-    throw ApiError.internal('Push notifications are not configured.', 'FCM_NOT_CONFIGURED');
-  }
-
-  app = initializeApp({ credential: cert(credentials) });
-  return app;
-}
+import { getFirebaseApp as getApp } from './firebaseAdmin';
 
 const INVALID_TOKEN_CODES = new Set([
   'messaging/invalid-registration-token',

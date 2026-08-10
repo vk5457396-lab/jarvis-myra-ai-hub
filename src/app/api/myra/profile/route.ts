@@ -23,8 +23,13 @@ export const PATCH = withApi(
     const body = await req.json();
     const set: Record<string, any> = {};
 
+    // Note: this only renames the display name shown around the app - it does not
+    // touch usernameLower, so it can never collide with someone's unique @handle.
+    // Claiming/changing the actual chat handle goes through POST /api/myra/username.
     const username = optionalString(body.username, 'username', 120);
     if (username !== null) set.username = username;
+    const bio = optionalString(body.bio, 'bio', 280);
+    if (bio !== null) set.bio = bio;
     const avatar = optionalString(body.avatar, 'avatar', 2000);
     if (avatar !== null) set.avatar = avatar;
     const language = optionalString(body.language, 'language', 20);
