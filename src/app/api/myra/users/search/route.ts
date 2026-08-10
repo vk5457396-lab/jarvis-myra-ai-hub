@@ -20,17 +20,22 @@ export const GET = withApi(
     if (q.length < 2) return success({ users: [] });
 
     await connectMongo();
-    const pattern = new RegExp('^' + escapeRegex(q.toLowerCase()), 'i');
+    // Matches either the unique @handle (chatHandleLower) or the free-text display name
+    // (username) - most people haven't set a handle yet, and searching by the name they
+    // actually see everywhere else in the app (profile, login) is what users expect "search
+    // by name" to mean, not just the newer @handle concept.
+    const pattern = new RegExp(escapeRegex(q), 'i');
     const matches = await MyraProfile.find({
-      chatHandleLower: { $regex: pattern },
       userId: { $ne: user._id },
+      $or: [{ chatHandleLower: { $regex: pattern } }, { username: { $regex: pattern } }],
     })
-      .select('userId chatHandle avatar bio subscriptionType isAdmin')
+      .select('userId chatHandle username avatar bio subscriptionType isAdmin')
       .limit(20)
       .lean<
         {
           userId: any;
           chatHandle: string;
+          username: string;
           avatar: string | null;
           bio: string;
           subscriptionType: string;
@@ -41,7 +46,9 @@ export const GET = withApi(
     return success({
       users: matches.map((m) => ({
         id: m.userId.toString(),
-        username: m.chatHandle,
+        // Prefer the claimed handle; fall back to the display name for anyone who hasn't
+        // set one up yet, so they're still findable and messageable.
+        username: m.chatHandle || m.username || 'User',
         avatar: m.avatar,
         bio: m.bio || '',
         subscription_type: m.subscriptionType,
