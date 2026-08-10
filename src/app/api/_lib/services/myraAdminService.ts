@@ -1,5 +1,13 @@
 import { connectMongo } from '@/lib/db/mongoose';
-import { User, Profile, MyraProfile, MyraSubscription, MyraAccessKey } from '@/lib/db/models';
+import {
+  User,
+  Profile,
+  MyraProfile,
+  MyraSubscription,
+  MyraAccessKey,
+  MyraDevice,
+  MyraBlockedDevice,
+} from '@/lib/db/models';
 import { generateUniqueKeys } from '@/lib/licenses';
 import { ApiError } from '../utils/response';
 import { ensureMyraState, MYRA_PLANS } from './myraService';
@@ -83,6 +91,74 @@ export async function addCreditsToUser({
     await profile.save();
   }
   return profile;
+}
+
+const BADGE_VALUES = ['blue', 'red', 'yellow', 'none'] as const;
+
+/** Admin: manually set (or clear) a user's chat badge override, by email. */
+export async function setBadgeOverride({
+  user,
+  badge,
+}: {
+  user: any;
+  badge: (typeof BADGE_VALUES)[number] | null;
+}) {
+  if (badge !== null && !BADGE_VALUES.includes(badge)) {
+    throw ApiError.badRequest(`badge must be one of: ${BADGE_VALUES.join(', ')}.`, 'INVALID_BADGE');
+  }
+  await connectMongo();
+  return MyraProfile.findOneAndUpdate(
+    { userId: user._id },
+    { $set: { badgeOverride: badge } },
+    { new: true }
+  );
+}
+
+/** Admin: every device a user has ever logged in from, with each one's current block status. */
+export async function listUserDevices(user: any) {
+  await connectMongo();
+  const devices = await MyraDevice.find({ userId: user._id }).sort({ lastLogin: -1 }).lean();
+  if (devices.length === 0) return [];
+  const blocked = await MyraBlockedDevice.find({
+    deviceId: { $in: devices.map((d: any) => d.deviceId) },
+  })
+    .select('deviceId')
+    .lean();
+  const blockedSet = new Set(blocked.map((b: any) => b.deviceId));
+  return devices.map((d: any) => ({
+    device_id: d.deviceId,
+    device_name: d.deviceName,
+    manufacturer: d.manufacturer,
+    model: d.model,
+    android_version: d.androidVersion,
+    app_version: d.appVersion,
+    last_login: d.lastLogin,
+    is_blocked: blockedSet.has(d.deviceId),
+  }));
+}
+
+/** Admin: block a specific physical device (by its ANDROID_ID) from ever logging into any
+ *  account - checked at login/refresh time in mobileAuthService. Idempotent. */
+export async function blockDevice({
+  deviceId,
+  reason,
+  blockedBy,
+}: {
+  deviceId: string;
+  reason?: string | null;
+  blockedBy?: string | null;
+}) {
+  await connectMongo();
+  return MyraBlockedDevice.findOneAndUpdate(
+    { deviceId },
+    { $set: { reason: reason || null, blockedBy: blockedBy || null } },
+    { new: true, upsert: true, setDefaultsOnInsert: true }
+  );
+}
+
+export async function unblockDevice(deviceId: string) {
+  await connectMongo();
+  await MyraBlockedDevice.deleteOne({ deviceId });
 }
 
 export async function generateMyraAccessKeys({

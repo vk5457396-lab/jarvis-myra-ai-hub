@@ -12,6 +12,7 @@ import {
 } from '../../../_lib/utils/mobileJwt';
 import { connectMongo } from '@/lib/db/mongoose';
 import { MyraDevice, Profile, User } from '@/lib/db/models';
+import { assertDeviceNotBlocked } from '../../../_lib/services/mobileAuthService';
 
 export const OPTIONS = handleOptions(['POST']);
 
@@ -24,6 +25,7 @@ export const POST = withApi(
     if (claims.device_id !== deviceId) {
       throw ApiError.unauthorized('Refresh token is not valid for this device.', 'DEVICE_TOKEN_MISMATCH');
     }
+    await assertDeviceNotBlocked(deviceId);
 
     await connectMongo();
     const [user, device] = await Promise.all([

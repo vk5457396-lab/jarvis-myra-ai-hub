@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Loader2, Search, Sparkles, Coins, KeyRound, Copy, Ban, RefreshCw,
+  ArrowLeft, Loader2, Search, Sparkles, Coins, KeyRound, Copy, Ban, RefreshCw, BadgeCheck, Smartphone, ShieldOff,
 } from "lucide-react";
 
 const PLAN_OPTIONS = [
@@ -22,6 +22,14 @@ const PLAN_OPTIONS = [
   { value: "elite", label: "Elite" },
   { value: "elite_pro", label: "Elite Pro" },
   { value: "membership", label: "Membership" },
+];
+
+const BADGE_OPTIONS = [
+  { value: "clear", label: "Automatic (no override)" },
+  { value: "red", label: "Red tick (admin)" },
+  { value: "blue", label: "Blue tick (membership)" },
+  { value: "yellow", label: "Yellow tick (premium)" },
+  { value: "none", label: "No badge (force-hide)" },
 ];
 
 interface MyraUserRow {
@@ -34,9 +42,22 @@ interface MyraUserRow {
   subscription_type: string | null;
   subscription_status: string | null;
   subscription_expiry: string | null;
+  badge_override: string | null;
+  is_admin: boolean;
   plan: string | null;
   plan_status: string | null;
   credits_used: number | null;
+}
+
+interface MyraDeviceRow {
+  device_id: string;
+  device_name: string | null;
+  manufacturer: string | null;
+  model: string | null;
+  android_version: string | null;
+  app_version: string | null;
+  last_login: string | null;
+  is_blocked: boolean;
 }
 
 interface AccessKeyRow {
@@ -80,6 +101,13 @@ const MyraAdminPage = () => {
   const [savingCredits, setSavingCredits] = useState(false);
   const [savingPlan, setSavingPlan] = useState(false);
 
+  const [badgeValue, setBadgeValue] = useState("clear");
+  const [savingBadge, setSavingBadge] = useState(false);
+
+  const [devices, setDevices] = useState<MyraDeviceRow[]>([]);
+  const [loadingDevices, setLoadingDevices] = useState(false);
+  const [blockingDeviceId, setBlockingDeviceId] = useState<string | null>(null);
+
   const [keyPlan, setKeyPlan] = useState("premium");
   const [keyCount, setKeyCount] = useState(1);
   const [keyAssignedEmail, setKeyAssignedEmail] = useState("");
@@ -96,6 +124,19 @@ const MyraAdminPage = () => {
       toast.error(e instanceof Error ? e.message : "Could not load users");
     } finally {
       setSearching(false);
+    }
+  }, []);
+
+  const loadDevices = useCallback(async (email: string) => {
+    setLoadingDevices(true);
+    try {
+      const data = await api(`/api/admin/myra/devices?email=${encodeURIComponent(email)}`);
+      setDevices(data.devices);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not load devices");
+      setDevices([]);
+    } finally {
+      setLoadingDevices(false);
     }
   }, []);
 
@@ -156,6 +197,47 @@ const MyraAdminPage = () => {
       toast.error(e instanceof Error ? e.message : "Failed to update plan");
     } finally {
       setSavingPlan(false);
+    }
+  };
+
+  const applyBadge = async () => {
+    if (!selectedEmail) return;
+    setSavingBadge(true);
+    try {
+      await api("/api/admin/myra/badge", {
+        method: "POST",
+        body: JSON.stringify({ email: selectedEmail, badge: badgeValue }),
+      });
+      toast.success("Badge updated");
+      await loadUsers(query);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update badge");
+    } finally {
+      setSavingBadge(false);
+    }
+  };
+
+  const toggleDeviceBlock = async (device: MyraDeviceRow) => {
+    setBlockingDeviceId(device.device_id);
+    try {
+      if (device.is_blocked) {
+        await api("/api/admin/myra/devices/unblock", {
+          method: "POST",
+          body: JSON.stringify({ device_id: device.device_id }),
+        });
+        toast.success("Device unblocked");
+      } else {
+        await api("/api/admin/myra/devices/block", {
+          method: "POST",
+          body: JSON.stringify({ device_id: device.device_id, reason: `Blocked from admin panel for ${selectedEmail}` }),
+        });
+        toast.success("Device blocked — no account can log in from it again");
+      }
+      if (selectedEmail) await loadDevices(selectedEmail);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update device block");
+    } finally {
+      setBlockingDeviceId(null);
     }
   };
 
@@ -260,13 +342,19 @@ const MyraAdminPage = () => {
                   <th className="p-2 text-left">Plan</th>
                   <th className="p-2 text-left">Status</th>
                   <th className="p-2 text-left">Expiry</th>
+                  <th className="p-2 text-left">Badge</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((u) => (
                   <tr
                     key={u.id}
-                    onClick={() => { setSelectedEmail(u.email); toast.message(`Selected ${u.email}`); }}
+                    onClick={() => {
+                      setSelectedEmail(u.email);
+                      setBadgeValue(u.badge_override || "clear");
+                      loadDevices(u.email);
+                      toast.message(`Selected ${u.email}`);
+                    }}
                     className={`cursor-pointer border-b border-border/60 hover:bg-muted/40 ${
                       selectedEmail === u.email ? "bg-primary/10" : ""
                     }`}
@@ -279,10 +367,23 @@ const MyraAdminPage = () => {
                     <td className="p-2 text-xs text-muted-foreground">
                       {u.subscription_expiry ? new Date(u.subscription_expiry).toLocaleDateString() : "—"}
                     </td>
+                    <td className="p-2 text-xs">
+                      {u.badge_override ? (
+                        <span className={
+                          u.badge_override === "red" ? "text-red-400" :
+                          u.badge_override === "blue" ? "text-blue-400" :
+                          u.badge_override === "yellow" ? "text-amber-400" : "text-muted-foreground"
+                        }>
+                          {u.badge_override}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">auto</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {users.length === 0 && (
-                  <tr><td colSpan={6} className="p-4 text-center text-muted-foreground">No users found.</td></tr>
+                  <tr><td colSpan={7} className="p-4 text-center text-muted-foreground">No users found.</td></tr>
                 )}
               </tbody>
             </table>
@@ -352,6 +453,89 @@ const MyraAdminPage = () => {
                 {savingPlan ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Activate plan
               </Button>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Badge + device block */}
+        <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-2">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="license-glass p-6">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="rounded-2xl bg-amber-500/15 p-3">
+                <BadgeCheck className="h-5 w-5 text-amber-400" />
+              </div>
+              <h2 className="text-lg font-semibold">Chat verification badge</h2>
+            </div>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Selected: <span className="font-mono">{selectedEmail ?? "click a user above"}</span>
+            </p>
+            <div className="space-y-3">
+              <Select value={badgeValue} onValueChange={setBadgeValue}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {BADGE_OPTIONS.map((b) => (
+                    <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Overrides the automatic badge (real admin status / membership plan) everywhere
+                in chat: search, the people directory, conversation list, and chat headers.
+              </p>
+              <Button onClick={applyBadge} disabled={!selectedEmail || savingBadge} className="w-full">
+                {savingBadge ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Apply badge
+              </Button>
+            </div>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="license-glass p-6">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="rounded-2xl bg-red-500/15 p-3">
+                <ShieldOff className="h-5 w-5 text-red-400" />
+              </div>
+              <h2 className="text-lg font-semibold">Block device</h2>
+            </div>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Selected: <span className="font-mono">{selectedEmail ?? "click a user above"}</span> — every
+              device this account has ever logged in from. Blocking a device stops <em>any</em> email
+              from logging into the app on it, not just this account.
+            </p>
+            <div className="max-h-64 space-y-2 overflow-auto">
+              {loadingDevices && (
+                <div className="flex justify-center py-4"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>
+              )}
+              {!loadingDevices && devices.length === 0 && (
+                <p className="py-4 text-center text-xs text-muted-foreground">
+                  {selectedEmail ? "No devices found for this account." : "Select a user to see their devices."}
+                </p>
+              )}
+              {devices.map((d) => (
+                <div key={d.device_id} className="flex items-center justify-between gap-2 rounded-lg border border-border/60 p-2">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Smartphone className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-medium">{d.device_name || d.model || d.device_id}</p>
+                      <p className="truncate font-mono text-[10px] text-muted-foreground">{d.device_id}</p>
+                      {d.last_login && (
+                        <p className="text-[10px] text-muted-foreground">
+                          Last login {new Date(d.last_login).toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={d.is_blocked ? "outline" : "destructive"}
+                    disabled={blockingDeviceId === d.device_id}
+                    onClick={() => toggleDeviceBlock(d)}
+                  >
+                    {blockingDeviceId === d.device_id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : d.is_blocked ? "Unblock" : "Block"}
+                  </Button>
+                </div>
+              ))}
             </div>
           </motion.div>
         </div>

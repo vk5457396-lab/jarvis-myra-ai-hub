@@ -52,6 +52,8 @@ export const GET = withApi(async (req) => {
         subscription_type: profile?.subscriptionType ?? null,
         subscription_status: profile?.subscriptionStatus ?? null,
         subscription_expiry: profile?.subscriptionExpiry ?? null,
+        badge_override: profile?.badgeOverride ?? null,
+        is_admin: Boolean(profile?.isAdmin),
         plan: subscription?.plan ?? null,
         plan_status: subscription?.status ?? null,
         credits_used: usage?.creditsUsed ?? null,

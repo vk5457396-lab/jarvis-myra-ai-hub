@@ -4,6 +4,7 @@ export { AuthAccount, type AuthAccountDoc } from './AuthAccount';
 export {
   MyraProfile,
   MyraDevice,
+  MyraBlockedDevice,
   MyraChatHistory,
   MyraMemory,
   MyraUsage,

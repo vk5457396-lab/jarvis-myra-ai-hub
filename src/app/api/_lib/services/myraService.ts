@@ -91,12 +91,43 @@ export async function ensureMyraState(user: any, websiteProfile?: any) {
   // Best-effort: the MYRA community group living in Firestore must never block login/bootstrap
   // if Firestore is briefly unreachable.
   try {
-    await ensureMyraGroupMembership(userId.toString(), profile.chatHandle || username, profile.avatar);
+    await ensureMyraGroupMembership(
+      userId.toString(),
+      profile.chatHandle || username,
+      profile.avatar,
+      chatBadgeFields(profile)
+    );
   } catch (error) {
     console.warn('[myraGroup] membership sync failed', (error as Error)?.message);
   }
 
   return { profile, subscription, usage, settings };
+}
+
+/**
+ * Chat-facing admin/subscription badge, for display only (search, all-users directory,
+ * conversation list/header) - NOT used for publicMyraProfile()/billing, since that must
+ * always reflect the user's real plan regardless of a cosmetic badge override.
+ * An admin-set badgeOverride takes priority over the computed isAdmin/subscriptionType badge;
+ * 'none' explicitly suppresses any badge (including a real isAdmin/membership one).
+ */
+export function chatBadgeFields(profile: {
+  isAdmin?: boolean;
+  subscriptionType?: string | null;
+  badgeOverride?: string | null;
+}) {
+  switch (profile.badgeOverride) {
+    case 'red':
+      return { is_admin: true, subscription_type: profile.subscriptionType ?? null };
+    case 'blue':
+      return { is_admin: false, subscription_type: 'membership' };
+    case 'yellow':
+      return { is_admin: false, subscription_type: 'premium' };
+    case 'none':
+      return { is_admin: false, subscription_type: null };
+    default:
+      return { is_admin: Boolean(profile.isAdmin), subscription_type: profile.subscriptionType ?? null };
+  }
 }
 
 export function publicUser(user: any, role: 'admin' | 'user' = 'user') {
@@ -134,6 +165,7 @@ export function publicMyraProfile(profile: any) {
     subscription_expiry: profile.subscriptionExpiry,
     premium_features: profile.premiumFeatures || [],
     preferences: profile.preferences || {},
+    badge_override: profile.badgeOverride ?? null,
     created_at: profile.createdAt,
     updated_at: profile.updatedAt,
   };

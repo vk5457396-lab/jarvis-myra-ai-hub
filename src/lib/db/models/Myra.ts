@@ -31,6 +31,10 @@ const myraProfileSchema = new Schema(
     subscriptionExpiry: { type: Date, default: null },
     premiumFeatures: { type: [String], default: [] },
     preferences: { type: Schema.Types.Mixed, default: {} },
+    // Admin-set chat badge, independent of the computed isAdmin/subscriptionType badge.
+    // null/unset = use the computed badge as before. 'none' explicitly hides any badge
+    // (including a real isAdmin/membership one) for this user.
+    badgeOverride: { type: String, enum: ['blue', 'red', 'yellow', 'none', null], default: null },
   },
   { timestamps: true, collection: 'myra_profiles' }
 );
@@ -60,6 +64,19 @@ myraDeviceSchema.index({ userId: 1, deviceId: 1 }, { unique: true });
 myraDeviceSchema.index(
   { webHandoffHash: 1 },
   { unique: true, partialFilterExpression: { webHandoffHash: { $type: 'string' } } }
+);
+
+// Blocks a physical device (keyed only on deviceId, the Android ANDROID_ID) from ever logging
+// into ANY account - independent of MyraDevice, which is scoped per-{userId, deviceId} and
+// can't express "ban this device regardless of which account signs in on it". Checked in
+// createMobileSession() (login) and the token-refresh route.
+const myraBlockedDeviceSchema = new Schema(
+  {
+    deviceId: { type: String, required: true, unique: true, index: true },
+    reason: { type: String, default: null },
+    blockedBy: { type: String, default: null },
+  },
+  { timestamps: true, collection: 'myra_blocked_devices' }
 );
 
 const myraChatHistorySchema = new Schema(
@@ -161,6 +178,8 @@ export const MyraProfile: Model<any> =
   models.MyraProfile || model('MyraProfile', myraProfileSchema);
 export const MyraDevice: Model<any> =
   models.MyraDevice || model('MyraDevice', myraDeviceSchema);
+export const MyraBlockedDevice: Model<any> =
+  models.MyraBlockedDevice || model('MyraBlockedDevice', myraBlockedDeviceSchema);
 export const MyraChatHistory: Model<any> =
   models.MyraChatHistory || model('MyraChatHistory', myraChatHistorySchema);
 export const MyraMemory: Model<any> =

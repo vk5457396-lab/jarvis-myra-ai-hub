@@ -6,6 +6,7 @@ import { requireMobileUser } from '../../../_lib/middleware/mobileAuth';
 import { success } from '../../../_lib/utils/response';
 import { connectMongo } from '@/lib/db/mongoose';
 import { MyraProfile } from '@/lib/db/models';
+import { chatBadgeFields } from '../../../_lib/services/myraService';
 
 export const OPTIONS = handleOptions(['GET']);
 
@@ -29,7 +30,7 @@ export const GET = withApi(
       userId: { $ne: user._id },
       $or: [{ chatHandleLower: { $regex: pattern } }, { username: { $regex: pattern } }],
     })
-      .select('userId chatHandle username avatar bio subscriptionType isAdmin')
+      .select('userId chatHandle username avatar bio subscriptionType isAdmin badgeOverride')
       .limit(20)
       .lean<
         {
@@ -40,6 +41,7 @@ export const GET = withApi(
           bio: string;
           subscriptionType: string;
           isAdmin: boolean;
+          badgeOverride: string | null;
         }[]
       >();
 
@@ -51,8 +53,7 @@ export const GET = withApi(
         username: m.chatHandle || m.username || 'User',
         avatar: m.avatar,
         bio: m.bio || '',
-        subscription_type: m.subscriptionType,
-        is_admin: Boolean(m.isAdmin),
+        ...chatBadgeFields(m),
       })),
     });
   },

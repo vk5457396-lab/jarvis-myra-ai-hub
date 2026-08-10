@@ -13,7 +13,8 @@ export const MYRA_GROUP_ID = 'myra-group';
 export async function ensureMyraGroupMembership(
   uid: string,
   username: string,
-  avatar: string | null
+  avatar: string | null,
+  badge?: { is_admin: boolean; subscription_type: string | null }
 ) {
   const db = getFirestore(getFirebaseApp());
   const ref = db.collection('conversations').doc(MYRA_GROUP_ID);
@@ -21,7 +22,15 @@ export async function ensureMyraGroupMembership(
 
   const participantUpdate: Record<string, unknown> = {
     participants: FieldValue.arrayUnion(uid),
-    [`participantInfo.${uid}`]: { username, avatar: avatar || null },
+    [`participantInfo.${uid}`]: {
+      username,
+      avatar: avatar || null,
+      // Re-written on every login, so unlike a 1-on-1 conversation's participantInfo (only
+      // written once when the chat is first started) this stays fresh - an admin badge
+      // change or a plan upgrade shows up here the next time the user logs in.
+      isAdmin: badge?.is_admin ?? false,
+      subscriptionType: badge?.subscription_type ?? null,
+    },
   };
 
   if (!snap.exists) {

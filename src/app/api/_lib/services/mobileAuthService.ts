@@ -3,6 +3,18 @@ import { ApiError } from '../utils/response';
 import { hashRefreshToken, signMobileTokenPair } from '../utils/mobileJwt';
 import { ensureMyraState, publicMyraProfile, publicUser, upsertMyraDevice } from './myraService';
 import { syncAdapterUser } from '@/lib/auth/users';
+import { connectMongo } from '@/lib/db/mongoose';
+import { MyraBlockedDevice } from '@/lib/db/models';
+
+/** Throws if this physical device (by ANDROID_ID) has been admin-blocked - regardless of
+ *  which account is signing in on it. Call before minting any token. */
+export async function assertDeviceNotBlocked(deviceId: string) {
+  await connectMongo();
+  const blocked = await MyraBlockedDevice.findOne({ deviceId }).lean();
+  if (blocked) {
+    throw ApiError.forbidden('This device has been blocked.', 'DEVICE_BLOCKED');
+  }
+}
 
 function googleAudiences(): string[] {
   return [
@@ -46,6 +58,7 @@ export async function createMobileSession({
   if (!deviceId) {
     throw ApiError.badRequest('device_id is required.', 'DEVICE_ID_REQUIRED');
   }
+  await assertDeviceNotBlocked(deviceId);
 
   const role = (websiteProfile?.role || 'user') as 'admin' | 'user';
   const tokenPair = signMobileTokenPair({
