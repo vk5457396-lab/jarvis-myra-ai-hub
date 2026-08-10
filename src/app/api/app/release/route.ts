@@ -8,20 +8,26 @@ import { AppRelease, APP_RELEASE_ID } from '@/lib/db/models';
 
 export const OPTIONS = handleOptions(['GET']);
 
-/** Public: returns release metadata only — never the GitHub asset URL. */
+/**
+ * Public: what the website's Download page / home & pricing download cards show.
+ * Deliberately reads the public* fields, NOT the OTA versionName/releaseNotes/fileSizeMb the
+ * admin sets when cutting an in-app update — those two are independent by design (see
+ * AppRelease model comment). Falls back to the OTA fields only until the admin has set the
+ * public fields for the first time, so the page isn't blank before that migration happens.
+ */
 export const GET = withApi(async () => {
   await connectMongo();
   const doc = await AppRelease.findById(APP_RELEASE_ID)
-    .select('versionName versionCode releaseNotes fileSizeMb updatedAt')
+    .select('versionName versionCode releaseNotes fileSizeMb publicVersionName publicReleaseNotes publicFileSizeMb updatedAt')
     .lean();
 
   if (!doc) throw ApiError.notFound('No release configured yet.', 'RELEASE_NOT_CONFIGURED');
 
   return success({
-    version_name: doc.versionName,
+    version_name: doc.publicVersionName ?? doc.versionName,
     version_code: doc.versionCode,
-    release_notes: doc.releaseNotes,
-    file_size_mb: doc.fileSizeMb,
+    release_notes: doc.publicReleaseNotes ?? doc.releaseNotes,
+    file_size_mb: doc.publicFileSizeMb ?? doc.fileSizeMb,
     updated_at: doc.updatedAt,
   });
 });

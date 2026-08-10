@@ -52,17 +52,32 @@ async function resolveUserId(req: NextRequest): Promise<string> {
 export const GET = withApi(
   async (req: NextRequest) => {
     const userId = await resolveUserId(req);
+    // ?mode=url is only ever sent by the website's own download button (see doc-comment
+    // below) - the Android app's in-app updater always calls this route without it. That
+    // existing signal is what keeps the public website download independent of the OTA
+    // release: the site gets the publicApkAssetUrl the admin explicitly set, never whatever
+    // was last pasted in for an app update.
+    const isWebsiteDownload = req.nextUrl.searchParams.get('mode') === 'url';
 
     await connectMongo();
-    const release = await AppRelease.findById(APP_RELEASE_ID).select('versionName apkAssetUrl').lean();
+    const release = await AppRelease.findById(APP_RELEASE_ID)
+      .select('versionName apkAssetUrl publicVersionName publicApkAssetUrl')
+      .lean();
 
-    if (!release?.apkAssetUrl) {
+    const assetUrl = isWebsiteDownload
+      ? (release?.publicApkAssetUrl ?? release?.apkAssetUrl)
+      : release?.apkAssetUrl;
+    const versionName = isWebsiteDownload
+      ? (release?.publicVersionName ?? release?.versionName)
+      : release?.versionName;
+
+    if (!assetUrl) {
       throw ApiError.notFound('APK is not available right now.', 'RELEASE_NOT_CONFIGURED');
     }
 
     let directUrl: string;
     try {
-      directUrl = await toFreshDirectLink(release.apkAssetUrl);
+      directUrl = await toFreshDirectLink(assetUrl);
     } catch (error) {
       logger.error('Failed to resolve APK download link', { detail: (error as Error)?.message });
       throw ApiError.internal('Could not prepare the download link. Try again in a moment.', 'LINK_RESOLVE_FAILED');
@@ -71,7 +86,7 @@ export const GET = withApi(
     try {
       await AppReleaseDownload.create({
         userId,
-        versionName: release.versionName,
+        versionName,
         ip: req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
         userAgent: req.headers.get('user-agent') || null,
       });
@@ -79,12 +94,12 @@ export const GET = withApi(
       // Best-effort analytics only — never block the download over a logging failure.
     }
 
-    if (req.nextUrl.searchParams.get('mode') === 'url') {
+    if (isWebsiteDownload) {
       return success({
         url: directUrl,
-        filename: `MYRA-${release.versionName}.apk`,
+        filename: `MYRA-${versionName}.apk`,
         direct: true,
-        version_name: release.versionName,
+        version_name: versionName,
       });
     }
 
@@ -97,7 +112,7 @@ export const GET = withApi(
       throw ApiError.internal('Failed to fetch the APK from storage. Try again in a moment.', 'DOWNLOAD_UPSTREAM_FAILED');
     }
 
-    const filename = `MYRA-${release.versionName}.apk`;
+    const filename = `MYRA-${versionName}.apk`;
     const headers: Record<string, string> = {
       'Content-Type': 'application/vnd.android.package-archive',
       'Content-Disposition': `attachment; filename="${filename}"`,
