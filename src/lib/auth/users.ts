@@ -15,6 +15,12 @@ function adminEmails(): Set<string> {
   );
 }
 
+/** Single source of truth for "is this an admin/owner account" - same ADMIN_EMAILS list the
+ *  website's own role assignment uses, so chat's admin badge can never drift from it. */
+export function isAdminEmail(emailValue: string): boolean {
+  return adminEmails().has(normalizedEmail(emailValue));
+}
+
 export async function ensureWebsiteProfile(
   emailValue: string,
   fullName?: string | null

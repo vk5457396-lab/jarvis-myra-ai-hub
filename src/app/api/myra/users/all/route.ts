@@ -9,24 +9,21 @@ import { MyraProfile } from '@/lib/db/models';
 
 export const OPTIONS = handleOptions(['GET']);
 
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
+// Directory of everyone who has claimed a chat handle - people without one can't be messaged
+// yet (no identity to start a conversation against), so they're left out rather than shown
+// as an unnamed row.
 export const GET = withApi(
   async (req) => {
     const { user } = await requireMobileUser(req);
-    const q = (new URL(req.url).searchParams.get('q') || '').trim();
-    if (q.length < 2) return success({ users: [] });
-
     await connectMongo();
-    const pattern = new RegExp('^' + escapeRegex(q.toLowerCase()), 'i');
-    const matches = await MyraProfile.find({
-      chatHandleLower: { $regex: pattern },
+
+    const profiles = await MyraProfile.find({
+      chatHandleLower: { $exists: true, $ne: '' },
       userId: { $ne: user._id },
     })
       .select('userId chatHandle avatar bio subscriptionType isAdmin')
-      .limit(20)
+      .sort({ isAdmin: -1, chatHandleLower: 1 })
+      .limit(500)
       .lean<
         {
           userId: any;
@@ -39,15 +36,15 @@ export const GET = withApi(
       >();
 
     return success({
-      users: matches.map((m) => ({
-        id: m.userId.toString(),
-        username: m.chatHandle,
-        avatar: m.avatar,
-        bio: m.bio || '',
-        subscription_type: m.subscriptionType,
-        is_admin: Boolean(m.isAdmin),
+      users: profiles.map((p) => ({
+        id: p.userId.toString(),
+        username: p.chatHandle,
+        avatar: p.avatar,
+        bio: p.bio || '',
+        subscription_type: p.subscriptionType,
+        is_admin: Boolean(p.isAdmin),
       })),
     });
   },
-  { rateLimit: { scope: 'myra-users-search', max: 60 } }
+  { rateLimit: { scope: 'myra-users-all', max: 30 } }
 );

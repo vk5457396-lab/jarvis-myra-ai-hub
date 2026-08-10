@@ -6,6 +6,8 @@ import {
   MyraSubscription,
   MyraUsage,
 } from '@/lib/db/models';
+import { isAdminEmail } from '@/lib/auth/users';
+import { ensureMyraGroupMembership } from './myraGroupService';
 
 export const MYRA_PLANS: Record<
   string,
@@ -32,11 +34,15 @@ export async function ensureMyraState(user: any, websiteProfile?: any) {
   const trialExpiry = expiryForPlan('free', now);
   const username = user.name || websiteProfile?.fullName || user.email?.split('@')[0] || 'User';
   const avatar = user.profilePhoto || user.image || null;
+  const isAdmin = isAdminEmail(user.email || '');
 
   const [profile, subscription, usage, settings] = await Promise.all([
     MyraProfile.findOneAndUpdate(
       { userId },
       {
+        // Refreshed on every call (not just insert) so a change to ADMIN_EMAILS takes effect
+        // on the next login instead of being frozen at whatever it was on account creation.
+        $set: { isAdmin },
         $setOnInsert: {
           userId,
           username,
@@ -82,6 +88,14 @@ export async function ensureMyraState(user: any, websiteProfile?: any) {
     ),
   ]);
 
+  // Best-effort: the MYRA community group living in Firestore must never block login/bootstrap
+  // if Firestore is briefly unreachable.
+  try {
+    await ensureMyraGroupMembership(userId.toString(), profile.chatHandle || username, profile.avatar);
+  } catch (error) {
+    console.warn('[myraGroup] membership sync failed', (error as Error)?.message);
+  }
+
   return { profile, subscription, usage, settings };
 }
 
@@ -109,6 +123,7 @@ export function publicMyraProfile(profile: any) {
     // is not unique, and is edited independently via PATCH /api/myra/profile.
     has_chat_handle: Boolean(profile.chatHandleLower),
     bio: profile.bio || '',
+    is_admin: Boolean(profile.isAdmin),
     avatar: profile.avatar,
     language: profile.language,
     voice: profile.voice,
@@ -151,6 +166,7 @@ export function publicSettings(settings: any) {
   return {
     theme: settings.theme,
     notifications: settings.notifications,
+    chat_notifications: settings.chatNotifications !== false,
     language: settings.language,
     assistant_voice: settings.assistantVoice,
     wake_word: settings.wakeWord,

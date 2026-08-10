@@ -24,6 +24,7 @@ export const PATCH = withApi(async (req) => {
   const theme = optionalString(body.theme, 'theme', 40);
   if (theme !== null) set.theme = theme;
   if (typeof body.notifications === 'boolean') set.notifications = body.notifications;
+  if (typeof body.chat_notifications === 'boolean') set.chatNotifications = body.chat_notifications;
   const language = optionalString(body.language, 'language', 20);
   if (language !== null) set.language = language;
   const voice = optionalString(body.assistant_voice, 'assistant_voice', 80);

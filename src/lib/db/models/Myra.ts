@@ -18,6 +18,9 @@ const myraProfileSchema = new Schema(
     // chatHandle preserves the casing the user picked.
     chatHandleLower: { type: String, default: '' },
     bio: { type: String, default: '' },
+    // Denormalized from ADMIN_EMAILS (see isAdminEmail()) and refreshed on every
+    // ensureMyraState call, so chat badges don't need a User join on every read.
+    isAdmin: { type: Boolean, default: false },
     avatar: { type: String, default: null },
     language: { type: String, default: 'en' },
     voice: { type: String, default: 'default' },
@@ -122,6 +125,9 @@ const myraSettingsSchema = new Schema(
     userId: { type: objectId, ref: 'User', required: true, unique: true, index: true },
     theme: { type: String, default: 'black_amoled' },
     notifications: { type: Boolean, default: true },
+    // Separate from `notifications` above (MYRA system/marketing pushes) - lets a user mute
+    // chat message pushes without muting everything else, and vice versa.
+    chatNotifications: { type: Boolean, default: true },
     language: { type: String, default: 'en' },
     assistantVoice: { type: String, default: 'default' },
     wakeWord: { type: String, default: 'MYRA' },

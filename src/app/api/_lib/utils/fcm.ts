@@ -45,6 +45,11 @@ function buildMessage(payload: any) {
   if (payload.custom_url) data.custom_url = payload.custom_url;
   if (payload.notification_type) data.notification_type = payload.notification_type;
   if (payload.notification_id) data.notification_id = payload.notification_id;
+  // Chat-message pushes: lets the Android client deep-link straight into the right
+  // conversation instead of just opening the app.
+  if (payload.conversation_id) data.conversation_id = payload.conversation_id;
+  if (payload.sender_username) data.sender_username = payload.sender_username;
+  if (payload.sender_avatar) data.sender_avatar = payload.sender_avatar;
 
   return {
     data,
