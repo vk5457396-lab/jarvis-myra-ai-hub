@@ -161,6 +161,14 @@ export async function unblockDevice(deviceId: string) {
   await MyraBlockedDevice.deleteOne({ deviceId });
 }
 
+/** Admin: free a device from the one-device-one-account lock (assertDeviceAccountLock in
+ *  mobileAuthService) by deleting its MyraDevice binding - e.g. the user got a new phone and
+ *  handed this one to someone else. The next login from this device (any account) rebinds it. */
+export async function unlinkDevice(deviceId: string) {
+  await connectMongo();
+  await MyraDevice.deleteMany({ deviceId });
+}
+
 export async function generateMyraAccessKeys({
   plan,
   count,

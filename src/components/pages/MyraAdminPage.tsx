@@ -107,6 +107,7 @@ const MyraAdminPage = () => {
   const [devices, setDevices] = useState<MyraDeviceRow[]>([]);
   const [loadingDevices, setLoadingDevices] = useState(false);
   const [blockingDeviceId, setBlockingDeviceId] = useState<string | null>(null);
+  const [unlinkingDeviceId, setUnlinkingDeviceId] = useState<string | null>(null);
 
   const [keyPlan, setKeyPlan] = useState("premium");
   const [keyCount, setKeyCount] = useState(1);
@@ -238,6 +239,23 @@ const MyraAdminPage = () => {
       toast.error(e instanceof Error ? e.message : "Failed to update device block");
     } finally {
       setBlockingDeviceId(null);
+    }
+  };
+
+  const unlinkDeviceFromAccount = async (device: MyraDeviceRow) => {
+    if (!confirm(`Unlink ${device.device_name || device.device_id}? A different Gmail account will then be able to log in on it.`)) return;
+    setUnlinkingDeviceId(device.device_id);
+    try {
+      await api("/api/admin/myra/devices/unlink", {
+        method: "POST",
+        body: JSON.stringify({ device_id: device.device_id }),
+      });
+      toast.success("Device unlinked — any account can now log in on it");
+      if (selectedEmail) await loadDevices(selectedEmail);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to unlink device");
+    } finally {
+      setUnlinkingDeviceId(null);
     }
   };
 
@@ -498,8 +516,9 @@ const MyraAdminPage = () => {
             </div>
             <p className="mb-3 text-xs text-muted-foreground">
               Selected: <span className="font-mono">{selectedEmail ?? "click a user above"}</span> — every
-              device this account has ever logged in from. Blocking a device stops <em>any</em> email
-              from logging into the app on it, not just this account.
+              device this account has ever logged in from. A device is locked to the first account
+              that ever logs into it (no other Gmail can log in there); <strong>Block</strong> stops the
+              device outright, <strong>Unlink</strong> just frees it so a different account can log in.
             </p>
             <div className="max-h-64 space-y-2 overflow-auto">
               {loadingDevices && (
@@ -524,16 +543,26 @@ const MyraAdminPage = () => {
                       )}
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    variant={d.is_blocked ? "outline" : "destructive"}
-                    disabled={blockingDeviceId === d.device_id}
-                    onClick={() => toggleDeviceBlock(d)}
-                  >
-                    {blockingDeviceId === d.device_id ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : d.is_blocked ? "Unblock" : "Block"}
-                  </Button>
+                  <div className="flex shrink-0 gap-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={unlinkingDeviceId === d.device_id}
+                      onClick={() => unlinkDeviceFromAccount(d)}
+                    >
+                      {unlinkingDeviceId === d.device_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Unlink"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={d.is_blocked ? "outline" : "destructive"}
+                      disabled={blockingDeviceId === d.device_id}
+                      onClick={() => toggleDeviceBlock(d)}
+                    >
+                      {blockingDeviceId === d.device_id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : d.is_blocked ? "Unblock" : "Block"}
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

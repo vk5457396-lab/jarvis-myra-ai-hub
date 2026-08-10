@@ -2,9 +2,9 @@ import { OAuth2Client } from 'google-auth-library';
 import { ApiError } from '../utils/response';
 import { hashRefreshToken, signMobileTokenPair } from '../utils/mobileJwt';
 import { ensureMyraState, publicMyraProfile, publicUser, upsertMyraDevice } from './myraService';
-import { syncAdapterUser } from '@/lib/auth/users';
+import { isAdminEmail, syncAdapterUser } from '@/lib/auth/users';
 import { connectMongo } from '@/lib/db/mongoose';
-import { MyraBlockedDevice } from '@/lib/db/models';
+import { MyraBlockedDevice, MyraDevice, User } from '@/lib/db/models';
 
 /** Throws if this physical device (by ANDROID_ID) has been admin-blocked - regardless of
  *  which account is signing in on it. Call before minting any token. */
@@ -14,6 +14,30 @@ export async function assertDeviceNotBlocked(deviceId: string) {
   if (blocked) {
     throw ApiError.forbidden('This device has been blocked.', 'DEVICE_BLOCKED');
   }
+}
+
+/**
+ * One-device-one-account lock: the first account that ever logs in on a physical device
+ * (by ANDROID_ID) "owns" it - any other account trying to log in on the same device is
+ * rejected. Exempt on both sides for admin: an admin account can sign in anywhere, and once
+ * a device is bound to an admin account it stays unrestricted (their own test phone).
+ * Call before minting any token; upsertMyraDevice() right after is what actually records the
+ * binding on a device's first login.
+ */
+export async function assertDeviceAccountLock(deviceId: string, user: any) {
+  if (isAdminEmail(user.email || '')) return;
+
+  await connectMongo();
+  const existing = await MyraDevice.findOne({ deviceId }).select('userId').lean();
+  if (!existing) return;
+
+  const boundUserId = (existing as any).userId.toString();
+  if (boundUserId === user._id.toString()) return;
+
+  const boundUser = await User.findById(boundUserId).select('email').lean();
+  if (boundUser && isAdminEmail((boundUser as any).email || '')) return;
+
+  throw ApiError.forbidden('Is phone me dusra account login nahi ho sakta.', 'DEVICE_ALREADY_LINKED');
 }
 
 function googleAudiences(): string[] {
@@ -59,6 +83,7 @@ export async function createMobileSession({
     throw ApiError.badRequest('device_id is required.', 'DEVICE_ID_REQUIRED');
   }
   await assertDeviceNotBlocked(deviceId);
+  await assertDeviceAccountLock(deviceId, user);
 
   const role = (websiteProfile?.role || 'user') as 'admin' | 'user';
   const tokenPair = signMobileTokenPair({

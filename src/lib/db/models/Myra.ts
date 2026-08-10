@@ -61,6 +61,9 @@ const myraDeviceSchema = new Schema(
   { timestamps: true, collection: 'myra_devices' }
 );
 myraDeviceSchema.index({ userId: 1, deviceId: 1 }, { unique: true });
+// Non-unique - looked up on every login to enforce the one-device-one-account lock
+// (assertDeviceAccountLock in mobileAuthService.ts), independent of which user it's for.
+myraDeviceSchema.index({ deviceId: 1 });
 myraDeviceSchema.index(
   { webHandoffHash: 1 },
   { unique: true, partialFilterExpression: { webHandoffHash: { $type: 'string' } } }
