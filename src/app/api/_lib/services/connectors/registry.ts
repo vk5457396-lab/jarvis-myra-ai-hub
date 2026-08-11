@@ -41,6 +41,21 @@ export const CONNECTOR_METADATA: Record<string, ConnectorMetadata> = {
     ],
     scopes: ['openid', 'email', 'profile', 'https://www.googleapis.com/auth/drive.file'],
   },
+  // Same Google OAuth app as google/google_drive above (GOOGLE_CLIENT_ID/SECRET) - no separate
+  // client id needed, just another connectorId with its own narrower scope/consent. Read-only:
+  // youtube.readonly is enough for search/list, no upload or channel-management capability
+  // exists yet. Requires the YouTube Data API v3 to be enabled for this OAuth client's Google
+  // Cloud project (console.cloud.google.com -> APIs & Services -> Library) - a one-time,
+  // dashboard-only step outside what any client id/secret env var can express.
+  youtube: {
+    id: 'youtube',
+    provider: 'google',
+    name: 'YouTube',
+    description: 'Search YouTube videos.',
+    category: 'media',
+    capabilities: [{ id: 'youtube_search', label: 'Search YouTube videos' }],
+    scopes: ['openid', 'email', 'profile', 'https://www.googleapis.com/auth/youtube.readonly'],
+  },
   // GitHub classic OAuth Apps don't offer a clean read-only repo scope - `repo` is the
   // standard scope every GitHub integration requests for repository access (see
   // githubOAuth.ts's comment on why there's no refresh - tokens don't expire by default).

@@ -30,6 +30,16 @@ const myraVideos = [
     title: "MYRA 2.0 Setup Guide",
     description: "Latest setup tutorial for the new MYRA 2.0 version with enhanced features.",
   },
+  {
+    id: "nyUVa692EIs",
+    title: "MYRA Full Setup Video",
+    description: "Full end-to-end setup walkthrough for MYRA, from install to first use.",
+  },
+  {
+    id: "A_4LBZHH8nE",
+    title: "API Setup Video",
+    description: "How to get and configure your own API keys for MYRA's AI providers.",
+  },
 ];
 
 const DemoVideos = () => {

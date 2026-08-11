@@ -253,7 +253,8 @@ export async function manualRefresh(userId: string, connectorId: string): Promis
 export async function executeConnectorTool(
   userId: string,
   connectorId: string,
-  toolId: string
+  toolId: string,
+  args?: Record<string, string>
 ): Promise<Record<string, unknown>> {
   const accessToken = await getValidAccessToken(userId, connectorId);
 
@@ -282,6 +283,27 @@ export async function executeConnectorTool(
     if (!res.ok) throw ApiError.internal('Could not read Google Drive.', 'GOOGLE_DRIVE_FAILED');
     const data = await res.json();
     return { files: data.files || [] };
+  }
+
+  if (connectorId === 'youtube' && toolId === 'search_videos') {
+    const q = args?.q?.trim();
+    if (!q) throw ApiError.badRequest('search_videos needs a "q" search query.', 'YOUTUBE_QUERY_MISSING');
+    const url = new URL('https://www.googleapis.com/youtube/v3/search');
+    url.searchParams.set('part', 'snippet');
+    url.searchParams.set('type', 'video');
+    url.searchParams.set('maxResults', '5');
+    url.searchParams.set('q', q);
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (!res.ok) throw ApiError.internal('Could not search YouTube.', 'YOUTUBE_SEARCH_FAILED');
+    const data = await res.json();
+    const videos = (data.items || []).map((v: any) => ({
+      title: v.snippet?.title,
+      channel: v.snippet?.channelTitle,
+      video_id: v.id?.videoId,
+      url: v.id?.videoId ? `https://www.youtube.com/watch?v=${v.id.videoId}` : null,
+      published_at: v.snippet?.publishedAt,
+    }));
+    return { videos };
   }
 
   if (connectorId === 'github' && toolId === 'list_repositories') {

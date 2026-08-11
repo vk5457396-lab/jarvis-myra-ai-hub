@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ContactFormModal from "@/components/ContactFormModal";
 import { openDownload } from "@/lib/appDownload";
+import VideoThumbnail from "@/components/VideoThumbnail";
 
 interface MarketProduct {
   id: string;
@@ -44,6 +45,18 @@ const MYRA_GALLERY = {
   banner: "/assets/myra-app/promo-banner.png",
   screenshots: ["/assets/myra-app/screens-app.png", "/assets/myra-app/screens-auth.png"],
 };
+const MYRA_SETUP_VIDEOS = [
+  {
+    id: "nyUVa692EIs",
+    title: "MYRA Full Setup Video",
+    description: "Full end-to-end setup walkthrough for MYRA, from install to first use.",
+  },
+  {
+    id: "A_4LBZHH8nE",
+    title: "API Setup Video",
+    description: "How to get and configure your own API keys for MYRA's AI providers.",
+  },
+];
 
 const formatSize = (bytes?: number | null) => {
   if (!bytes) return "—";
@@ -370,6 +383,24 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
                 <div className="prose prose-invert max-w-none text-muted-foreground whitespace-pre-wrap leading-relaxed">
                   {product.description}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Setup videos - MYRA only */}
+          {product.slug === MYRA_SLUG && (
+            <div className="max-w-6xl mx-auto mt-10">
+              <h2 className="font-display text-xl font-bold text-foreground mb-4">Setup Videos</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {MYRA_SETUP_VIDEOS.map((video) => (
+                  <div key={video.id}>
+                    <VideoThumbnail videoId={video.id} title={video.title} variant="myra" />
+                    <div className="mt-3">
+                      <h3 className="font-display text-base font-semibold text-foreground">{video.title}</h3>
+                      <p className="text-muted-foreground text-sm">{video.description}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

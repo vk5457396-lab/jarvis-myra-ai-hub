@@ -17,7 +17,9 @@ export const POST = withApi(
     const connectorId = req.nextUrl.pathname.split('/').slice(-2, -1)[0];
     const body = await req.json();
     const toolId = requireString(body.tool_id, 'tool_id', { min: 1, max: 64 });
-    const result = await executeConnectorTool(user._id.toString(), connectorId, toolId);
+    const args: Record<string, string> | undefined =
+      body.args && typeof body.args === 'object' ? body.args : undefined;
+    const result = await executeConnectorTool(user._id.toString(), connectorId, toolId, args);
     return success(result);
   },
   { rateLimit: { scope: 'connector-execute', max: 60 } }

@@ -6,11 +6,25 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MyraAndroidDownload from "@/components/MyraAndroidDownload";
 import MyraAppGalleryCard from "@/components/MyraAppGalleryCard";
+import VideoThumbnail from "@/components/VideoThumbnail";
 
 const steps = [
   { title: "Sign in", desc: "Use the same codeninjavik.in account you use on the website." },
   { title: "Download the APK", desc: "The file downloads straight from our release CDN — it resumes if your network drops." },
   { title: "Allow the install", desc: "Open the downloaded file and tap \"Allow from this source\" if Android asks." },
+];
+
+const setupVideos = [
+  {
+    id: "nyUVa692EIs",
+    title: "MYRA Full Setup Video",
+    description: "Full end-to-end setup walkthrough for MYRA, from install to first use.",
+  },
+  {
+    id: "A_4LBZHH8nE",
+    title: "API Setup Video",
+    description: "How to get and configure your own API keys for MYRA's AI providers.",
+  },
 ];
 
 const DownloadPage = () => {
@@ -70,6 +84,34 @@ const DownloadPage = () => {
                 </div>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Setup videos */}
+      <section className="pb-20 md:pb-28">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="font-display text-2xl md:text-3xl font-bold mb-8 text-center">
+              <span className="gradient-text">Setup</span> Videos
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              {setupVideos.map((video, i) => (
+                <motion.div
+                  key={video.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.08 }}
+                >
+                  <VideoThumbnail videoId={video.id} title={video.title} variant="myra" />
+                  <div className="mt-3">
+                    <h3 className="font-display text-base font-semibold">{video.title}</h3>
+                    <p className="text-muted-foreground text-sm">{video.description}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
