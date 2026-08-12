@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { upload } from "@vercel/blob/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,15 +87,17 @@ const NotificationCenter = () => {
     if (!file) return;
     setUploadingImage(true);
     try {
-      const pathname = `notifications/${Date.now()}-${file.name}`;
-      const blob = await upload(pathname, file, {
-        access: "private",
-        handleUploadUrl: "/api/admin/blob/upload",
-      });
-      // Absolute URL: the FCM payload has to be fetchable by the Android app, and
-      // the send API's image_url validation requires a real http(s) URL anyway.
-      const assetUrl = `${window.location.origin}/api/marketplace/asset?path=${encodeURIComponent(blob.url)}`;
-      set("image_url", assetUrl);
+      // Supabase Storage, not Blob - see src/lib/supabaseStorage.ts. Public bucket, so the
+      // returned URL is already absolute and permanent (the FCM payload has to be fetchable
+      // by the Android app, and the send API's image_url validation requires a real http(s)
+      // URL anyway) - no proxy route needed like Blob's /api/marketplace/asset.
+      const form = new FormData();
+      form.append("file", file);
+      form.append("folder", "notifications");
+      const res = await fetch("/api/admin/storage/upload", { method: "POST", body: form });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.message || "Upload failed");
+      set("image_url", json.data.url as string);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Image upload failed");
     } finally {

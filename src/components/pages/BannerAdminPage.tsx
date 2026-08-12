@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
-import { upload } from "@vercel/blob/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,15 +31,19 @@ async function api(path: string, opts: RequestInit = {}) {
   return json.data;
 }
 
-// Same pattern as NotificationCenter.tsx's image upload: goes straight from the browser to
-// Blob storage (the store is private-only), then loads through the existing public asset proxy.
-// Absolute URL (not a relative path) because the Android app's Coil/AsyncImage loads this
-// directly - there's no page origin for it to resolve a relative URL against.
+// Supabase Storage, not Blob - Blob's quota filled up, so new banner/notification uploads go
+// here instead (see src/lib/supabaseStorage.ts). Existing Blob-hosted banners are untouched and
+// keep loading exactly as before; this only changes where *new* uploads land. Public bucket, so
+// the returned URL is already absolute and permanent - no proxy route needed like Blob's.
 async function uploadBannerImage(file: File): Promise<string | null> {
   try {
-    const pathname = `banners/${Date.now()}-${file.name}`;
-    const blob = await upload(pathname, file, { access: "private", handleUploadUrl: "/api/admin/blob/upload" });
-    return `${window.location.origin}/api/marketplace/asset?path=${encodeURIComponent(blob.url)}`;
+    const form = new FormData();
+    form.append("file", file);
+    form.append("folder", "banners");
+    const res = await fetch("/api/admin/storage/upload", { method: "POST", body: form });
+    const json = await res.json();
+    if (!res.ok || !json.success) throw new Error(json.message || "Upload failed");
+    return json.data.url as string;
   } catch (err) {
     toast.error(err instanceof Error ? err.message : "Image upload failed");
     return null;
