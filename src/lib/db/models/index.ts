@@ -11,6 +11,7 @@ export {
   MyraSubscription,
   MyraSettings,
   MyraAccessKey,
+  MyraBanner,
 } from './Myra';
 export { ReferralEarning, type ReferralEarningDoc } from './ReferralEarning';
 export { Purchase, type PurchaseDoc } from './Purchase';

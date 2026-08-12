@@ -6,7 +6,7 @@ import { requireMobileUser } from '../../../_lib/middleware/mobileAuth';
 import { success } from '../../../_lib/utils/response';
 import { requireString, optionalString } from '../../../_lib/utils/validation';
 import { sendToTokens } from '../../../_lib/utils/fcm';
-import { getConversationRecipients } from '../../../_lib/services/myraGroupService';
+import { getConversationRecipients, MYRA_GROUP_ID, MYRA_GROUP_NAME } from '../../../_lib/services/myraGroupService';
 import { connectMongo } from '@/lib/db/mongoose';
 import { MyraDevice, MyraProfile, MyraSettings } from '@/lib/db/models';
 
@@ -50,12 +50,20 @@ export const POST = withApi(
     if (!targets.length) return success({ sent: 0 });
 
     const senderName = senderProfile?.chatHandle || senderProfile?.username || 'Someone';
+    // Group messages used to be indistinguishable from a 1-on-1 DM here - title was always the
+    // sender's name and the Android client had no is_group flag to go on, so tapping a group
+    // message's notification opened it as if it were a personal chat WITH that sender (right
+    // conversation id, wrong header/avatar and wrong "who is this" framing).
+    const isGroup = conversationId === MYRA_GROUP_ID;
     const outcome = await sendToTokens(targets, {
-      title: senderName,
-      body: preview,
+      title: isGroup ? MYRA_GROUP_NAME : senderName,
+      body: isGroup ? `${senderName}: ${preview}` : preview,
       action: 'OPEN_USER_CHAT',
       notification_type: 'chat_message',
       conversation_id: conversationId,
+      is_group: isGroup ? 'true' : 'false',
+      chat_title: isGroup ? MYRA_GROUP_NAME : senderName,
+      chat_avatar: isGroup ? '' : senderProfile?.avatar || '',
       sender_username: senderName,
       sender_avatar: senderProfile?.avatar || '',
     });

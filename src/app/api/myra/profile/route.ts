@@ -42,6 +42,21 @@ export const PATCH = withApi(
       set.preferences = body.preferences;
     }
 
+    // Custom Name add-on: server-enforced, not just hidden in the app UI - eligibility
+    // (customNameEnabled) is admin-only (POST /api/admin/myra/custom-name), but once granted the
+    // user picks the actual name themselves, here, any time.
+    if (body.custom_assistant_name !== undefined) {
+      const existing = await MyraProfile.findOne({ userId: user._id }).select('customNameEnabled');
+      if (!existing?.customNameEnabled) {
+        throw ApiError.forbidden(
+          'Custom Name is not enabled on this account yet.',
+          'CUSTOM_NAME_NOT_ELIGIBLE'
+        );
+      }
+      const customName = optionalString(body.custom_assistant_name, 'custom_assistant_name', 40);
+      set.customAssistantName = customName;
+    }
+
     const profile = await MyraProfile.findOneAndUpdate(
       { userId: user._id },
       { $set: set },

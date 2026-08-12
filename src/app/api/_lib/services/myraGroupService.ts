@@ -3,6 +3,7 @@ import { getFirebaseApp } from '../utils/firebaseAdmin';
 
 /** Fixed id so every user's login lands on the same one shared group doc. */
 export const MYRA_GROUP_ID = 'myra-group';
+export const MYRA_GROUP_NAME = 'MYRA Community';
 
 /**
  * Every account gets auto-joined to one shared "MYRA Community" group on login/bootstrap.
@@ -20,33 +21,39 @@ export async function ensureMyraGroupMembership(
   const ref = db.collection('conversations').doc(MYRA_GROUP_ID);
   const snap = await ref.get();
 
-  const participantUpdate: Record<string, unknown> = {
-    participants: FieldValue.arrayUnion(uid),
-    [`participantInfo.${uid}`]: {
-      username,
-      avatar: avatar || null,
-      // Re-written on every login, so unlike a 1-on-1 conversation's participantInfo (only
-      // written once when the chat is first started) this stays fresh - an admin badge
-      // change or a plan upgrade shows up here the next time the user logs in.
-      isAdmin: badge?.is_admin ?? false,
-      subscriptionType: badge?.subscription_type ?? null,
-    },
+  // Re-written on every login, so unlike a 1-on-1 conversation's participantInfo (only written
+  // once when the chat is first started) this stays fresh - an admin badge change or a plan
+  // upgrade shows up here the next time the user logs in.
+  const participantInfoEntry = {
+    username,
+    avatar: avatar || null,
+    isAdmin: badge?.is_admin ?? false,
+    subscriptionType: badge?.subscription_type ?? null,
   };
 
   if (!snap.exists) {
     await ref.set({
       type: 'group',
-      groupName: 'MYRA Community',
+      groupName: MYRA_GROUP_NAME,
       groupAvatar: null,
       createdBy: uid,
       createdAt: FieldValue.serverTimestamp(),
       lastMessage: '',
       lastMessageAt: FieldValue.serverTimestamp(),
       lastSenderId: '',
-      ...participantUpdate,
+      participants: [uid],
+      participantInfo: { [uid]: participantInfoEntry },
     });
   } else {
-    await ref.set(participantUpdate, { merge: true });
+    // update() (not set-with-merge) is what actually interprets 'participantInfo.<uid>' as a
+    // nested-field path - set({merge:true}) treats a dotted object key as one literal field
+    // name instead, which is how earlier writes ended up as ~40 flat "participantInfo.<uid>"
+    // fields on the doc rather than a real participantInfo map (see the one-time cleanup in
+    // the migration script for those).
+    await ref.update({
+      participants: FieldValue.arrayUnion(uid),
+      [`participantInfo.${uid}`]: participantInfoEntry,
+    });
   }
 }
 

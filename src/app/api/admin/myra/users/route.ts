@@ -57,6 +57,9 @@ export const GET = withApi(async (req) => {
         plan: subscription?.plan ?? null,
         plan_status: subscription?.status ?? null,
         credits_used: usage?.creditsUsed ?? null,
+        discount_percent: profile?.discountPercent ?? 0,
+        custom_name_enabled: Boolean(profile?.customNameEnabled),
+        custom_assistant_name: profile?.customAssistantName ?? null,
       };
     }),
   });

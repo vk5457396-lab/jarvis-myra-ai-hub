@@ -7,6 +7,7 @@ import {
   MyraAccessKey,
   MyraDevice,
   MyraBlockedDevice,
+  MyraBanner,
 } from '@/lib/db/models';
 import { generateUniqueKeys } from '@/lib/licenses';
 import { ApiError } from '../utils/response';
@@ -85,7 +86,7 @@ export async function addCreditsToUser({
 }) {
   await ensureMyraState(user, websiteProfile);
   const update = mode === 'add' ? { $inc: { credits: amount } } : { $set: { credits: amount } };
-  let profile = await MyraProfile.findOneAndUpdate({ userId: user._id }, update, { new: true });
+  const profile = await MyraProfile.findOneAndUpdate({ userId: user._id }, update, { new: true });
   if (profile && profile.credits < 0) {
     profile.credits = 0;
     await profile.save();
@@ -110,6 +111,33 @@ export async function setBadgeOverride({
   return MyraProfile.findOneAndUpdate(
     { userId: user._id },
     { $set: { badgeOverride: badge } },
+    { new: true }
+  );
+}
+
+/** Admin: set (or clear, with 0) a per-user coupon-style discount %, by email. Applied
+ *  automatically the next time this user creates/verifies a subscription order - see
+ *  discountedPrice() in myraService.ts and its use in the order/verify routes. */
+export async function setDiscountPercent({ user, discountPercent }: { user: any; discountPercent: number }) {
+  if (!Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 100) {
+    throw ApiError.badRequest('discount_percent must be between 0 and 100.', 'INVALID_DISCOUNT');
+  }
+  await connectMongo();
+  return MyraProfile.findOneAndUpdate(
+    { userId: user._id },
+    { $set: { discountPercent } },
+    { new: true }
+  );
+}
+
+/** Admin: grant/revoke eligibility for the Custom Name add-on, by email. Revoking does NOT
+ *  clear the name already on file - it just stops it applying (see
+ *  ConversationalAgentService's identity prompt) and re-enabling restores it instantly. */
+export async function setCustomNameEligibility({ user, enabled }: { user: any; enabled: boolean }) {
+  await connectMongo();
+  return MyraProfile.findOneAndUpdate(
+    { userId: user._id },
+    { $set: { customNameEnabled: enabled } },
     { new: true }
   );
 }
@@ -215,6 +243,73 @@ export async function generateMyraAccessKeys({
       ...(paymentId ? { paymentId } : {}),
     }))
   );
+}
+
+// ================================================================
+// Event/promo banners (admin-authored popup shown on Android app open)
+// ================================================================
+
+export async function listBanners() {
+  await connectMongo();
+  return MyraBanner.find({}).sort({ createdAt: -1 }).lean();
+}
+
+export async function createBanner({
+  title,
+  message,
+  imageUrl,
+  ctaLabel,
+  ctaUrl,
+  createdBy,
+}: {
+  title: string;
+  message: string;
+  imageUrl?: string | null;
+  ctaLabel?: string | null;
+  ctaUrl?: string | null;
+  createdBy?: string | null;
+}) {
+  await connectMongo();
+  return MyraBanner.create({
+    title,
+    message,
+    imageUrl: imageUrl || null,
+    ctaLabel: ctaLabel || null,
+    ctaUrl: ctaUrl || null,
+    isActive: false,
+    createdBy: createdBy || null,
+  });
+}
+
+export async function updateBanner(
+  id: string,
+  fields: Partial<{
+    title: string;
+    message: string;
+    imageUrl: string | null;
+    ctaLabel: string | null;
+    ctaUrl: string | null;
+    isActive: boolean;
+  }>
+) {
+  await connectMongo();
+  const banner = await MyraBanner.findByIdAndUpdate(id, { $set: fields }, { new: true });
+  if (!banner) throw ApiError.notFound('Banner not found.', 'BANNER_NOT_FOUND');
+  return banner;
+}
+
+export async function deleteBanner(id: string) {
+  await connectMongo();
+  const res = await MyraBanner.findByIdAndDelete(id);
+  if (!res) throw ApiError.notFound('Banner not found.', 'BANNER_NOT_FOUND');
+}
+
+/** Whichever banner is currently switched on - manual on/off, not date-range scheduled (see
+ *  the schema comment on isActive). If more than one is accidentally left active, the most
+ *  recently updated one wins rather than an arbitrary DB order. */
+export async function getActiveBanner() {
+  await connectMongo();
+  return MyraBanner.findOne({ isActive: true }).sort({ updatedAt: -1 });
 }
 
 export async function redeemMyraAccessKey({

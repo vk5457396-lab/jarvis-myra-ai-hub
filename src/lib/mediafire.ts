@@ -10,6 +10,12 @@
 
 const SHARE_PAGE_RE = /^https:\/\/(www\.)?mediafire\.com\/file\/[^/]+\/[^/]+\/file\/?$/i;
 const DIRECT_LINK_RE = /^https:\/\/download\d+\.mediafire\.com\//i;
+// github.com/OWNER/REPO/releases/download/TAG/FILE - the plain browser-download link every
+// public-repo release asset has. Unlike MediaFire's CDN link this never expires (it 302s to a
+// freshly-signed S3 URL on every request), so it needs no re-resolution - fetch() already
+// follows the redirect. api.github.com asset URLs are a *different*, auth-gated endpoint and
+// are deliberately not matched here.
+const GITHUB_RELEASE_RE = /^https:\/\/github\.com\/[^/]+\/[^/]+\/releases\/download\/[^/]+\/[^/]+$/i;
 
 export function isMediaFireShareLink(url: string): boolean {
   return SHARE_PAGE_RE.test(url.trim());
@@ -17,6 +23,10 @@ export function isMediaFireShareLink(url: string): boolean {
 
 export function isMediaFireDirectLink(url: string): boolean {
   return DIRECT_LINK_RE.test(url.trim());
+}
+
+export function isGitHubReleaseLink(url: string): boolean {
+  return GITHUB_RELEASE_RE.test(url.trim());
 }
 
 /**

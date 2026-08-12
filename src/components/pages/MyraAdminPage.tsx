@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import {
   ArrowLeft, Loader2, Search, Sparkles, Coins, KeyRound, Copy, Ban, RefreshCw, BadgeCheck, Smartphone, ShieldOff,
+  Percent, UserCog,
 } from "lucide-react";
 
 const PLAN_OPTIONS = [
@@ -47,6 +48,9 @@ interface MyraUserRow {
   plan: string | null;
   plan_status: string | null;
   credits_used: number | null;
+  discount_percent: number | null;
+  custom_name_enabled: boolean;
+  custom_assistant_name: string | null;
 }
 
 interface MyraDeviceRow {
@@ -103,6 +107,13 @@ const MyraAdminPage = () => {
 
   const [badgeValue, setBadgeValue] = useState("clear");
   const [savingBadge, setSavingBadge] = useState(false);
+
+  const [discountValue, setDiscountValue] = useState(0);
+  const [savingDiscount, setSavingDiscount] = useState(false);
+
+  const [customNameEnabled, setCustomNameEnabled] = useState(false);
+  const [customNameCurrent, setCustomNameCurrent] = useState<string | null>(null);
+  const [savingCustomName, setSavingCustomName] = useState(false);
 
   const [devices, setDevices] = useState<MyraDeviceRow[]>([]);
   const [loadingDevices, setLoadingDevices] = useState(false);
@@ -198,6 +209,41 @@ const MyraAdminPage = () => {
       toast.error(e instanceof Error ? e.message : "Failed to update plan");
     } finally {
       setSavingPlan(false);
+    }
+  };
+
+  const applyDiscount = async () => {
+    if (!selectedEmail) return;
+    setSavingDiscount(true);
+    try {
+      await api("/api/admin/myra/discount", {
+        method: "POST",
+        body: JSON.stringify({ email: selectedEmail, discount_percent: discountValue }),
+      });
+      toast.success("Discount updated");
+      await loadUsers(query);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update discount");
+    } finally {
+      setSavingDiscount(false);
+    }
+  };
+
+  const applyCustomNameEligibility = async (enabled: boolean) => {
+    if (!selectedEmail) return;
+    setSavingCustomName(true);
+    try {
+      await api("/api/admin/myra/custom-name", {
+        method: "POST",
+        body: JSON.stringify({ email: selectedEmail, enabled }),
+      });
+      setCustomNameEnabled(enabled);
+      toast.success(enabled ? "Custom Name enabled for this user" : "Custom Name disabled for this user");
+      await loadUsers(query);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update Custom Name eligibility");
+    } finally {
+      setSavingCustomName(false);
     }
   };
 
@@ -370,6 +416,9 @@ const MyraAdminPage = () => {
                     onClick={() => {
                       setSelectedEmail(u.email);
                       setBadgeValue(u.badge_override || "clear");
+                      setDiscountValue(u.discount_percent || 0);
+                      setCustomNameEnabled(u.custom_name_enabled);
+                      setCustomNameCurrent(u.custom_assistant_name);
                       loadDevices(u.email);
                       toast.message(`Selected ${u.email}`);
                     }}
@@ -565,6 +614,72 @@ const MyraAdminPage = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Discount + Custom Name */}
+        <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-2">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="license-glass p-6">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="rounded-2xl bg-emerald-500/15 p-3">
+                <Percent className="h-5 w-5 text-emerald-400" />
+              </div>
+              <h2 className="text-lg font-semibold">Discount coupon</h2>
+            </div>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Selected: <span className="font-mono">{selectedEmail ?? "click a user above"}</span> —
+              applied automatically the next time this user buys/renews any plan. 0 = no discount.
+            </p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={discountValue}
+                  onChange={(e) => setDiscountValue(Number(e.target.value))}
+                />
+                <span className="text-sm text-muted-foreground">%</span>
+              </div>
+              <Button onClick={applyDiscount} disabled={!selectedEmail || savingDiscount} className="w-full">
+                {savingDiscount ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Apply discount
+              </Button>
+            </div>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="license-glass p-6">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="rounded-2xl bg-fuchsia-500/15 p-3">
+                <UserCog className="h-5 w-5 text-fuchsia-400" />
+              </div>
+              <h2 className="text-lg font-semibold">Custom Name add-on (₹1500 lifetime)</h2>
+            </div>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Selected: <span className="font-mono">{selectedEmail ?? "click a user above"}</span> —
+              once enabled, the user picks their own assistant name in the app.
+              {customNameCurrent && (
+                <> Currently set to <span className="font-mono">&quot;{customNameCurrent}&quot;</span>.</>
+              )}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => applyCustomNameEligibility(true)}
+                disabled={!selectedEmail || savingCustomName || customNameEnabled}
+                className="flex-1"
+              >
+                {savingCustomName ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {customNameEnabled ? "Enabled" : "Enable"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => applyCustomNameEligibility(false)}
+                disabled={!selectedEmail || savingCustomName || !customNameEnabled}
+                className="flex-1"
+              >
+                Disable
+              </Button>
             </div>
           </motion.div>
         </div>

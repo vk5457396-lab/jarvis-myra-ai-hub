@@ -9,6 +9,7 @@ import { requireString, validateEnum } from '../../../_lib/utils/validation';
 import {
   expiryForPlan,
   MYRA_PLANS,
+  discountedPrice,
   publicMyraProfile,
   publicSubscription,
 } from '../../../_lib/services/myraService';
@@ -63,7 +64,12 @@ export const POST = withApi(
     }
     const order = await orderResponse.json();
     const planConfig = MYRA_PLANS[plan];
-    const expectedAmount = planConfig.price * 100;
+    // Trusts the discount % Razorpay itself stored in the order's notes at creation time (order/
+    // route.ts) rather than re-reading the user's CURRENT discount - that's what was actually
+    // charged, and an admin could have changed the discount in between order creation and this
+    // verify call. notes come back from Razorpay's own API, so the client can't forge them.
+    const orderDiscountPercent = Number(order.notes?.discount_percent) || 0;
+    const expectedAmount = discountedPrice(planConfig.price, orderDiscountPercent) * 100;
     if (
       order.id !== orderId ||
       order.amount !== expectedAmount ||
@@ -82,6 +88,9 @@ export const POST = withApi(
     if (paymentOwner) {
       throw ApiError.conflict('Payment has already been used.', 'PAYMENT_ALREADY_USED');
     }
+
+    const previousSubscription = await MyraSubscription.findOne({ userId: user._id }).select('plan');
+    const isFirstPaidSubscription = !previousSubscription || previousSubscription.plan === 'free';
 
     const startDate = new Date();
     const expiryDate = expiryForPlan(plan, startDate);
@@ -126,6 +135,21 @@ export const POST = withApi(
     if (!profile) {
       throw ApiError.notFound('MYRA profile not found.', 'MYRA_PROFILE_NOT_FOUND');
     }
+
+    // Referral payout: exactly one credit, exactly once, only for a genuinely first paid
+    // subscription from a user who redeemed someone else's code before ever subscribing.
+    // referralCredited flips true here so a plan change/renewal later never pays out again.
+    if (isFirstPaidSubscription && profile.referredByCode && !profile.referralCredited) {
+      const referrerUpdate = await MyraProfile.findOneAndUpdate(
+        { referralCode: profile.referredByCode },
+        { $inc: { credits: 1 } },
+        { new: true }
+      ).select('_id');
+      if (referrerUpdate) {
+        await MyraProfile.updateOne({ _id: profile._id }, { $set: { referralCredited: true } });
+      }
+    }
+
     return success(
       {
         subscription: publicSubscription(subscription),

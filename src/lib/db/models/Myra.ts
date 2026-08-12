@@ -35,12 +35,34 @@ const myraProfileSchema = new Schema(
     // null/unset = use the computed badge as before. 'none' explicitly hides any badge
     // (including a real isAdmin/membership one) for this user.
     badgeOverride: { type: String, enum: ['blue', 'red', 'yellow', 'none', null], default: null },
+    // This user's own shareable code (generated once, on first bootstrap - see ensureMyraState).
+    referralCode: { type: String, default: null },
+    // The code THIS user redeemed (once, ever) via POST /api/myra/referrals/redeem - null until
+    // they redeem someone else's code. Distinct from referralCode, which is the code others use
+    // to refer *this* user.
+    referredByCode: { type: String, default: null },
+    // Set true the moment the referrer has been credited for this user's first paid
+    // subscription, so a later renewal (or a retried verify call) never double-credits them.
+    referralCredited: { type: Boolean, default: false },
+    // Admin-set, per-user coupon-style discount applied to THIS user's next order/verify call
+    // for any plan (see order/route.ts + verify/route.ts) - never a blanket plan price change.
+    discountPercent: { type: Number, default: 0, min: 0, max: 100 },
+    // Eligibility for the "Custom Name" add-on (Rs.1500 lifetime, admin-activated by email) -
+    // once true, the user can set customAssistantName themselves via PATCH /api/myra/profile.
+    // Independent of subscriptionType/MYRA_PLANS on purpose: this is an add-on, not a plan tier,
+    // so buying/having it must never overwrite a user's actual AI plan.
+    customNameEnabled: { type: Boolean, default: false },
+    customAssistantName: { type: String, default: null },
   },
   { timestamps: true, collection: 'myra_profiles' }
 );
 myraProfileSchema.index(
   { chatHandleLower: 1 },
   { unique: true, partialFilterExpression: { chatHandleLower: { $type: 'string', $ne: '' } } }
+);
+myraProfileSchema.index(
+  { referralCode: 1 },
+  { unique: true, partialFilterExpression: { referralCode: { $type: 'string' } } }
 );
 
 const myraDeviceSchema = new Schema(
@@ -177,6 +199,23 @@ const myraAccessKeySchema = new Schema(
 );
 myraAccessKeySchema.index({ paymentId: 1 }, { unique: true, sparse: true });
 
+// Promo/event popup shown once per app open on Android (e.g. Diwali, Independence Day) -
+// admin-authored, simple manual on/off (isActive) rather than a date-range scheduler; only ever
+// one banner is meant to be active at a time (see getActiveBanner in bannerService.ts), but
+// nothing here enforces that at the DB level - it's an admin-panel convention.
+const myraBannerSchema = new Schema(
+  {
+    title: { type: String, required: true },
+    message: { type: String, required: true },
+    imageUrl: { type: String, default: null },
+    ctaLabel: { type: String, default: null },
+    ctaUrl: { type: String, default: null },
+    isActive: { type: Boolean, default: false, index: true },
+    createdBy: { type: String, default: null },
+  },
+  { timestamps: true, collection: 'myra_banners' }
+);
+
 export const MyraProfile: Model<any> =
   models.MyraProfile || model('MyraProfile', myraProfileSchema);
 export const MyraDevice: Model<any> =
@@ -195,3 +234,5 @@ export const MyraSettings: Model<any> =
   models.MyraSettings || model('MyraSettings', myraSettingsSchema);
 export const MyraAccessKey: Model<any> =
   models.MyraAccessKey || model('MyraAccessKey', myraAccessKeySchema);
+export const MyraBanner: Model<any> =
+  models.MyraBanner || model('MyraBanner', myraBannerSchema);

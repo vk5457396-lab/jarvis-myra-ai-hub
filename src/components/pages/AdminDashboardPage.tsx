@@ -7,7 +7,7 @@ import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
-  Shield, LogOut, Users, Wallet, TrendingUp, CheckCircle2, XCircle, Clock, ArrowDownToLine, Package, KeyRound, Bell, Smartphone, Sparkles
+  Shield, LogOut, Users, Wallet, TrendingUp, CheckCircle2, XCircle, Clock, ArrowDownToLine, Package, KeyRound, Bell, Smartphone, Sparkles, Megaphone
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
@@ -285,6 +285,12 @@ const AdminDashboard = () => {
               className="px-5 py-2.5 rounded-xl font-display font-bold text-sm transition-all bg-white/5 border border-white/10 text-muted-foreground hover:text-foreground"
             >
               <Smartphone size={14} className="inline mr-2" /> App Release
+            </button>
+            <button
+              onClick={() => router.push("/admin/banners")}
+              className="px-5 py-2.5 rounded-xl font-display font-bold text-sm transition-all bg-white/5 border border-white/10 text-muted-foreground hover:text-foreground"
+            >
+              <Megaphone size={14} className="inline mr-2" /> Banners
             </button>
             <button
               onClick={() => setActiveTab("notifications")}

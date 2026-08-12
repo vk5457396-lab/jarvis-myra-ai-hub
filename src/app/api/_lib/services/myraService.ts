@@ -21,10 +21,45 @@ export const MYRA_PLANS: Record<
   membership: { price: 999, credits: null, durationDays: null, features: ['unlimited', 'all_models'] },
 };
 
+/** Rounds to the nearest rupee - Razorpay wants an integer amount in paise, and a fractional
+ *  rupee from an odd discount % (e.g. 15% of Rs.299) would otherwise carry into the paise math. */
+export function discountedPrice(basePrice: number, discountPercent: number): number {
+  const clamped = Math.min(100, Math.max(0, discountPercent || 0));
+  return Math.round(basePrice * (1 - clamped / 100));
+}
+
 export function expiryForPlan(plan: string, start = new Date()): Date | null {
   const days = MYRA_PLANS[plan]?.durationDays;
   if (!days) return null;
   return new Date(start.getTime() + days * 24 * 60 * 60 * 1000);
+}
+
+const REFERRAL_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I - easy to read aloud
+function generateReferralCode(): string {
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += REFERRAL_CODE_ALPHABET[Math.floor(Math.random() * REFERRAL_CODE_ALPHABET.length)];
+  }
+  return code;
+}
+
+/** Every profile gets a shareable referral code, generated lazily on first bootstrap after this
+ *  field shipped (existing profiles won't have one from $setOnInsert, which only fires on
+ *  document creation) rather than backfilled in a migration. Retries past the rare collision -
+ *  the unique index on referralCode is the actual guarantee, this is just making the odds good. */
+async function ensureReferralCode(profile: any) {
+  if (profile.referralCode) return profile;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      profile.referralCode = generateReferralCode();
+      await profile.save();
+      return profile;
+    } catch (error: any) {
+      if (error?.code !== 11000) throw error;
+      // Duplicate key on referralCode - another profile already has this code, try again.
+    }
+  }
+  throw new Error('Could not generate a unique referral code after 5 attempts.');
 }
 
 export async function ensureMyraState(user: any, websiteProfile?: any) {
@@ -87,6 +122,8 @@ export async function ensureMyraState(user: any, websiteProfile?: any) {
       { new: true, upsert: true, setDefaultsOnInsert: true }
     ),
   ]);
+
+  await ensureReferralCode(profile);
 
   // Best-effort: the MYRA community group living in Firestore must never block login/bootstrap
   // if Firestore is briefly unreachable.
@@ -166,8 +203,27 @@ export function publicMyraProfile(profile: any) {
     premium_features: profile.premiumFeatures || [],
     preferences: profile.preferences || {},
     badge_override: profile.badgeOverride ?? null,
+    referral_code: profile.referralCode ?? null,
+    referred_by_code: profile.referredByCode ?? null,
+    discount_percent: profile.discountPercent ?? 0,
+    custom_name_enabled: Boolean(profile.customNameEnabled),
+    custom_assistant_name: profile.customAssistantName ?? null,
     created_at: profile.createdAt,
     updated_at: profile.updatedAt,
+  };
+}
+
+export function publicBanner(banner: any) {
+  return {
+    id: banner._id.toString(),
+    title: banner.title,
+    message: banner.message,
+    image_url: banner.imageUrl ?? null,
+    cta_label: banner.ctaLabel ?? null,
+    cta_url: banner.ctaUrl ?? null,
+    is_active: Boolean(banner.isActive),
+    created_at: banner.createdAt,
+    updated_at: banner.updatedAt,
   };
 }
 
