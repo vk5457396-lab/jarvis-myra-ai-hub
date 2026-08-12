@@ -181,6 +181,13 @@ export function publicUser(user: any, role: 'admin' | 'user' = 'user') {
 }
 
 export function publicMyraProfile(profile: any) {
+  // What chat should actually render for this user (badge override already resolved) - see
+  // chatBadgeFields() above. The client needs this, not raw is_admin/subscription_type, when it
+  // self-heals its own participantInfo entry on every message send (see sendMessage() in the
+  // Android FirestoreChatRepository) - using the raw fields there was clobbering an admin-set
+  // badge override the moment that user sent their next message, since the client write always
+  // lands after the server's login-time chatBadgeFields()-aware sync.
+  const chatBadge = chatBadgeFields(profile);
   return {
     id: profile._id.toString(),
     user_id: profile.userId.toString(),
@@ -203,6 +210,8 @@ export function publicMyraProfile(profile: any) {
     premium_features: profile.premiumFeatures || [],
     preferences: profile.preferences || {},
     badge_override: profile.badgeOverride ?? null,
+    chat_badge_is_admin: chatBadge.is_admin,
+    chat_badge_subscription_type: chatBadge.subscription_type,
     referral_code: profile.referralCode ?? null,
     referred_by_code: profile.referredByCode ?? null,
     discount_percent: profile.discountPercent ?? 0,
