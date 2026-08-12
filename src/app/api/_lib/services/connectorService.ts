@@ -285,6 +285,23 @@ export async function executeConnectorTool(
     return { files: data.files || [] };
   }
 
+  // Was declared on the Android side (ConnectorToolSpec with a "q" param) but had no backend
+  // case here, so every call fell through to the generic CONNECTOR_TOOL_NOT_FOUND error below.
+  if (connectorId === 'google_drive' && toolId === 'search_files') {
+    const q = args?.q?.trim();
+    if (!q) throw ApiError.badRequest('search_files needs a "q" search query.', 'GOOGLE_DRIVE_QUERY_MISSING');
+    const url = new URL('https://www.googleapis.com/drive/v3/files');
+    url.searchParams.set('pageSize', '10');
+    url.searchParams.set('orderBy', 'modifiedTime desc');
+    url.searchParams.set('fields', 'files(id,name,modifiedTime,webViewLink)');
+    // Single quotes in the query would break out of the q='...' string Drive expects.
+    url.searchParams.set('q', `name contains '${q.replace(/'/g, "\\'")}' and trashed = false`);
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (!res.ok) throw ApiError.internal('Could not search Google Drive.', 'GOOGLE_DRIVE_SEARCH_FAILED');
+    const data = await res.json();
+    return { files: data.files || [] };
+  }
+
   if (connectorId === 'youtube' && toolId === 'search_videos') {
     const q = args?.q?.trim();
     if (!q) throw ApiError.badRequest('search_videos needs a "q" search query.', 'YOUTUBE_QUERY_MISSING');

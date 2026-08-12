@@ -1,14 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
+import { upload } from "@vercel/blob/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Megaphone, Plus, Trash2, Power } from "lucide-react";
+import { ArrowLeft, Loader2, Megaphone, Plus, Trash2, Power, UploadCloud } from "lucide-react";
 
 interface BannerRow {
   id: string;
@@ -31,6 +32,21 @@ async function api(path: string, opts: RequestInit = {}) {
   return json.data;
 }
 
+// Same pattern as NotificationCenter.tsx's image upload: goes straight from the browser to
+// Blob storage (the store is private-only), then loads through the existing public asset proxy.
+// Absolute URL (not a relative path) because the Android app's Coil/AsyncImage loads this
+// directly - there's no page origin for it to resolve a relative URL against.
+async function uploadBannerImage(file: File): Promise<string | null> {
+  try {
+    const pathname = `banners/${Date.now()}-${file.name}`;
+    const blob = await upload(pathname, file, { access: "private", handleUploadUrl: "/api/admin/blob/upload" });
+    return `${window.location.origin}/api/marketplace/asset?path=${encodeURIComponent(blob.url)}`;
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : "Image upload failed");
+    return null;
+  }
+}
+
 const emptyForm = { title: "", message: "", image_url: "", cta_label: "", cta_url: "" };
 
 const BannerAdminPage = () => {
@@ -42,6 +58,18 @@ const BannerAdminPage = () => {
   const [form, setForm] = useState(emptyForm);
   const [creating, setCreating] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploadingImage(true);
+    const url = await uploadBannerImage(file);
+    if (url) setForm((f) => ({ ...f, image_url: url }));
+    setUploadingImage(false);
+  };
 
   const loadBanners = useCallback(async () => {
     try {
@@ -173,8 +201,27 @@ const BannerAdminPage = () => {
               <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Happy Diwali!" />
             </div>
             <div>
-              <Label className="mb-1 block text-xs">Image URL (optional)</Label>
-              <Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." />
+              <Label className="mb-1 block text-xs">Image (optional)</Label>
+              <div className="flex items-center gap-2">
+                <Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://... or upload" />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  disabled={uploadingImage}
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Upload image"
+                >
+                  {uploadingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
             <div className="md:col-span-2">
               <Label className="mb-1 block text-xs">Message</Label>
