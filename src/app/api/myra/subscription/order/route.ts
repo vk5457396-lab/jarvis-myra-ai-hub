@@ -5,7 +5,7 @@ import { withApi, handleOptions } from '../../../_lib/middleware/handler';
 import { requireMobileUser } from '../../../_lib/middleware/mobileAuth';
 import { success, ApiError } from '../../../_lib/utils/response';
 import { validateEnum } from '../../../_lib/utils/validation';
-import { MYRA_PLANS, discountedPrice } from '../../../_lib/services/myraService';
+import { MYRA_PLANS, discountedPrice, effectiveDiscountPercent } from '../../../_lib/services/myraService';
 import { MyraProfile } from '@/lib/db/models';
 import logger from '../../../_lib/utils/logger';
 
@@ -27,10 +27,11 @@ export const POST = withApi(
       throw ApiError.internal('Payments are not configured.', 'PAYMENTS_NOT_CONFIGURED');
     }
 
-    // Admin-set per-user coupon discount (setDiscountPercent) - read fresh here, never trusted
-    // from the client, so the charged amount can't be tampered with from the app.
+    // The higher of the admin-set per-user coupon (setDiscountPercent) and the current sitewide
+    // discount (setGlobalDiscount) - read fresh here, never trusted from the client, so the
+    // charged amount can't be tampered with from the app.
     const profile = await MyraProfile.findOne({ userId: user._id }).select('discountPercent');
-    const discountPercent = profile?.discountPercent || 0;
+    const discountPercent = await effectiveDiscountPercent(profile?.discountPercent || 0);
     const finalPrice = discountedPrice(planConfig.price, discountPercent);
 
     const orderData = {

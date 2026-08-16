@@ -1,13 +1,18 @@
 import { connectMongo } from '@/lib/db/mongoose';
 import {
+  MyraAutomationError,
   MyraDevice,
+  MyraGlobalSettings,
   MyraProfile,
   MyraSettings,
   MyraSubscription,
+  MyraTelemetryEvent,
   MyraUsage,
 } from '@/lib/db/models';
 import { isAdminEmail } from '@/lib/auth/users';
 import { ensureMyraGroupMembership } from './myraGroupService';
+
+const GLOBAL_SETTINGS_ID = 'singleton';
 
 export const MYRA_PLANS: Record<
   string,
@@ -26,6 +31,37 @@ export const MYRA_PLANS: Record<
 export function discountedPrice(basePrice: number, discountPercent: number): number {
   const clamped = Math.min(100, Math.max(0, discountPercent || 0));
   return Math.round(basePrice * (1 - clamped / 100));
+}
+
+/** The sitewide "apply to all users" discount % (see setGlobalDiscount in myraAdminService.ts).
+ *  0 when never set - findOne on an empty singleton collection returns null, which must not
+ *  throw here since this is on the hot path of every order/bootstrap call. */
+export async function getGlobalDiscountPercent(): Promise<number> {
+  await connectMongo();
+  const doc = await MyraGlobalSettings.findById(GLOBAL_SETTINGS_ID).lean();
+  return (doc as any)?.discountPercent || 0;
+}
+
+/** The discount % that actually applies to a user right now: the higher of their personal
+ *  coupon (MyraProfile.discountPercent) and the current sitewide discount - a smaller sitewide
+ *  sale must never undercut a bigger coupon someone was individually granted, and vice versa. */
+export async function effectiveDiscountPercent(profileDiscountPercent: number): Promise<number> {
+  const global = await getGlobalDiscountPercent();
+  return Math.max(profileDiscountPercent || 0, global);
+}
+
+/** Admin-disabled connector ids right now (see setConnectorEnabled in myraAdminService.ts).
+ *  On the hot path of every connect/execute call, same empty-on-missing-doc contract as
+ *  getGlobalDiscountPercent above. */
+export async function getDisabledConnectors(): Promise<string[]> {
+  await connectMongo();
+  const doc = await MyraGlobalSettings.findById(GLOBAL_SETTINGS_ID).lean();
+  return (doc as any)?.disabledConnectors || [];
+}
+
+export async function isConnectorDisabled(connectorId: string): Promise<boolean> {
+  const disabled = await getDisabledConnectors();
+  return disabled.includes(connectorId);
 }
 
 export function expiryForPlan(plan: string, start = new Date()): Date | null {
@@ -180,7 +216,12 @@ export function publicUser(user: any, role: 'admin' | 'user' = 'user') {
   };
 }
 
-export function publicMyraProfile(profile: any) {
+/** @param discountPercentOverride When provided (bootstrap/profile routes pass
+ *  effectiveDiscountPercent() here), used instead of the raw profile.discountPercent so the
+ *  client sees the sitewide discount too, not just its own per-user coupon. Optional and
+ *  backward-compatible - callers that don't pass it (there are several call sites where the
+ *  discount value isn't user-facing) keep the old per-user-only behavior unchanged. */
+export function publicMyraProfile(profile: any, discountPercentOverride?: number) {
   // What chat should actually render for this user (badge override already resolved) - see
   // chatBadgeFields() above. The client needs this, not raw is_admin/subscription_type, when it
   // self-heals its own participantInfo entry on every message send (see sendMessage() in the
@@ -214,7 +255,7 @@ export function publicMyraProfile(profile: any) {
     chat_badge_subscription_type: chatBadge.subscription_type,
     referral_code: profile.referralCode ?? null,
     referred_by_code: profile.referredByCode ?? null,
-    discount_percent: profile.discountPercent ?? 0,
+    discount_percent: discountPercentOverride ?? profile.discountPercent ?? 0,
     custom_name_enabled: Boolean(profile.customNameEnabled),
     custom_assistant_name: profile.customAssistantName ?? null,
     created_at: profile.createdAt,
@@ -311,4 +352,109 @@ export async function upsertMyraDevice(
     { $set: set, $setOnInsert: { userId, deviceId } },
     { new: true, upsert: true, setDefaultsOnInsert: true }
   );
+}
+
+/**
+ * Live telemetry for Admin > Live Devices - called by the app on its own state transitions
+ * (Listening/Processing/Speaking/Idle, Gemini Live connect/reconnect/disconnect) plus a
+ * periodic safety-net timer, not on a fixed interval alone, so a state that's stuck for a long
+ * time still reflects promptly rather than waiting for the next tick.
+ *
+ * Upserts rather than requiring MyraDevice to already exist for this {userId, deviceId} - a
+ * heartbeat arriving before/without a full device-registration call (upsertMyraDevice) must not
+ * be silently dropped.
+ */
+export async function upsertHeartbeat(userId: any, deviceId: string, data: Record<string, any>) {
+  if (!deviceId) throw new Error('device_id is required');
+  const set: Record<string, any> = { lastHeartbeatAt: new Date() };
+  if (data.app_state !== undefined) set.appState = data.app_state || null;
+  if (data.battery_percent !== undefined) set.batteryPercent = Number(data.battery_percent);
+  if (data.network_type !== undefined) set.networkType = data.network_type || null;
+  if (data.current_task !== undefined) set.currentTask = data.current_task || null;
+  if (data.current_screen_app !== undefined) set.currentScreenApp = data.current_screen_app || null;
+  if (data.gemini_live_connected !== undefined) set.geminiLiveConnected = Boolean(data.gemini_live_connected);
+  if (data.reconnect_count !== undefined) set.reconnectCount = Number(data.reconnect_count);
+  if (data.app_version !== undefined) set.appVersion = data.app_version || null;
+
+  return MyraDevice.findOneAndUpdate(
+    { userId, deviceId },
+    { $set: set, $setOnInsert: { userId, deviceId } },
+    { new: true, upsert: true, setDefaultsOnInsert: true }
+  );
+}
+
+/** Records one automation failure for Admin > Diagnostics - see MyraAutomationError's schema
+ *  doc comment for what this is and is not responsible for detecting. */
+export async function logAutomationError(userId: any, deviceId: string | null, data: Record<string, any>) {
+  const failureType = String(data.failure_type || '').trim();
+  if (!failureType) throw new Error('failure_type is required');
+
+  return MyraAutomationError.create({
+    userId,
+    deviceId: deviceId || null,
+    failureType,
+    taskDescription: data.task_description ? String(data.task_description).slice(0, 2000) : null,
+    toolName: data.tool_name || null,
+    errorMessage: data.error_message ? String(data.error_message).slice(0, 4000) : null,
+    appVersion: data.app_version || null,
+    context: data.context ?? null,
+  });
+}
+
+/** Records one performance event for Admin > Performance - see MyraTelemetryEvent's schema doc
+ *  comment for the two event shapes ('tool_call' / 'response_latency') this accepts. */
+export async function logTelemetryEvent(userId: any, deviceId: string | null, data: Record<string, any>) {
+  const type = String(data.type || '').trim();
+  if (type !== 'tool_call' && type !== 'response_latency') {
+    throw new Error('type must be "tool_call" or "response_latency"');
+  }
+  const durationMs = Number(data.duration_ms);
+  if (!Number.isFinite(durationMs) || durationMs < 0) throw new Error('duration_ms is required');
+
+  return MyraTelemetryEvent.create({
+    userId,
+    deviceId: deviceId || null,
+    type,
+    toolName: data.tool_name || null,
+    durationMs,
+    success: data.success === undefined || data.success === null ? null : Boolean(data.success),
+    errorMessage: data.error_message ? String(data.error_message).slice(0, 2000) : null,
+    appVersion: data.app_version || null,
+  });
+}
+
+/** Batched counterpart of logTelemetryEvent - see TelemetryReporter's doc comment (mayra-vikash
+ *  repo) for why the client now buffers events and flushes them together instead of firing one
+ *  request per event. Invalid events inside a batch are skipped rather than failing the whole
+ *  batch - a buffered event is still worth keeping even if a sibling event in the same flush is
+ *  malformed. Each event carries its own client_timestamp (when it actually happened) so batching
+ *  doesn't cluster every event in the batch onto the flush time instead. */
+export async function logTelemetryEventsBatch(
+  userId: any,
+  deviceId: string | null,
+  events: Record<string, any>[]
+) {
+  const docs = events.reduce<any[]>((acc, data) => {
+    const type = String(data?.type || '').trim();
+    if (type !== 'tool_call' && type !== 'response_latency') return acc;
+    const durationMs = Number(data.duration_ms);
+    if (!Number.isFinite(durationMs) || durationMs < 0) return acc;
+    const clientTimestamp = Number(data.client_timestamp);
+    acc.push({
+      userId,
+      deviceId: deviceId || null,
+      type,
+      toolName: data.tool_name || null,
+      durationMs,
+      success: data.success === undefined || data.success === null ? null : Boolean(data.success),
+      errorMessage: data.error_message ? String(data.error_message).slice(0, 2000) : null,
+      appVersion: data.app_version || null,
+      timestamp: Number.isFinite(clientTimestamp) && clientTimestamp > 0 ? new Date(clientTimestamp) : new Date(),
+    });
+    return acc;
+  }, []);
+
+  if (docs.length === 0) return { inserted: 0 };
+  await MyraTelemetryEvent.insertMany(docs, { ordered: false });
+  return { inserted: docs.length };
 }

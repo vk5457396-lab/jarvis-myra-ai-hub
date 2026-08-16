@@ -73,7 +73,7 @@ export function withApi(
 
     try {
       if (opts.rateLimit) {
-        rateLimit(req, opts.rateLimit);
+        await rateLimit(req, opts.rateLimit);
       }
       const res = await core(req);
       return applyHeaders(res, { ...sec, ...cors.headers });

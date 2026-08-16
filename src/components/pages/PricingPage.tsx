@@ -30,7 +30,6 @@ const Pricing = () => {
   const sourceAis = [
     { thumb: thumbJarvis, name: "Jarvis 2.0", hsl: "188 100% 50%" },
     { thumb: thumbMyra, name: "MYRA 2.0", hsl: "263 70% 58%" },
-    { thumb: thumbAria, name: "ARIA 1.0", hsl: "160 70% 50%" },
   ];
 
   const exeAis = [
@@ -46,7 +45,7 @@ const Pricing = () => {
       hsl: "45 95% 55%",
       gradient: "from-yellow-400 via-amber-500 to-orange-500",
       badge: "💻 DEVELOPER",
-      countLabel: "3 AIs + Bundle",
+      countLabel: "2 AIs + Bundle",
       thumbs: sourceAis,
       priceLabel: `Starts at ${formatPrice(3900)}`,
     },
@@ -215,7 +214,6 @@ const Pricing = () => {
                     <button onClick={() => openBinancePayment("Source Code Bundle (Jarvis 2.0 + MYRA 2.0)", 6999)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-yellow-500/30">2-Bundle {formatPrice(6999)}</button>
                     <button onClick={() => openBinancePayment("Jarvis 2.0 Source Code", 3900)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-primary/30">Jarvis 2.0 {formatPrice(3900)}</button>
                     <button onClick={() => openBinancePayment("MYRA 2.0 Source Code", 3900)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary/10 hover:bg-secondary/20 text-secondary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-secondary/30">MYRA 2.0 {formatPrice(3900)}</button>
-                    <button onClick={() => openBinancePayment("ARIA 1.0 Source Code", 3900)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-emerald-500/30">ARIA 1.0 {formatPrice(3900)}</button>
                   </div>
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1 mt-3"><Package size={12} /> Products (.exe)</p>
                   <div className="flex flex-wrap gap-2">

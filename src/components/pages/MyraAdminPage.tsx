@@ -7,13 +7,14 @@ import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
   ArrowLeft, Loader2, Search, Sparkles, Coins, KeyRound, Copy, Ban, RefreshCw, BadgeCheck, Smartphone, ShieldOff,
-  Percent, UserCog,
+  Percent, UserCog, Globe2, Plug,
 } from "lucide-react";
 
 const PLAN_OPTIONS = [
@@ -64,6 +65,13 @@ interface MyraDeviceRow {
   is_blocked: boolean;
 }
 
+interface ConnectorRow {
+  id: string;
+  name: string;
+  category: string;
+  enabled: boolean;
+}
+
 interface AccessKeyRow {
   id: string;
   key: string;
@@ -110,6 +118,20 @@ const MyraAdminPage = () => {
 
   const [discountValue, setDiscountValue] = useState(0);
   const [savingDiscount, setSavingDiscount] = useState(false);
+
+  // Sitewide "apply to all users" discount - independent of discountValue above, which is the
+  // per-user coupon for whichever user is selected. Whichever of the two is higher is what
+  // actually applies for any given user (see effectiveDiscountPercent in myraService.ts).
+  const [globalDiscountValue, setGlobalDiscountValue] = useState(0);
+  const [savingGlobalDiscount, setSavingGlobalDiscount] = useState(false);
+  const [loadingGlobalDiscount, setLoadingGlobalDiscount] = useState(true);
+  const [savingResetAll, setSavingResetAll] = useState(false);
+
+  // Admin kill switch for connectors (see setConnectorEnabled) - togglingConnectorId disables
+  // just that one row's Switch mid-request instead of a page-wide loading state.
+  const [connectors, setConnectors] = useState<ConnectorRow[]>([]);
+  const [loadingConnectors, setLoadingConnectors] = useState(true);
+  const [togglingConnectorId, setTogglingConnectorId] = useState<string | null>(null);
 
   const [customNameEnabled, setCustomNameEnabled] = useState(false);
   const [customNameCurrent, setCustomNameCurrent] = useState<string | null>(null);
@@ -164,11 +186,35 @@ const MyraAdminPage = () => {
     }
   }, []);
 
+  const loadGlobalDiscount = useCallback(async () => {
+    setLoadingGlobalDiscount(true);
+    try {
+      const data = await api("/api/admin/myra/discount/global");
+      setGlobalDiscountValue(data.discount_percent || 0);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not load global discount");
+    } finally {
+      setLoadingGlobalDiscount(false);
+    }
+  }, []);
+
+  const loadConnectors = useCallback(async () => {
+    setLoadingConnectors(true);
+    try {
+      const data = await api("/api/admin/myra/connectors");
+      setConnectors(data.connectors);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not load connectors");
+    } finally {
+      setLoadingConnectors(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (status === "loading") return;
     if (status === "unauthenticated") { router.push("/login"); return; }
     (async () => {
-      await Promise.all([loadUsers(""), loadKeys()]);
+      await Promise.all([loadUsers(""), loadKeys(), loadGlobalDiscount(), loadConnectors()]);
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -226,6 +272,63 @@ const MyraAdminPage = () => {
       toast.error(e instanceof Error ? e.message : "Failed to update discount");
     } finally {
       setSavingDiscount(false);
+    }
+  };
+
+  const applyGlobalDiscount = async () => {
+    setSavingGlobalDiscount(true);
+    try {
+      const data = await api("/api/admin/myra/discount/global", {
+        method: "POST",
+        body: JSON.stringify({ discount_percent: globalDiscountValue }),
+      });
+      setGlobalDiscountValue(data.discount_percent || 0);
+      toast.success("Global discount updated for all users");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update global discount");
+    } finally {
+      setSavingGlobalDiscount(false);
+    }
+  };
+
+  const toggleConnector = async (connectorId: string, nextEnabled: boolean) => {
+    setTogglingConnectorId(connectorId);
+    // Optimistic - a single toggle should feel instant; loadConnectors below reconciles with
+    // the server on error or, if that also fails, stays as-is rather than a jarring flip-back.
+    setConnectors((prev) => prev.map((c) => (c.id === connectorId ? { ...c, enabled: nextEnabled } : c)));
+    try {
+      await api("/api/admin/myra/connectors", {
+        method: "POST",
+        body: JSON.stringify({ connector_id: connectorId, enabled: nextEnabled }),
+      });
+      toast.success(`${connectorId} ${nextEnabled ? "enabled" : "disabled"}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update connector");
+      await loadConnectors();
+    } finally {
+      setTogglingConnectorId(null);
+    }
+  };
+
+  const resetAllDiscounts = async () => {
+    // Bulk write touching every user's record - confirm before firing, unlike the single-target
+    // discount actions above.
+    if (!window.confirm(
+      "Reset the sitewide discount AND every individual user's coupon to 0%? This cannot be undone."
+    )) {
+      return;
+    }
+    setSavingResetAll(true);
+    try {
+      const data = await api("/api/admin/myra/discount/reset-all", { method: "POST" });
+      setGlobalDiscountValue(0);
+      setDiscountValue(0);
+      toast.success(data.message || "All discounts reset");
+      await loadUsers(query);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to reset discounts");
+    } finally {
+      setSavingResetAll(false);
     }
   };
 
@@ -647,6 +750,93 @@ const MyraAdminPage = () => {
                 Apply discount
               </Button>
             </div>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="license-glass p-6">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="rounded-2xl bg-sky-500/15 p-3">
+                <Globe2 className="h-5 w-5 text-sky-400" />
+              </div>
+              <h2 className="text-lg font-semibold">Global discount (all users)</h2>
+            </div>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Applies to EVERY user&apos;s next order automatically - no need to select anyone
+              above. If a user also has their own coupon, the higher of the two wins. 0 = off.
+            </p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={globalDiscountValue}
+                  disabled={loadingGlobalDiscount}
+                  onChange={(e) => setGlobalDiscountValue(Number(e.target.value))}
+                />
+                <span className="text-sm text-muted-foreground">%</span>
+              </div>
+              <Button
+                onClick={applyGlobalDiscount}
+                disabled={loadingGlobalDiscount || savingGlobalDiscount}
+                className="w-full"
+              >
+                {savingGlobalDiscount ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Apply to all users
+              </Button>
+              <div className="border-t border-white/10 pt-3">
+                <p className="mb-2 text-xs text-muted-foreground">
+                  Clears the sitewide discount above AND every individual user&apos;s own coupon
+                  back to 0% in one action - use this to fully undo all discounts at once.
+                </p>
+                <Button
+                  onClick={resetAllDiscounts}
+                  disabled={savingResetAll}
+                  variant="destructive"
+                  className="w-full"
+                >
+                  {savingResetAll ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Reset ALL discounts to 0%
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="license-glass p-6">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="rounded-2xl bg-orange-500/15 p-3">
+                <Plug className="h-5 w-5 text-orange-400" />
+              </div>
+              <h2 className="text-lg font-semibold">Connectors kill switch</h2>
+            </div>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Turn a connector off instantly for every user - no redeploy. Use this if one
+              integration is misbehaving (looping, erroring, or driving unexpected traffic). Turning
+              it back on resumes exactly where it left off; nobody&apos;s connection is lost.
+            </p>
+            {loadingConnectors ? (
+              <div className="flex justify-center py-4">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {connectors.map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex items-center justify-between rounded-xl border border-white/10 px-3 py-2"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">{c.name}</p>
+                      <p className="text-xs text-muted-foreground capitalize">{c.category}</p>
+                    </div>
+                    <Switch
+                      checked={c.enabled}
+                      disabled={togglingConnectorId === c.id}
+                      onCheckedChange={(checked) => toggleConnector(c.id, checked)}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="license-glass p-6">

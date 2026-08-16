@@ -5,7 +5,7 @@ import { withApi, handleOptions } from '../../_lib/middleware/handler';
 import { requireMobileUser } from '../../_lib/middleware/mobileAuth';
 import { success, ApiError } from '../../_lib/utils/response';
 import { optionalString } from '../../_lib/utils/validation';
-import { ensureMyraState, publicMyraProfile } from '../../_lib/services/myraService';
+import { effectiveDiscountPercent, ensureMyraState, publicMyraProfile } from '../../_lib/services/myraService';
 import { MyraProfile, Profile } from '@/lib/db/models';
 
 export const OPTIONS = handleOptions(['GET', 'PATCH']);
@@ -14,7 +14,8 @@ export const GET = withApi(async (req) => {
   const { user } = await requireMobileUser(req);
   const websiteProfile = await Profile.findOne({ email: user.email });
   const state = await ensureMyraState(user, websiteProfile);
-  return success({ profile: publicMyraProfile(state.profile) });
+  const discountPercent = await effectiveDiscountPercent(state.profile.discountPercent);
+  return success({ profile: publicMyraProfile(state.profile, discountPercent) });
 });
 
 export const PATCH = withApi(

@@ -14,12 +14,11 @@ const thumbJarvis = "/assets/thumb-jarvis.png";
 const thumbMyra = "/assets/thumb-myra.png";
 const thumbAria = "/assets/thumb-aria.png";
 
-type SourceVariant = "jarvis" | "myra" | "aria";
+type SourceVariant = "jarvis" | "myra";
 
 const sourceList: { variant: SourceVariant; thumb: string; hsl: string }[] = [
   { variant: "jarvis", thumb: thumbJarvis, hsl: "188 100% 50%" },
   { variant: "myra", thumb: thumbMyra, hsl: "263 70% 58%" },
-  { variant: "aria", thumb: thumbAria, hsl: "160 70% 50%" },
 ];
 
 const ProductDetailPage = ({ productId }: { productId: string }) => {

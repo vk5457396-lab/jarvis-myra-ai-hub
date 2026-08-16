@@ -7,8 +7,6 @@ import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Smartphone, Globe, ArrowLeft, Save, Loader2 } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 
 interface ReleaseForm {
   version_name: string;
@@ -154,8 +152,7 @@ const AdminAppReleasePage = () => {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
-      <section className="pt-28 pb-16 md:pt-36 md:pb-24 relative overflow-hidden">
+      <section className="pt-8 pb-16 md:pt-12 md:pb-24 relative overflow-hidden">
         <div className="absolute inset-0 circuit-pattern opacity-20" />
         <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
 
@@ -354,7 +351,6 @@ const AdminAppReleasePage = () => {
           </div>
         </div>
       </section>
-      <Footer />
     </div>
   );
 };

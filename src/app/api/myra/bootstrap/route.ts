@@ -5,6 +5,7 @@ import { withApi, handleOptions } from '../../_lib/middleware/handler';
 import { requireMobileUser } from '../../_lib/middleware/mobileAuth';
 import { success } from '../../_lib/utils/response';
 import {
+  effectiveDiscountPercent,
   ensureMyraState,
   publicDevice,
   publicMyraProfile,
@@ -22,10 +23,11 @@ export const GET = withApi(async (req) => {
   const websiteProfile = await Profile.findOne({ email: user.email });
   const state = await ensureMyraState(user, websiteProfile);
   const devices = await MyraDevice.find({ userId: user._id }).sort({ lastLogin: -1 });
+  const discountPercent = await effectiveDiscountPercent(state.profile.discountPercent);
 
   return success({
     user: publicUser(user, claims.role),
-    profile: publicMyraProfile(state.profile),
+    profile: publicMyraProfile(state.profile, discountPercent),
     subscription: publicSubscription(state.subscription),
     usage: publicUsage(state.usage),
     settings: publicSettings(state.settings),

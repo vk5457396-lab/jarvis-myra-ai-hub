@@ -4,6 +4,8 @@ export { AuthAccount, type AuthAccountDoc } from './AuthAccount';
 export {
   MyraProfile,
   MyraDevice,
+  MyraAutomationError,
+  MyraTelemetryEvent,
   MyraBlockedDevice,
   MyraChatHistory,
   MyraMemory,
@@ -12,6 +14,7 @@ export {
   MyraSettings,
   MyraAccessKey,
   MyraBanner,
+  MyraGlobalSettings,
 } from './Myra';
 export { ReferralEarning, type ReferralEarningDoc } from './ReferralEarning';
 export { Purchase, type PurchaseDoc } from './Purchase';
@@ -27,3 +30,4 @@ export { NotificationDelivery, type NotificationDeliveryDoc } from './Notificati
 export { AppRelease, APP_RELEASE_ID, type AppReleaseDoc } from './AppRelease';
 export { AppReleaseDownload, type AppReleaseDownloadDoc } from './AppReleaseDownload';
 export { UserConnection, OAuthState } from './Connector';
+export { RateLimitBucket } from './RateLimit';

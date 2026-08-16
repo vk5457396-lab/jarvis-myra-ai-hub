@@ -11,6 +11,7 @@ import {
 } from './connectors/registry';
 import { encryptToken, decryptToken } from '../utils/tokenCrypto';
 import { getProviderAdapter } from './connectors/adapters';
+import { isConnectorDisabled, getDisabledConnectors } from './myraService';
 
 const STATE_TTL_MS = 10 * 60 * 1000;
 
@@ -32,7 +33,10 @@ function pkcePair(): { verifier: string; challenge: string } {
 /** Metadata for every known connector + this user's live status, for GET /api/connectors. */
 export async function listConnectorsForUser(userId: string) {
   await connectMongo();
-  const connections = await UserConnection.find({ userId }).lean();
+  const [connections, disabledConnectors] = await Promise.all([
+    UserConnection.find({ userId }).lean(),
+    getDisabledConnectors(),
+  ]);
   const byConnectorId = new Map(connections.map((c: any) => [c.connectorId, c]));
 
   return listConnectorIds().map((id) => {
@@ -47,6 +51,9 @@ export async function listConnectorsForUser(userId: string) {
       status: conn ? conn.status : 'not_connected',
       account: conn?.accountLabel ?? null,
       connected_at: conn?.createdAt ?? null,
+      // Admin kill switch (see setConnectorEnabled) - false means MYRA won't let anyone
+      // connect or use this integration right now, regardless of their own connection status.
+      enabled: !disabledConnectors.includes(id),
     };
   });
 }
@@ -55,6 +62,9 @@ export async function listConnectorsForUser(userId: string) {
 export async function createConnectSession(userId: string, connectorId: string): Promise<string> {
   const meta = getConnectorMetadata(connectorId);
   if (!meta) throw ApiError.notFound('Unknown connector.', 'CONNECTOR_NOT_FOUND');
+  if (await isConnectorDisabled(connectorId)) {
+    throw ApiError.forbidden(`${meta.name} is temporarily unavailable. Please try again later.`, 'CONNECTOR_DISABLED');
+  }
   const provider = getProviderConfig(meta.provider);
   const clientId = provider ? process.env[provider.clientIdEnv] : undefined;
   if (!provider || !clientId) {
@@ -197,6 +207,9 @@ export async function getValidAccessToken(userId: string, connectorId: string): 
   }
   const meta = getConnectorMetadata(connectorId);
   if (!meta) throw ApiError.notFound('Unknown connector.', 'CONNECTOR_NOT_FOUND');
+  if (await isConnectorDisabled(connectorId)) {
+    throw ApiError.forbidden(`${meta.name} is temporarily unavailable. Please try again later.`, 'CONNECTOR_DISABLED');
+  }
 
   // No expiresAt at all means the provider's tokens don't expire (e.g. classic GitHub OAuth
   // App tokens) - always "still valid" until a real API call reports otherwise.

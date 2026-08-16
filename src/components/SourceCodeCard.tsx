@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Code, FileCode, GitBranch, Layers, Settings, Star, ArrowRight, Gem, Shield } from "lucide-react";
+import { Code, FileCode, GitBranch, Layers, Settings, Star, ArrowRight, Gem, Shield, Monitor } from "lucide-react";
 import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 import ContactFormModal from "@/components/ContactFormModal";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -130,6 +130,14 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
               </div>
               <p className="text-xs text-emerald-400 mt-2 font-bold font-display">Save {formatPrice(c.savings)}!</p>
               <CurrencySelector currentCode={countryCode} onSelect={setSelectedCountry} currency={currency} />
+            </div>
+
+            {/* PC-only notice */}
+            <div className="flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 mb-7 text-center" style={{ background: "hsla(38, 92%, 55%, 0.08)", border: "1px solid hsla(38, 92%, 55%, 0.25)" }}>
+              <Monitor className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+              <span className="text-[11px] md:text-xs font-display font-bold text-amber-400 tracking-wide">
+                PC / Windows Only — Won&apos;t run on Android
+              </span>
             </div>
 
             {/* Divider */}

@@ -79,6 +79,20 @@ const myraDeviceSchema = new Schema(
     isCurrentDevice: { type: Boolean, default: true },
     refreshTokenHash: { type: String, default: null, select: false },
     webHandoffHash: { type: String, select: false },
+
+    // Live telemetry (Admin > Live Devices) - written by POST /api/myra/heartbeat, which the
+    // app calls on its own state transitions plus a periodic safety-net timer. "Online" is
+    // never stored directly - it's computed at read time from lastHeartbeatAt's recency (see
+    // listLiveDevices in myraAdminService.ts), so a killed/crashed app can't get stuck showing
+    // stale "online" with nothing to ever flip it back.
+    appState: { type: String, default: null }, // Listening | Processing | Speaking | Idle
+    batteryPercent: { type: Number, default: null },
+    networkType: { type: String, default: null }, // wifi | cellular | offline | ...
+    currentTask: { type: String, default: null },
+    currentScreenApp: { type: String, default: null }, // foreground app/activity name
+    geminiLiveConnected: { type: Boolean, default: null },
+    reconnectCount: { type: Number, default: 0 }, // since the app process last cold-started
+    lastHeartbeatAt: { type: Date, default: null },
   },
   { timestamps: true, collection: 'myra_devices' }
 );
@@ -103,6 +117,61 @@ const myraBlockedDeviceSchema = new Schema(
   },
   { timestamps: true, collection: 'myra_blocked_devices' }
 );
+
+// Append-only log (Admin > Diagnostics) - one document per real automation failure: the agent
+// ran out of steps, a tool reported an error, or MYRA claimed something succeeded that later
+// turned out not to have (e.g. "playing" when isMusicActive() was a false positive). Written by
+// POST /api/myra/automation-error, called by the app at the exact point each of these is
+// already detected server-side-of-the-app (ActionExecutor, Agent, MissionExecutor) - this does
+// not do any of its own failure detection, it just gives those existing checks somewhere to
+// report to instead of only a local logcat line nobody but a developer with the phone in hand
+// can see.
+const myraAutomationErrorSchema = new Schema(
+  {
+    userId: { type: objectId, ref: 'User', required: true, index: true },
+    deviceId: { type: String, default: null, index: true },
+    // e.g. "max_steps_reached", "fake_success", "tool_error", "llm_failure" - open-ended on
+    // purpose (new failure classes shouldn't need a schema migration), not an enum.
+    failureType: { type: String, required: true, index: true },
+    taskDescription: { type: String, default: null, maxlength: 2000 },
+    toolName: { type: String, default: null },
+    errorMessage: { type: String, default: null, maxlength: 4000 },
+    appVersion: { type: String, default: null },
+    // Free-form extra context (last screen summary, action history tail, etc.) - shape varies
+    // by failureType, so Mixed rather than a fixed set of fields.
+    context: { type: Schema.Types.Mixed, default: null },
+    timestamp: { type: Date, default: () => new Date(), index: true },
+  },
+  { collection: 'myra_automation_errors' }
+);
+myraAutomationErrorSchema.index({ timestamp: -1 });
+
+// Performance telemetry (Admin > Performance) - two event shapes share one collection since
+// they're both "how is MYRA performing right now" facts logged from the same fire-and-forget
+// TelemetryReporter pipeline as heartbeats/automation errors:
+//  - type "tool_call": one per Action dispatched through ActionExecutor.execute() - toolName,
+//    how long it took, and whether it succeeded (with the full error if not).
+//  - type "response_latency": one per voice turn - how long MYRA spent between the user's turn
+//    ending (PROCESSING) and MYRA actually starting to speak (SPEAKING), from MyraStateManager.
+// High volume by design (every tool call, every turn) so this is TTL'd rather than kept forever
+// like MyraAutomationError - 30 days is enough to spot a slow/failing tool or device without
+// unbounded growth.
+const myraTelemetryEventSchema = new Schema(
+  {
+    userId: { type: objectId, ref: 'User', required: true, index: true },
+    deviceId: { type: String, default: null, index: true },
+    type: { type: String, required: true, index: true }, // 'tool_call' | 'response_latency'
+    toolName: { type: String, default: null, index: true },
+    durationMs: { type: Number, required: true },
+    success: { type: Boolean, default: null },
+    errorMessage: { type: String, default: null, maxlength: 2000 },
+    appVersion: { type: String, default: null },
+    timestamp: { type: Date, default: () => new Date() },
+  },
+  { collection: 'myra_telemetry_events' }
+);
+myraTelemetryEventSchema.index({ timestamp: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 30 });
+myraTelemetryEventSchema.index({ type: 1, toolName: 1, timestamp: -1 });
 
 const myraChatHistorySchema = new Schema(
   {
@@ -216,10 +285,34 @@ const myraBannerSchema = new Schema(
   { timestamps: true, collection: 'myra_banners' }
 );
 
+// Singleton document (fixed _id) - the "apply to all users" half of the discount feature,
+// separate from MyraProfile.discountPercent (the per-user coupon). Whichever is higher wins -
+// see effectiveDiscountPercent() in myraService.ts - so a sitewide sale never undercuts a
+// bigger coupon someone was already individually granted.
+//
+// disabledConnectors: admin-controlled kill switch, one connectorId (registry.ts's
+// CONNECTOR_METADATA keys - "google", "google_drive", "youtube", "github", "canva") per disabled
+// entry. Lets an admin instantly stop new connects/executes for one misbehaving integration
+// without a redeploy - see connectorService.ts's createConnectSession/getValidAccessToken.
+const myraGlobalSettingsSchema = new Schema(
+  {
+    _id: { type: String, default: 'singleton' },
+    discountPercent: { type: Number, default: 0, min: 0, max: 100 },
+    disabledConnectors: { type: [String], default: [] },
+  },
+  { timestamps: true, collection: 'myra_global_settings' }
+);
+
 export const MyraProfile: Model<any> =
   models.MyraProfile || model('MyraProfile', myraProfileSchema);
+export const MyraGlobalSettings: Model<any> =
+  models.MyraGlobalSettings || model('MyraGlobalSettings', myraGlobalSettingsSchema);
 export const MyraDevice: Model<any> =
   models.MyraDevice || model('MyraDevice', myraDeviceSchema);
+export const MyraAutomationError: Model<any> =
+  models.MyraAutomationError || model('MyraAutomationError', myraAutomationErrorSchema);
+export const MyraTelemetryEvent: Model<any> =
+  models.MyraTelemetryEvent || model('MyraTelemetryEvent', myraTelemetryEventSchema);
 export const MyraBlockedDevice: Model<any> =
   models.MyraBlockedDevice || model('MyraBlockedDevice', myraBlockedDeviceSchema);
 export const MyraChatHistory: Model<any> =

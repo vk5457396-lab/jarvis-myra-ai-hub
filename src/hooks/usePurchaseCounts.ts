@@ -36,8 +36,12 @@ export const usePurchaseCounts = () => {
 
       return counts;
     },
-    staleTime: 1000 * 60 * 2, // 2 minutes - refresh more often
+    // The route itself is now edge-cached for 2min (see /api/purchases/stats), so a short client
+    // staleTime/interval no longer buys real freshness - it just re-hits an already-cached
+    // response. Widened both; refetchOnWindowFocus stays on since that one's cheap (edge cache
+    // absorbs it) and keeps the number current when someone tabs back in.
+    staleTime: 1000 * 60 * 10, // 10 minutes
     refetchOnWindowFocus: true,
-    refetchInterval: 1000 * 60 * 5, // Auto-refresh every 5 minutes
+    refetchInterval: 1000 * 60 * 15, // Auto-refresh every 15 minutes
   });
 };

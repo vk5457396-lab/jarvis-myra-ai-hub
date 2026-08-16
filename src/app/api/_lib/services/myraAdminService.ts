@@ -6,14 +6,19 @@ import {
   MyraSubscription,
   MyraAccessKey,
   MyraDevice,
+  MyraAutomationError,
+  MyraTelemetryEvent,
   MyraBlockedDevice,
   MyraBanner,
+  MyraGlobalSettings,
 } from '@/lib/db/models';
 import { generateUniqueKeys } from '@/lib/licenses';
 import { ApiError } from '../utils/response';
 import { ensureMyraState, MYRA_PLANS } from './myraService';
+import { listConnectorIds } from './connectors/registry';
 
 const ACCESS_KEY_PREFIX = 'MYRA-PLAN';
+const GLOBAL_SETTINGS_ID = 'singleton';
 
 export async function findUserByEmail(email: string) {
   await connectMongo();
@@ -130,6 +135,70 @@ export async function setDiscountPercent({ user, discountPercent }: { user: any;
   );
 }
 
+/** Admin: set (or clear, with 0) the sitewide "apply to all users" discount %. Combines with
+ *  any individual user's coupon via effectiveDiscountPercent() (myraService.ts) - the higher of
+ *  the two applies, on the next order/verify call or profile/bootstrap fetch for every user,
+ *  with no per-user changes needed. */
+export async function setGlobalDiscount({ discountPercent }: { discountPercent: number }) {
+  if (!Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 100) {
+    throw ApiError.badRequest('discount_percent must be between 0 and 100.', 'INVALID_DISCOUNT');
+  }
+  await connectMongo();
+  return MyraGlobalSettings.findByIdAndUpdate(
+    GLOBAL_SETTINGS_ID,
+    { $set: { discountPercent } },
+    { new: true, upsert: true, setDefaultsOnInsert: true }
+  );
+}
+
+/**
+ * Admin: clear EVERY discount at once - the sitewide one and every individual user's coupon -
+ * back to 0%. The two other functions above only ever touch one target (one user, or the single
+ * global value); this exists because zeroing just the global one still leaves any per-user
+ * coupons in effect (effectiveDiscountPercent takes the higher of the two), so getting back to
+ * "nobody has a discount" previously meant hunting down and clearing each user by hand.
+ * @returns how many user records actually had a non-zero discount cleared.
+ */
+/**
+ * Admin kill switch: enable/disable one connector for every user at once, no redeploy needed.
+ * Blocks new connects immediately (createConnectSession) and existing connections' next
+ * refresh/execute (getValidAccessToken) - see connectorService.ts. Does not revoke already-
+ * issued tokens or touch UserConnection records; re-enabling picks up exactly where it left off.
+ */
+export async function setConnectorEnabled({
+  connectorId,
+  enabled,
+}: {
+  connectorId: string;
+  enabled: boolean;
+}) {
+  if (!listConnectorIds().includes(connectorId)) {
+    throw ApiError.badRequest('Unknown connector.', 'CONNECTOR_NOT_FOUND', { field: 'connectorId' });
+  }
+  await connectMongo();
+  const settings = await MyraGlobalSettings.findByIdAndUpdate(
+    GLOBAL_SETTINGS_ID,
+    enabled
+      ? { $pull: { disabledConnectors: connectorId } }
+      : { $addToSet: { disabledConnectors: connectorId } },
+    { new: true, upsert: true, setDefaultsOnInsert: true }
+  );
+  return { disabledConnectors: (settings.disabledConnectors || []) as string[] };
+}
+
+export async function resetAllDiscounts(): Promise<{ usersCleared: number }> {
+  await connectMongo();
+  const [profileResult] = await Promise.all([
+    MyraProfile.updateMany({ discountPercent: { $gt: 0 } }, { $set: { discountPercent: 0 } }),
+    MyraGlobalSettings.findByIdAndUpdate(
+      GLOBAL_SETTINGS_ID,
+      { $set: { discountPercent: 0 } },
+      { upsert: true, setDefaultsOnInsert: true }
+    ),
+  ]);
+  return { usersCleared: profileResult.modifiedCount };
+}
+
 /** Admin: grant/revoke eligibility for the Custom Name add-on, by email. Revoking does NOT
  *  clear the name already on file - it just stops it applying (see
  *  ConversationalAgentService's identity prompt) and re-enabling restores it instantly. */
@@ -163,6 +232,232 @@ export async function listUserDevices(user: any) {
     last_login: d.lastLogin,
     is_blocked: blockedSet.has(d.deviceId),
   }));
+}
+
+/** How recently a heartbeat must have landed for a device to still count as "online" - past
+ *  this, treat it as gone rather than trusting a stale stored state that nothing will ever
+ *  flip back on its own (app killed, phone off, network gone). */
+const LIVE_DEVICE_ONLINE_WINDOW_MS = 90_000;
+
+/** Admin > Live Devices: every device with at least one heartbeat on record, most recently
+ *  active first, with the owning user's email joined in - see MyraDevice's heartbeat fields
+ *  (Myra.ts) for what upsertHeartbeat actually writes. "online" is computed here from
+ *  lastHeartbeatAt's recency, never read from a stored flag. */
+export async function listLiveDevices(limit = 200) {
+  await connectMongo();
+  const devices = await MyraDevice.find({ lastHeartbeatAt: { $ne: null } })
+    .sort({ lastHeartbeatAt: -1 })
+    .limit(limit)
+    .populate('userId', 'email')
+    .lean();
+
+  const cutoff = Date.now() - LIVE_DEVICE_ONLINE_WINDOW_MS;
+  return devices.map((d: any) => ({
+    device_id: d.deviceId,
+    device_name: d.deviceName,
+    user_email: d.userId?.email ?? null,
+    app_version: d.appVersion,
+    app_state: d.appState,
+    battery_percent: d.batteryPercent,
+    network_type: d.networkType,
+    current_task: d.currentTask,
+    current_screen_app: d.currentScreenApp,
+    gemini_live_connected: d.geminiLiveConnected,
+    reconnect_count: d.reconnectCount,
+    last_heartbeat_at: d.lastHeartbeatAt,
+    online: d.lastHeartbeatAt ? new Date(d.lastHeartbeatAt).getTime() >= cutoff : false,
+  }));
+}
+
+/** Admin > Diagnostics: recent automation failures, newest first, with the owning user's email
+ *  joined in. See MyraAutomationError's schema doc comment (Myra.ts) for what gets logged here
+ *  and why. */
+export async function listAutomationErrors({
+  limit = 100,
+  failureType,
+}: { limit?: number; failureType?: string } = {}) {
+  await connectMongo();
+  const filter: Record<string, any> = {};
+  if (failureType) filter.failureType = failureType;
+
+  const errors = await MyraAutomationError.find(filter)
+    .sort({ timestamp: -1 })
+    .limit(limit)
+    .populate('userId', 'email')
+    .lean();
+
+  return errors.map((e: any) => ({
+    id: e._id.toString(),
+    user_email: e.userId?.email ?? null,
+    device_id: e.deviceId,
+    failure_type: e.failureType,
+    task_description: e.taskDescription,
+    tool_name: e.toolName,
+    error_message: e.errorMessage,
+    app_version: e.appVersion,
+    context: e.context,
+    timestamp: e.timestamp,
+  }));
+}
+
+/** Admin > Analytics: aggregate counters for the dashboard - user/device totals, plan mix, and
+ *  automation health (failure volume + breakdown) over the last 24h/7d/14d. Every number here is
+ *  computed fresh from the same collections the other admin pages already read (MyraDevice,
+ *  MyraAutomationError, MyraProfile) - nothing new is written or tracked to produce this. */
+export async function getAnalyticsSummary() {
+  await connectMongo();
+
+  const now = Date.now();
+  const since24h = new Date(now - 24 * 60 * 60 * 1000);
+  const since7d = new Date(now - 7 * 24 * 60 * 60 * 1000);
+  const since14d = new Date(now - 14 * 24 * 60 * 60 * 1000);
+  const onlineCutoff = new Date(now - LIVE_DEVICE_ONLINE_WINDOW_MS);
+
+  const [
+    totalUsers,
+    totalDevices,
+    onlineDevices,
+    geminiLiveConnectedDevices,
+    errors24h,
+    errors7d,
+    byTypeRaw,
+    dailyTrendRaw,
+    plansRaw,
+    topAffectedUsersRaw,
+  ] = await Promise.all([
+    User.countDocuments(),
+    MyraDevice.countDocuments(),
+    MyraDevice.countDocuments({ lastHeartbeatAt: { $gte: onlineCutoff } }),
+    MyraDevice.countDocuments({ lastHeartbeatAt: { $gte: onlineCutoff }, geminiLiveConnected: true }),
+    MyraAutomationError.countDocuments({ timestamp: { $gte: since24h } }),
+    MyraAutomationError.countDocuments({ timestamp: { $gte: since7d } }),
+    MyraAutomationError.aggregate([
+      { $match: { timestamp: { $gte: since7d } } },
+      { $group: { _id: '$failureType', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]),
+    MyraAutomationError.aggregate([
+      { $match: { timestamp: { $gte: since14d } } },
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } }, count: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]),
+    MyraProfile.aggregate([
+      { $group: { _id: '$subscriptionType', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]),
+    MyraAutomationError.aggregate([
+      { $match: { timestamp: { $gte: since7d } } },
+      { $group: { _id: '$userId', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 5 },
+    ]),
+  ]);
+
+  const topAffectedUsers = await User.populate(topAffectedUsersRaw, { path: '_id', select: 'email' });
+
+  return {
+    users: { total: totalUsers },
+    devices: {
+      total: totalDevices,
+      online_now: onlineDevices,
+      gemini_live_connected_now: geminiLiveConnectedDevices,
+    },
+    automation: {
+      errors_24h: errors24h,
+      errors_7d: errors7d,
+      by_type_7d: byTypeRaw.map((r: any) => ({ failure_type: r._id, count: r.count })),
+      daily_trend_14d: dailyTrendRaw.map((r: any) => ({ date: r._id, count: r.count })),
+      top_affected_users_7d: topAffectedUsers.map((r: any) => ({
+        user_email: r._id?.email ?? null,
+        count: r.count,
+      })),
+    },
+    plans: plansRaw.map((r: any) => ({ plan: r._id || 'free', count: r.count })),
+  };
+}
+
+/** Admin > Performance: tool-call volume/latency/failure rate per tool, the most recent tool
+ *  failures with their full error text, and voice-response latency (PROCESSING -> SPEAKING, see
+ *  MyraStateManager) over 24h/7d plus a 14-day daily trend. All computed from MyraTelemetryEvent
+ *  - see that schema's doc comment for exactly what gets logged and from where. */
+export async function getPerformanceSummary() {
+  await connectMongo();
+
+  const now = Date.now();
+  const since24h = new Date(now - 24 * 60 * 60 * 1000);
+  const since7d = new Date(now - 7 * 24 * 60 * 60 * 1000);
+  const since14d = new Date(now - 14 * 24 * 60 * 60 * 1000);
+
+  const [toolStatsRaw, recentToolFailuresRaw, latency24hRaw, latency7dRaw, latencyTrendRaw] = await Promise.all([
+    MyraTelemetryEvent.aggregate([
+      { $match: { type: 'tool_call', timestamp: { $gte: since7d } } },
+      {
+        $group: {
+          _id: '$toolName',
+          calls: { $sum: 1 },
+          failures: { $sum: { $cond: [{ $eq: ['$success', false] }, 1, 0] } },
+          avgDurationMs: { $avg: '$durationMs' },
+          maxDurationMs: { $max: '$durationMs' },
+        },
+      },
+      { $sort: { calls: -1 } },
+    ]),
+    MyraTelemetryEvent.find({ type: 'tool_call', success: false, timestamp: { $gte: since7d } })
+      .sort({ timestamp: -1 })
+      .limit(50)
+      .populate('userId', 'email')
+      .lean(),
+    MyraTelemetryEvent.aggregate([
+      { $match: { type: 'response_latency', timestamp: { $gte: since24h } } },
+      { $group: { _id: null, avg: { $avg: '$durationMs' }, max: { $max: '$durationMs' }, count: { $sum: 1 } } },
+    ]),
+    MyraTelemetryEvent.aggregate([
+      { $match: { type: 'response_latency', timestamp: { $gte: since7d } } },
+      { $group: { _id: null, avg: { $avg: '$durationMs' }, max: { $max: '$durationMs' }, count: { $sum: 1 } } },
+    ]),
+    MyraTelemetryEvent.aggregate([
+      { $match: { type: 'response_latency', timestamp: { $gte: since14d } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } },
+          avg: { $avg: '$durationMs' },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]),
+  ]);
+
+  const latencySummary = (rows: any[]) =>
+    rows[0]
+      ? { avg_ms: Math.round(rows[0].avg), max_ms: rows[0].max, count: rows[0].count }
+      : { avg_ms: null, max_ms: null, count: 0 };
+
+  return {
+    tool_stats_7d: toolStatsRaw.map((t: any) => ({
+      tool_name: t._id || 'Unknown',
+      calls: t.calls,
+      failures: t.failures,
+      success_rate_pct: t.calls > 0 ? Math.round(((t.calls - t.failures) / t.calls) * 1000) / 10 : null,
+      avg_duration_ms: Math.round(t.avgDurationMs),
+      max_duration_ms: t.maxDurationMs,
+    })),
+    recent_tool_failures: recentToolFailuresRaw.map((e: any) => ({
+      id: e._id.toString(),
+      user_email: e.userId?.email ?? null,
+      device_id: e.deviceId,
+      tool_name: e.toolName,
+      duration_ms: e.durationMs,
+      error_message: e.errorMessage,
+      app_version: e.appVersion,
+      timestamp: e.timestamp,
+    })),
+    response_latency: {
+      last_24h: latencySummary(latency24hRaw),
+      last_7d: latencySummary(latency7dRaw),
+      daily_trend_14d: latencyTrendRaw.map((r: any) => ({ date: r._id, avg_ms: Math.round(r.avg), count: r.count })),
+    },
+  };
 }
 
 /** Admin: block a specific physical device (by its ANDROID_ID) from ever logging into any

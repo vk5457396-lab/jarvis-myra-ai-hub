@@ -7,13 +7,11 @@ import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
-  Shield, LogOut, Users, Wallet, TrendingUp, CheckCircle2, XCircle, Clock, ArrowDownToLine, Package, KeyRound, Bell, Smartphone, Sparkles, Megaphone
+  Shield, LogOut, Users, Wallet, TrendingUp, CheckCircle2, XCircle, Clock, ArrowDownToLine, Package, Bell
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from "recharts";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import AdminProductsTab from "@/components/admin/AdminProductsTab";
 import NotificationCenter from "@/components/admin/NotificationCenter";
 
@@ -146,8 +144,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
-      <section className="pt-28 pb-16 md:pt-36 md:pb-24 relative overflow-hidden">
+      <section className="pt-8 pb-16 md:pt-12 md:pb-24 relative overflow-hidden">
         <div className="absolute inset-0 circuit-pattern opacity-20" />
         <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
 
@@ -267,30 +264,6 @@ const AdminDashboard = () => {
               }`}
             >
               <Package size={14} className="inline mr-2" /> Products
-            </button>
-            <button
-              onClick={() => router.push("/admin/licenses")}
-              className="px-5 py-2.5 rounded-xl font-display font-bold text-sm transition-all bg-white/5 border border-white/10 text-muted-foreground hover:text-foreground"
-            >
-              <KeyRound size={14} className="inline mr-2" /> Licenses
-            </button>
-            <button
-              onClick={() => router.push("/admin/myra")}
-              className="px-5 py-2.5 rounded-xl font-display font-bold text-sm transition-all bg-white/5 border border-white/10 text-muted-foreground hover:text-foreground"
-            >
-              <Sparkles size={14} className="inline mr-2" /> MYRA
-            </button>
-            <button
-              onClick={() => router.push("/admin/app-release")}
-              className="px-5 py-2.5 rounded-xl font-display font-bold text-sm transition-all bg-white/5 border border-white/10 text-muted-foreground hover:text-foreground"
-            >
-              <Smartphone size={14} className="inline mr-2" /> App Release
-            </button>
-            <button
-              onClick={() => router.push("/admin/banners")}
-              className="px-5 py-2.5 rounded-xl font-display font-bold text-sm transition-all bg-white/5 border border-white/10 text-muted-foreground hover:text-foreground"
-            >
-              <Megaphone size={14} className="inline mr-2" /> Banners
             </button>
             <button
               onClick={() => setActiveTab("notifications")}
@@ -419,7 +392,6 @@ const AdminDashboard = () => {
           )}
         </div>
       </section>
-      <Footer />
     </div>
   );
 };
