@@ -5,38 +5,23 @@ import { withApi, handleOptions } from '../../_lib/middleware/handler';
 import { requireMobileUser } from '../../_lib/middleware/mobileAuth';
 import { success } from '../../_lib/utils/response';
 import { optionalString, requireString, validateEnum } from '../../_lib/utils/validation';
-import { MyraChatHistory } from '@/lib/db/models';
 
 export const OPTIONS = handleOptions(['GET', 'POST', 'DELETE']);
 
-function publicMessage(doc: any) {
-  return {
-    id: doc._id.toString(),
-    conversation_id: doc.conversationId,
-    role: doc.role,
-    message: doc.message,
-    message_type: doc.messageType,
-    input_mode: doc.inputMode,
-    timestamp: doc.timestamp,
-  };
-}
-
+/**
+ * Disabled: server-side chat history storage/sync is turned off (the app keeps chat local-only
+ * now). Handlers still authenticate and validate input, and keep the same response envelope as
+ * before, so any caller still hitting these gets a normal 2xx instead of a 404/error - they just
+ * no longer touch MyraChatHistory.
+ */
 export const GET = withApi(async (req) => {
-  const { user } = await requireMobileUser(req);
-  const url = new URL(req.url);
-  const conversationId = url.searchParams.get('conversation_id');
-  const rawLimit = Number(url.searchParams.get('limit') || 100);
-  const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 500) : 100;
-  const query: Record<string, any> = { userId: user._id };
-  if (conversationId) query.conversationId = conversationId;
-
-  const docs = await MyraChatHistory.find(query).sort({ timestamp: -1 }).limit(limit).lean();
-  return success({ messages: docs.reverse().map(publicMessage) });
+  await requireMobileUser(req);
+  return success({ messages: [] });
 });
 
 export const POST = withApi(
   async (req) => {
-    const { user } = await requireMobileUser(req);
+    await requireMobileUser(req);
     const body = await req.json();
     const role = validateEnum(body.role, 'role', ['user', 'assistant', 'system']);
     const message = requireString(body.message, 'message', { min: 1, max: 20000 });
@@ -44,25 +29,26 @@ export const POST = withApi(
     const messageType = optionalString(body.message_type, 'message_type', 40) || 'text';
     const inputMode = optionalString(body.input_mode, 'input_mode', 40) || 'text';
 
-    const doc = await MyraChatHistory.create({
-      userId: user._id,
-      conversationId,
-      role,
-      message,
-      messageType,
-      inputMode,
-      timestamp: new Date(),
-    });
-    return success({ message: publicMessage(doc) }, 'Message stored.', 201);
+    return success(
+      {
+        message: {
+          id: 'disabled',
+          conversation_id: conversationId,
+          role,
+          message,
+          message_type: messageType,
+          input_mode: inputMode,
+          timestamp: new Date().toISOString(),
+        },
+      },
+      'Message stored.',
+      201
+    );
   },
   { rateLimit: { scope: 'myra-chat-write', max: 240 } }
 );
 
 export const DELETE = withApi(async (req) => {
-  const { user } = await requireMobileUser(req);
-  const conversationId = new URL(req.url).searchParams.get('conversation_id');
-  const query: Record<string, any> = { userId: user._id };
-  if (conversationId) query.conversationId = conversationId;
-  const result = await MyraChatHistory.deleteMany(query);
-  return success({ deleted: result.deletedCount }, 'Chat history cleared.');
+  await requireMobileUser(req);
+  return success({ deleted: 0 }, 'Chat history cleared.');
 });
