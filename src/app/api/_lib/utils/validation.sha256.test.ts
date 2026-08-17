@@ -29,16 +29,14 @@ test('normalizes uppercase hex to lowercase', () => {
   assert.equal(validateSha256(REAL_APK_SHA256.toUpperCase()), REAL_APK_SHA256);
 });
 
-test('rejects a value missing one character (the exact bug reported)', () => {
+test('rejects a value missing one character and reports the actual length received', () => {
   const missingLastChar = REAL_APK_SHA256.slice(0, -1);
   assert.equal(missingLastChar.length, 63);
-  // Caught by requireString's length range check before validateSha256's own hex-format
-  // regex ever runs - still a correct rejection, just a different (also correct) message.
-  assert.throws(() => validateSha256(missingLastChar), /64 and 64 characters/);
+  assert.throws(() => validateSha256(missingLastChar), /received 63/);
 });
 
-test('rejects a value with one extra character', () => {
-  assert.throws(() => validateSha256(`${REAL_APK_SHA256}a`), /64 and 64 characters/);
+test('rejects a value with one extra character and reports the actual length received', () => {
+  assert.throws(() => validateSha256(`${REAL_APK_SHA256}a`), /received 65/);
 });
 
 test('rejects a "sha256:" prefix rather than silently stripping it', () => {
@@ -46,9 +44,28 @@ test('rejects a "sha256:" prefix rather than silently stripping it', () => {
   assert.throws(() => validateSha256(`sha256:${REAL_APK_SHA256}`));
 });
 
-test('rejects non-hex characters', () => {
+test('rejects non-hex characters at the correct length', () => {
   const withNonHex = `g${REAL_APK_SHA256.slice(1)}`;
-  assert.throws(() => validateSha256(withNonHex), /64 hexadecimal characters/);
+  assert.equal(withNonHex.length, 64);
+  assert.throws(() => validateSha256(withNonHex), /only hexadecimal characters/);
+});
+
+// The actual bug reported: a mobile copy/paste can silently carry an internal newline (from a
+// wrapped display) or an invisible character (zero-width space, BOM) that plain .trim() doesn't
+// remove because it isn't at the very start/end of the string.
+test('strips an internal newline from a wrapped mobile paste', () => {
+  const wrapped = REAL_APK_SHA256.slice(0, 32) + '\n' + REAL_APK_SHA256.slice(32);
+  assert.equal(validateSha256(wrapped), REAL_APK_SHA256);
+});
+
+test('strips internal spaces', () => {
+  const withSpaces = REAL_APK_SHA256.slice(0, 16) + '  ' + REAL_APK_SHA256.slice(16);
+  assert.equal(validateSha256(withSpaces), REAL_APK_SHA256);
+});
+
+test('strips zero-width and BOM characters anywhere in the string', () => {
+  const withInvisible = '﻿' + REAL_APK_SHA256.slice(0, 20) + '​' + REAL_APK_SHA256.slice(20);
+  assert.equal(validateSha256(withInvisible), REAL_APK_SHA256);
 });
 
 test('optionalSha256 treats blank/whitespace-only input as "not provided", not invalid', () => {

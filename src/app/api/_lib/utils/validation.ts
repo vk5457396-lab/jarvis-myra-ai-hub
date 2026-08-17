@@ -142,15 +142,37 @@ export function validateApkAssetUrl(value: unknown, field = 'apk_asset_url'): st
 
 /** Exactly 64 hex characters (a SHA-256 digest), normalized to lowercase. */
 export function validateSha256(value: unknown, field = 'sha256'): string {
-  const str = requireString(value, field, { min: 64, max: 64 }).toLowerCase();
+  if (value === undefined || value === null) {
+    throw ApiError.badRequest(`${field} is required.`, 'MISSING_FIELD', { field });
+  }
+  // .trim() alone only strips the ends - a mobile copy/paste can leave an internal newline
+  // (from a wrapped display) or an invisible character (zero-width space, BOM) that a plain
+  // length check won't explain. Stripping every whitespace character anywhere in the string,
+  // plus the common invisible ones, means a value that's visually "just the hash" but carries
+  // hidden characters still validates - while genuinely wrong content still correctly fails.
+  const str = String(value)
+    .replace(/[\s​‌‍﻿]/g, '')
+    .toLowerCase();
+  if (str.length !== 64) {
+    throw ApiError.badRequest(
+      `${field} must be exactly 64 hexadecimal characters (received ${str.length}).`,
+      'INVALID_SHA256',
+      { field, receivedLength: str.length }
+    );
+  }
   if (!/^[0-9a-f]{64}$/.test(str)) {
-    throw ApiError.badRequest(`${field} must be exactly 64 hexadecimal characters.`, 'INVALID_SHA256', { field });
+    throw ApiError.badRequest(
+      `${field} must contain only hexadecimal characters (0-9, a-f).`,
+      'INVALID_SHA256',
+      { field }
+    );
   }
   return str;
 }
 
 /** Optional variant - only validates when a non-blank value is actually provided. */
 export function optionalSha256(value: unknown, field = 'sha256'): string | null {
-  if (value === undefined || value === null || String(value).trim() === '') return null;
+  if (value === undefined || value === null) return null;
+  if (String(value).replace(/[\s​‌‍﻿]/g, '') === '') return null;
   return validateSha256(value, field);
 }

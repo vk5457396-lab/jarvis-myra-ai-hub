@@ -34,6 +34,11 @@ const EMPTY: ReleaseForm = {
 };
 
 const SHA256_RE = /^[0-9a-f]{64}$/i;
+// Strips every whitespace character anywhere in the string (not just the ends - a mobile
+// copy/paste can leave an internal newline from a wrapped display) plus the common invisible
+// ones (zero-width space/joiners, BOM), so a value that's visually "just the hash" but carries
+// hidden characters still validates. Mirrors the backend's validateSha256 exactly.
+const sanitizeSha256 = (value: string) => value.replace(/[\s​‌‍﻿]/g, "");
 
 const EMPTY_PUBLIC: PublicDownloadForm = {
   version_name: "",
@@ -106,8 +111,9 @@ const AdminAppReleasePage = () => {
       toast.error("Yeh GitHub release page hai, APK asset link nahi - .../releases/download/TAG/FILE.apk use karo");
       return;
     }
-    if (form.sha256.trim() && !SHA256_RE.test(form.sha256.trim())) {
-      toast.error("SHA-256 exactly 64 hex characters ka hona chahiye");
+    const cleanSha256 = sanitizeSha256(form.sha256);
+    if (cleanSha256 && !SHA256_RE.test(cleanSha256)) {
+      toast.error(`SHA-256 exactly 64 hex characters ka hona chahiye (abhi ${cleanSha256.length} characters mile)`);
       return;
     }
 
@@ -121,7 +127,7 @@ const AdminAppReleasePage = () => {
         release_notes: form.release_notes.trim(),
         apk_asset_url: form.apk_asset_url.trim(),
         file_size_mb: form.file_size_mb ? Number(form.file_size_mb) : null,
-        sha256: form.sha256.trim() ? form.sha256.trim().toLowerCase() : null,
+        sha256: cleanSha256 ? cleanSha256.toLowerCase() : null,
       }),
     });
     const body = await res.json();
@@ -208,7 +214,7 @@ const AdminAppReleasePage = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-muted-foreground font-display tracking-wider mb-1.5 block">VERSION NAME</label>
                   <input
@@ -216,7 +222,7 @@ const AdminAppReleasePage = () => {
                     placeholder="1.2.0"
                     value={form.version_name}
                     onChange={(e) => setForm({ ...form, version_name: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm focus:outline-none focus:border-cyan-500/50"
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-base focus:outline-none focus:border-cyan-500/50"
                   />
                 </div>
                 <div>
@@ -226,7 +232,7 @@ const AdminAppReleasePage = () => {
                     placeholder="12"
                     value={form.version_code}
                     onChange={(e) => setForm({ ...form, version_code: Number(e.target.value) })}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm focus:outline-none focus:border-cyan-500/50"
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-base focus:outline-none focus:border-cyan-500/50"
                   />
                 </div>
               </div>
@@ -238,7 +244,7 @@ const AdminAppReleasePage = () => {
                   placeholder="https://github.com/vk5457396-lab/myra_apk/releases/download/vX.Y.Z/app-release.apk"
                   value={form.apk_asset_url}
                   onChange={(e) => setForm({ ...form, apk_asset_url: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm font-mono focus:outline-none focus:border-cyan-500/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-base font-mono focus:outline-none focus:border-cyan-500/50"
                 />
                 <p className="text-xs text-muted-foreground mt-1.5">
                   Preferred: the <span className="text-foreground/80">github.com/.../releases/download/TAG/FILE</span> link from the
@@ -258,7 +264,7 @@ const AdminAppReleasePage = () => {
                   placeholder="45"
                   value={form.file_size_mb}
                   onChange={(e) => setForm({ ...form, file_size_mb: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm focus:outline-none focus:border-cyan-500/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-base focus:outline-none focus:border-cyan-500/50"
                 />
               </div>
 
@@ -268,14 +274,22 @@ const AdminAppReleasePage = () => {
                   type="text"
                   placeholder="64-character hex digest of the exact APK file above"
                   value={form.sha256}
-                  onChange={(e) => setForm({ ...form, sha256: e.target.value.trim() })}
+                  onChange={(e) => setForm({ ...form, sha256: sanitizeSha256(e.target.value) })}
                   spellCheck={false}
-                  className={`w-full px-4 py-3 rounded-xl bg-white/5 border text-foreground text-sm font-mono focus:outline-none ${
-                    form.sha256.trim() && !SHA256_RE.test(form.sha256.trim())
+                  className={`w-full px-4 py-3 rounded-xl bg-white/5 border text-foreground text-base font-mono focus:outline-none ${
+                    form.sha256 && !SHA256_RE.test(form.sha256)
                       ? "border-red-500/50 focus:border-red-500/70"
                       : "border-white/10 focus:border-cyan-500/50"
                   }`}
                 />
+                {/* Live character count - this is the whole point: "64 hex characters required" means
+                    nothing on its own if you can't see how many you actually pasted. */}
+                {form.sha256.length > 0 && (
+                  <p className={`text-xs mt-1.5 font-mono ${form.sha256.length === 64 ? "text-emerald-400/80" : "text-red-300/80"}`}>
+                    {form.sha256.length} / 64 characters
+                    {form.sha256.length !== 64 && form.sha256.length > 0 ? " - paste again, something got cut off or extra characters got added" : ""}
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground mt-1.5">
                   The Android app rejects the download if this doesn&apos;t match the file it actually received - compute it
                   from the exact same file at the APK link above (e.g. <span className="font-mono text-foreground/80">sha256sum app-release.apk</span>),
@@ -290,7 +304,7 @@ const AdminAppReleasePage = () => {
                   value={form.release_notes}
                   onChange={(e) => setForm({ ...form, release_notes: e.target.value })}
                   rows={4}
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm focus:outline-none focus:border-cyan-500/50 resize-none"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-base focus:outline-none focus:border-cyan-500/50 resize-none"
                 />
               </div>
 
@@ -336,7 +350,7 @@ const AdminAppReleasePage = () => {
                   placeholder="1.2.0"
                   value={publicForm.version_name}
                   onChange={(e) => setPublicForm({ ...publicForm, version_name: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm focus:outline-none focus:border-emerald-500/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-base focus:outline-none focus:border-emerald-500/50"
                 />
               </div>
 
@@ -347,7 +361,7 @@ const AdminAppReleasePage = () => {
                   placeholder="https://github.com/vk5457396-lab/myra_apk/releases/download/vX.Y.Z/app-release.apk"
                   value={publicForm.apk_asset_url}
                   onChange={(e) => setPublicForm({ ...publicForm, apk_asset_url: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm font-mono focus:outline-none focus:border-emerald-500/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-base font-mono focus:outline-none focus:border-emerald-500/50"
                 />
               </div>
 
@@ -358,7 +372,7 @@ const AdminAppReleasePage = () => {
                   placeholder="45"
                   value={publicForm.file_size_mb}
                   onChange={(e) => setPublicForm({ ...publicForm, file_size_mb: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm focus:outline-none focus:border-emerald-500/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-base focus:outline-none focus:border-emerald-500/50"
                 />
               </div>
 
@@ -369,7 +383,7 @@ const AdminAppReleasePage = () => {
                   value={publicForm.release_notes}
                   onChange={(e) => setPublicForm({ ...publicForm, release_notes: e.target.value })}
                   rows={4}
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm focus:outline-none focus:border-emerald-500/50 resize-none"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-base focus:outline-none focus:border-emerald-500/50 resize-none"
                 />
               </div>
 
