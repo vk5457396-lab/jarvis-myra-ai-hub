@@ -4,7 +4,13 @@ export const maxDuration = 30;
 import { withApi, handleOptions } from '../../../_lib/middleware/handler';
 import { requireAdmin } from '../../../_lib/middleware/admin';
 import { success, ApiError } from '../../../_lib/utils/response';
-import { optionalString, optionalUrl, validatePositiveInt, requireString } from '../../../_lib/utils/validation';
+import {
+  optionalString,
+  optionalSha256,
+  validateApkAssetUrl,
+  validatePositiveInt,
+  requireString,
+} from '../../../_lib/utils/validation';
 import { connectMongo } from '@/lib/db/mongoose';
 import { AppRelease, APP_RELEASE_ID } from '@/lib/db/models';
 import { dispatchNotification } from '../../../_lib/services/notificationService';
@@ -27,13 +33,14 @@ export const GET = withApi(async (req) => {
           release_notes: doc.releaseNotes,
           file_size_mb: doc.fileSizeMb,
           apk_asset_url: doc.apkAssetUrl,
+          sha256: doc.sha256,
           updated_at: doc.updatedAt,
         }
       : {}
   );
 });
 
-/** Admin: update the APK release (asset URL, version, notes). Call after publishing a new GitHub release. */
+/** Admin: update the APK release (asset URL, version, notes, checksum). Call after publishing a new GitHub release. */
 export const PUT = withApi(
   async (req) => {
     const admin = await requireAdmin(req);
@@ -42,7 +49,10 @@ export const PUT = withApi(
     const versionName = requireString(body.version_name, 'version_name', { min: 1, max: 32 });
     const versionCode = validatePositiveInt(body.version_code, 'version_code', 1_000_000);
     const releaseNotes = optionalString(body.release_notes, 'release_notes', 4000);
-    const apkAssetUrl = optionalUrl(body.apk_asset_url, 'apk_asset_url');
+    const apkAssetUrl = validateApkAssetUrl(body.apk_asset_url, 'apk_asset_url');
+    // Optional for backward compatibility (existing rows/older admin-panel builds have none
+    // yet) - but once a release does carry one, it must be well-formed, never silently dropped.
+    const sha256 = optionalSha256(body.sha256, 'sha256');
     const fileSizeMb =
       body.file_size_mb === undefined || body.file_size_mb === null || body.file_size_mb === ''
         ? null
@@ -63,6 +73,7 @@ export const PUT = withApi(
           versionCode,
           releaseNotes,
           apkAssetUrl,
+          sha256,
           fileSizeMb,
           updatedBy: admin.userId ?? null,
         },
@@ -89,6 +100,7 @@ export const PUT = withApi(
         release_notes: doc.releaseNotes,
         file_size_mb: doc.fileSizeMb,
         apk_asset_url: doc.apkAssetUrl,
+        sha256: doc.sha256,
         updated_at: doc.updatedAt,
       },
       'Release updated.'

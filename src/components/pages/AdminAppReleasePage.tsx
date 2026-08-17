@@ -14,6 +14,7 @@ interface ReleaseForm {
   release_notes: string;
   apk_asset_url: string;
   file_size_mb: string;
+  sha256: string;
 }
 
 interface PublicDownloadForm {
@@ -29,7 +30,10 @@ const EMPTY: ReleaseForm = {
   release_notes: "",
   apk_asset_url: "",
   file_size_mb: "",
+  sha256: "",
 };
+
+const SHA256_RE = /^[0-9a-f]{64}$/i;
 
 const EMPTY_PUBLIC: PublicDownloadForm = {
   version_name: "",
@@ -70,6 +74,7 @@ const AdminAppReleasePage = () => {
           release_notes: d.release_notes ?? "",
           apk_asset_url: d.apk_asset_url ?? "",
           file_size_mb: d.file_size_mb ? String(d.file_size_mb) : "",
+          sha256: d.sha256 ?? "",
         });
         setUpdatedAt(d.updated_at ?? null);
       }
@@ -94,6 +99,17 @@ const AdminAppReleasePage = () => {
   const handleSave = async () => {
     if (!form.apk_asset_url.trim()) { toast.error("Direct download URL daalo"); return; }
     if (!form.version_name.trim()) { toast.error("Version name daalo"); return; }
+    if (!Number.isInteger(Number(form.version_code)) || Number(form.version_code) <= 0) {
+      toast.error("Version code ek positive integer hona chahiye"); return;
+    }
+    if (/\/releases\/tag\//i.test(form.apk_asset_url)) {
+      toast.error("Yeh GitHub release page hai, APK asset link nahi - .../releases/download/TAG/FILE.apk use karo");
+      return;
+    }
+    if (form.sha256.trim() && !SHA256_RE.test(form.sha256.trim())) {
+      toast.error("SHA-256 exactly 64 hex characters ka hona chahiye");
+      return;
+    }
 
     setSaving(true);
     const res = await fetch("/api/app/release/admin", {
@@ -105,6 +121,7 @@ const AdminAppReleasePage = () => {
         release_notes: form.release_notes.trim(),
         apk_asset_url: form.apk_asset_url.trim(),
         file_size_mb: form.file_size_mb ? Number(form.file_size_mb) : null,
+        sha256: form.sha256.trim() ? form.sha256.trim().toLowerCase() : null,
       }),
     });
     const body = await res.json();
@@ -243,6 +260,27 @@ const AdminAppReleasePage = () => {
                   onChange={(e) => setForm({ ...form, file_size_mb: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm focus:outline-none focus:border-cyan-500/50"
                 />
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground font-display tracking-wider mb-1.5 block">SHA-256 CHECKSUM</label>
+                <input
+                  type="text"
+                  placeholder="64-character hex digest of the exact APK file above"
+                  value={form.sha256}
+                  onChange={(e) => setForm({ ...form, sha256: e.target.value.trim() })}
+                  spellCheck={false}
+                  className={`w-full px-4 py-3 rounded-xl bg-white/5 border text-foreground text-sm font-mono focus:outline-none ${
+                    form.sha256.trim() && !SHA256_RE.test(form.sha256.trim())
+                      ? "border-red-500/50 focus:border-red-500/70"
+                      : "border-white/10 focus:border-cyan-500/50"
+                  }`}
+                />
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  The Android app rejects the download if this doesn&apos;t match the file it actually received - compute it
+                  from the exact same file at the APK link above (e.g. <span className="font-mono text-foreground/80">sha256sum app-release.apk</span>),
+                  never a different build. Leave blank to skip the checksum check (not recommended).
+                </p>
               </div>
 
               <div>

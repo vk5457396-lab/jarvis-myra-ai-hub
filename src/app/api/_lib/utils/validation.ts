@@ -116,3 +116,41 @@ export function optionalUrl(value: unknown, field: string): string | null {
     throw ApiError.badRequest(`${field} must be a valid http(s) URL.`, 'INVALID_URL', { field });
   }
 }
+
+/**
+ * Same as optionalUrl, plus rejects GitHub release/tag HTML pages
+ * (github.com/OWNER/REPO/releases/tag/...) - the page a human reading the release lands on,
+ * not the binary. Pasting that instead of the .../releases/download/TAG/FILE asset link is an
+ * easy mistake in the admin panel, and the Android updater would download an HTML document and
+ * fail to install it with a confusing "not a valid MYRA installer" error. Only applies the
+ * GitHub-specific check to github.com hosts - MediaFire/Drive/Dropbox links pass through
+ * unchanged, same as optionalUrl.
+ */
+export function validateApkAssetUrl(value: unknown, field = 'apk_asset_url'): string | null {
+  const url = optionalUrl(value, field);
+  if (!url) return null;
+  const parsed = new URL(url);
+  if (/(^|\.)github\.com$/i.test(parsed.hostname) && /\/releases\/tag\//i.test(parsed.pathname)) {
+    throw ApiError.badRequest(
+      `${field} must link directly to the release APK asset (.../releases/download/TAG/FILE.apk), not the release page (.../releases/tag/...).`,
+      'INVALID_APK_URL',
+      { field }
+    );
+  }
+  return url;
+}
+
+/** Exactly 64 hex characters (a SHA-256 digest), normalized to lowercase. */
+export function validateSha256(value: unknown, field = 'sha256'): string {
+  const str = requireString(value, field, { min: 64, max: 64 }).toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(str)) {
+    throw ApiError.badRequest(`${field} must be exactly 64 hexadecimal characters.`, 'INVALID_SHA256', { field });
+  }
+  return str;
+}
+
+/** Optional variant - only validates when a non-blank value is actually provided. */
+export function optionalSha256(value: unknown, field = 'sha256'): string | null {
+  if (value === undefined || value === null || String(value).trim() === '') return null;
+  return validateSha256(value, field);
+}

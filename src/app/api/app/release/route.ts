@@ -18,7 +18,7 @@ export const OPTIONS = handleOptions(['GET']);
 export const GET = withApi(async () => {
   await connectMongo();
   const doc = await AppRelease.findById(APP_RELEASE_ID)
-    .select('versionName versionCode releaseNotes fileSizeMb publicVersionName publicReleaseNotes publicFileSizeMb updatedAt')
+    .select('versionName versionCode releaseNotes fileSizeMb sha256 publicVersionName publicReleaseNotes publicFileSizeMb updatedAt')
     .lean();
 
   if (!doc) throw ApiError.notFound('No release configured yet.', 'RELEASE_NOT_CONFIGURED');
@@ -28,6 +28,10 @@ export const GET = withApi(async () => {
     version_code: doc.versionCode,
     release_notes: doc.publicReleaseNotes ?? doc.releaseNotes,
     file_size_mb: doc.publicFileSizeMb ?? doc.fileSizeMb,
+    // Not part of the public/OTA split above on purpose: this is the checksum of the OTA
+    // apkAssetUrl specifically (what the Android updater actually downloads via
+    // /api/app/release/download), so it must always follow that field, never the public one.
+    sha256: doc.sha256 ?? null,
     updated_at: doc.updatedAt,
   });
 });

@@ -14,6 +14,11 @@ const appReleaseSchema = new Schema(
     releaseNotes: { type: String, default: null },
     fileSizeMb: { type: Number, default: null },
     apkAssetUrl: { type: String, default: null },
+    // SHA-256 of the exact bytes at apkAssetUrl - lets the Android updater verify what it
+    // downloaded before installing, instead of trusting the OS installer to reject a
+    // corrupted/wrong file after the download has already completed. Must be re-set (or left
+    // stale, which the app tolerates by skipping the check) every time apkAssetUrl changes.
+    sha256: { type: String, default: null },
     updatedBy: { type: String, default: null },
     // Deliberately separate from the OTA fields above: what the public website's /download page
     // (and the home/pricing download cards) shows and links to. Only changes when explicitly
