@@ -57,7 +57,7 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
           transition={{ duration: 0.5, ease: "easeInOut" }}
           className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
           style={{
-            background: "radial-gradient(ellipse at 50% 30%, hsl(240 25% 12%) 0%, hsl(240 20% 4%) 70%, hsl(240 20% 2%) 100%)"
+            background: "radial-gradient(ellipse at 50% 30%, hsl(0 0% 12%) 0%, hsl(0 0% 5%) 70%, hsl(0 0% 3%) 100%)"
           }}
         >
           {/* Animated Grid Background */}
@@ -66,8 +66,8 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
               className="absolute inset-0"
               style={{
                 backgroundImage: `
-                  linear-gradient(hsl(185 100% 50% / 0.1) 1px, transparent 1px),
-                  linear-gradient(90deg, hsl(185 100% 50% / 0.1) 1px, transparent 1px)
+                  linear-gradient(hsl(0 72% 51% / 0.1) 1px, transparent 1px),
+                  linear-gradient(90deg, hsl(0 72% 51% / 0.1) 1px, transparent 1px)
                 `,
                 backgroundSize: "50px 50px",
               }}
@@ -88,7 +88,7 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
               ease: "easeInOut",
             }}
             className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl"
-            style={{ background: "radial-gradient(circle, hsl(185 100% 50% / 0.3) 0%, transparent 70%)" }}
+            style={{ background: "radial-gradient(circle, hsl(0 72% 51% / 0.3) 0%, transparent 70%)" }}
           />
           <motion.div
             animate={{
@@ -104,7 +104,7 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
               delay: 0.5,
             }}
             className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl"
-            style={{ background: "radial-gradient(circle, hsl(265 100% 65% / 0.3) 0%, transparent 70%)" }}
+            style={{ background: "radial-gradient(circle, hsl(350 65% 45% / 0.3) 0%, transparent 70%)" }}
           />
 
           {/* Rotating Ring */}
@@ -113,7 +113,7 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
             transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
             className="absolute w-[500px] h-[500px] rounded-full"
             style={{
-              border: "1px dashed hsl(185 100% 50% / 0.2)",
+              border: "1px dashed hsl(0 72% 51% / 0.2)",
             }}
           />
           <motion.div
@@ -121,7 +121,7 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
             transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
             className="absolute w-[400px] h-[400px] rounded-full"
             style={{
-              border: "1px dashed hsl(265 100% 65% / 0.2)",
+              border: "1px dashed hsl(350 65% 45% / 0.2)",
             }}
           />
 
@@ -141,7 +141,7 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
               }}
               className="absolute w-32 h-32 rounded-full border-2"
               style={{
-                borderColor: i % 2 === 0 ? "hsl(185 100% 50% / 0.4)" : "hsl(265 100% 65% / 0.4)",
+                borderColor: i % 2 === 0 ? "hsl(0 72% 51% / 0.4)" : "hsl(350 65% 45% / 0.4)",
               }}
             />
           ))}
@@ -157,9 +157,9 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
             <motion.div
               animate={{
                 boxShadow: [
-                  "0 0 40px hsl(185 100% 50% / 0.4), 0 0 80px hsl(265 100% 65% / 0.2), inset 0 0 30px hsl(185 100% 50% / 0.1)",
-                  "0 0 60px hsl(185 100% 50% / 0.6), 0 0 120px hsl(265 100% 65% / 0.4), inset 0 0 50px hsl(185 100% 50% / 0.2)",
-                  "0 0 40px hsl(185 100% 50% / 0.4), 0 0 80px hsl(265 100% 65% / 0.2), inset 0 0 30px hsl(185 100% 50% / 0.1)",
+                  "0 0 40px hsl(0 72% 51% / 0.4), 0 0 80px hsl(350 65% 45% / 0.2), inset 0 0 30px hsl(0 72% 51% / 0.1)",
+                  "0 0 60px hsl(0 72% 51% / 0.6), 0 0 120px hsl(350 65% 45% / 0.4), inset 0 0 50px hsl(0 72% 51% / 0.2)",
+                  "0 0 40px hsl(0 72% 51% / 0.4), 0 0 80px hsl(350 65% 45% / 0.2), inset 0 0 30px hsl(0 72% 51% / 0.1)",
                 ],
               }}
               transition={{
@@ -173,9 +173,9 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
               <div 
                 className="relative rounded-full p-8"
                 style={{
-                  background: "linear-gradient(135deg, hsl(240 20% 15% / 0.8) 0%, hsl(240 20% 8% / 0.9) 100%)",
+                  background: "linear-gradient(135deg, hsl(0 0% 15% / 0.8) 0%, hsl(0 0% 9% / 0.9) 100%)",
                   backdropFilter: "blur(20px)",
-                  border: "1px solid hsl(185 100% 50% / 0.3)",
+                  border: "1px solid hsl(0 72% 51% / 0.3)",
                 }}
               >
                 {/* Inner Rotating Border */}
@@ -184,7 +184,7 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
                   transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                   className="absolute inset-0 rounded-full"
                   style={{
-                    background: "conic-gradient(from 0deg, transparent, hsl(185 100% 50% / 0.5), transparent, hsl(265 100% 65% / 0.5), transparent)",
+                    background: "conic-gradient(from 0deg, transparent, hsl(0 72% 51% / 0.5), transparent, hsl(350 65% 45% / 0.5), transparent)",
                     padding: "2px",
                     mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
                     maskComposite: "xor",
@@ -199,9 +199,9 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
                   className="w-24 h-24 md:w-32 md:h-32 object-contain relative z-10"
                   animate={{
                     filter: [
-                      "drop-shadow(0 0 15px hsl(185 100% 50% / 0.6))",
-                      "drop-shadow(0 0 30px hsl(185 100% 50% / 0.9))",
-                      "drop-shadow(0 0 15px hsl(185 100% 50% / 0.6))",
+                      "drop-shadow(0 0 15px hsl(0 72% 51% / 0.6))",
+                      "drop-shadow(0 0 30px hsl(0 72% 51% / 0.9))",
+                      "drop-shadow(0 0 15px hsl(0 72% 51% / 0.6))",
                     ],
                   }}
                   transition={{
@@ -224,11 +224,11 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
             <h1 
               className="text-4xl md:text-5xl font-bold tracking-widest"
               style={{
-                background: "linear-gradient(135deg, hsl(185 100% 60%) 0%, hsl(185 100% 50%) 25%, hsl(265 100% 70%) 75%, hsl(265 100% 60%) 100%)",
+                background: "linear-gradient(135deg, hsl(0 80% 60%) 0%, hsl(0 72% 51%) 25%, hsl(350 70% 55%) 75%, hsl(350 65% 40%) 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
-                textShadow: "0 0 40px hsl(185 100% 50% / 0.5)",
+                textShadow: "0 0 40px hsl(0 72% 51% / 0.5)",
               }}
             >
               CODENINJAVIK
@@ -281,8 +281,8 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
             <div 
               className="h-2 rounded-full overflow-hidden"
               style={{
-                background: "hsl(240 20% 15%)",
-                border: "1px solid hsl(185 100% 50% / 0.2)",
+                background: "hsl(0 0% 15%)",
+                border: "1px solid hsl(0 72% 51% / 0.2)",
               }}
             >
               {/* Progress Fill */}
@@ -290,8 +290,8 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
                 className="h-full rounded-full relative overflow-hidden"
                 style={{
                   width: `${Math.min(progress, 100)}%`,
-                  background: "linear-gradient(90deg, hsl(185 100% 50%) 0%, hsl(265 100% 65%) 100%)",
-                  boxShadow: "0 0 20px hsl(185 100% 50% / 0.5)",
+                  background: "linear-gradient(90deg, hsl(0 72% 51%) 0%, hsl(350 65% 45%) 100%)",
+                  boxShadow: "0 0 20px hsl(0 72% 51% / 0.5)",
                 }}
               >
                 {/* Shimmer Effect */}
@@ -322,7 +322,7 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
               style={{
                 width: 4 + Math.random() * 4,
                 height: 4 + Math.random() * 4,
-                background: i % 2 === 0 ? "hsl(185 100% 50%)" : "hsl(265 100% 65%)",
+                background: i % 2 === 0 ? "hsl(0 72% 51%)" : "hsl(350 65% 45%)",
                 left: `${10 + Math.random() * 80}%`,
                 top: `${20 + Math.random() * 60}%`,
               }}

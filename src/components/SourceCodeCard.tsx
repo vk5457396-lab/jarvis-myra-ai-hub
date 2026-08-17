@@ -31,8 +31,8 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
   const myraName = isAfterFeb1 ? "MYRA 2.0" : "MYRA";
 
   const config = {
-    jarvis: { productId: "source_jarvis", name: "Jarvis 2.0", price: isIndia ? 3900 : 3499, originalPrice: isIndia ? 5999 : 4999, savings: isIndia ? 2099 : 1500, gradient: "from-cyan-400 via-blue-500 to-indigo-600", hsl: "188 100% 50%", badgeText: "JARVIS 2.0", features: ["Complete Jarvis 2.0 Source Code", "Python & Automation Scripts", "Full Documentation", "Customization Guide", "Future Code Updates", "Developer Support"] },
-    myra: { productId: "source_myra", name: myraName, price: isIndia ? 3900 : 3499, originalPrice: isIndia ? 5999 : 4999, savings: isIndia ? 2099 : 1500, gradient: "from-violet-400 via-purple-500 to-fuchsia-600", hsl: "263 70% 58%", badgeText: myraName.toUpperCase(), features: [`Complete ${myraName} Source Code`, "Python & Automation Scripts", "Full Documentation", "Customization Guide", "Future Code Updates", "Developer Support"] },
+    jarvis: { productId: "source_jarvis", name: "Jarvis 2.0", price: isIndia ? 3900 : 3499, originalPrice: isIndia ? 5999 : 4999, savings: isIndia ? 2099 : 1500, gradient: "from-red-400 via-red-500 to-rose-700", hsl: "0 72% 51%", badgeText: "JARVIS 2.0", features: ["Complete Jarvis 2.0 Source Code", "Python & Automation Scripts", "Full Documentation", "Customization Guide", "Future Code Updates", "Developer Support"] },
+    myra: { productId: "source_myra", name: myraName, price: isIndia ? 3900 : 3499, originalPrice: isIndia ? 5999 : 4999, savings: isIndia ? 2099 : 1500, gradient: "from-rose-400 via-red-500 to-red-700", hsl: "350 65% 45%", badgeText: myraName.toUpperCase(), features: [`Complete ${myraName} Source Code`, "Python & Automation Scripts", "Full Documentation", "Customization Guide", "Future Code Updates", "Developer Support"] },
     aria: { productId: "source_aria", name: "ARIA 1.0", price: isIndia ? 3900 : 3499, originalPrice: isIndia ? 5999 : 4999, savings: isIndia ? 2099 : 1500, gradient: "from-emerald-400 via-teal-500 to-cyan-600", hsl: "160 70% 50%", badgeText: "ARIA 1.0", features: ["Complete ARIA 1.0 Source Code", "Music & Audio Engine Code", "Python & Automation Scripts", "Full Documentation", "Customization Guide", "Future Code Updates", "Developer Support"] },
     bundle: { productId: "source_bundle", name: `Jarvis 2.0 + ${myraName}`, price: isIndia ? 6999 : 5999, originalPrice: isIndia ? 7800 : 6998, savings: isIndia ? 801 : 999, gradient: "from-amber-400 via-orange-500 to-red-500", hsl: "38 92% 55%", badgeText: "BEST VALUE", features: ["Complete Jarvis 2.0 Source Code", `Complete ${myraName} Source Code`, "Python & Automation Scripts", "Full Documentation", "Customization Guide", "Future Code Updates", "Developer Support", "Commercial License"] },
   };
@@ -73,7 +73,7 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
         </div>
 
         {/* Body */}
-        <div className="relative rounded-[calc(1.5rem-1px)] overflow-hidden m-px h-full backdrop-blur-xl" style={{ background: `linear-gradient(170deg, hsla(${c.hsl}, 0.07) 0%, hsla(220, 15%, 8%, 0.98) 35%, hsla(220, 20%, 5%, 0.99) 100%)` }}>
+        <div className="relative rounded-[calc(1.5rem-1px)] overflow-hidden m-px h-full backdrop-blur-xl" style={{ background: `linear-gradient(170deg, hsla(${c.hsl}, 0.07) 0%, hsla(0, 0%, 8%, 0.98) 35%, hsla(0, 0%, 5%, 0.99) 100%)` }}>
 
           {/* Mesh gradient */}
           <div className="absolute inset-0 opacity-25 pointer-events-none" style={{ background: `radial-gradient(ellipse at 20% 0%, hsla(${c.hsl}, 0.12), transparent 50%), radial-gradient(ellipse at 80% 100%, hsla(${c.hsl}, 0.08), transparent 50%)` }} />

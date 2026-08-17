@@ -85,19 +85,19 @@ const Signup = () => {
                   className="absolute inset-[-200%]"
                   animate={{ rotate: 360 }}
                   transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                  style={{ background: "conic-gradient(from 0deg, hsla(263,70%,58%,0.4), transparent 40%, hsla(188,100%,50%,0.4), transparent 80%)" }}
+                  style={{ background: "conic-gradient(from 0deg, hsla(350,65%,45%,0.4), transparent 40%, hsla(0,72%,51%,0.4), transparent 80%)" }}
                 />
               </div>
 
-              <div className="relative rounded-[calc(2rem-1px)] overflow-hidden m-px" style={{ background: "linear-gradient(165deg, hsla(263,70%,58%,0.06) 0%, hsla(220,20%,6%,0.97) 40%, hsla(220,20%,4%,0.99) 100%)" }}>
-                <div className="absolute -top-20 -right-20 w-44 h-44 rounded-full blur-[80px] opacity-20" style={{ background: "hsla(263,70%,58%,0.5)" }} />
-                <div className="absolute -bottom-20 -left-20 w-44 h-44 rounded-full blur-[80px] opacity-15" style={{ background: "hsla(188,100%,50%,0.4)" }} />
+              <div className="relative rounded-[calc(2rem-1px)] overflow-hidden m-px" style={{ background: "linear-gradient(165deg, hsla(350,65%,45%,0.06) 0%, hsla(0,0%,7%,0.97) 40%, hsla(0,0%,4%,0.99) 100%)" }}>
+                <div className="absolute -top-20 -right-20 w-44 h-44 rounded-full blur-[80px] opacity-20" style={{ background: "hsla(350,65%,45%,0.5)" }} />
+                <div className="absolute -bottom-20 -left-20 w-44 h-44 rounded-full blur-[80px] opacity-15" style={{ background: "hsla(0,72%,51%,0.4)" }} />
 
                 <div className="relative z-10 p-8 md:p-10">
                   <div className="text-center mb-8">
                     <motion.div
                       className="w-16 h-16 rounded-2xl bg-gradient-to-br from-secondary to-primary flex items-center justify-center mx-auto mb-4"
-                      style={{ boxShadow: "0 0 30px hsla(263,70%,58%,0.3)" }}
+                      style={{ boxShadow: "0 0 30px hsla(350,65%,45%,0.3)" }}
                       whileHover={{ scale: 1.1, rotate: 5 }}
                     >
                       <UserPlus className="w-8 h-8 text-white" />

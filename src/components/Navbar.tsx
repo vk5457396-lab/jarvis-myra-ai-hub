@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,16 +23,26 @@ const navLinks = [
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { data: session } = useSession();
   const user = session?.user ?? null;
   const pathname = usePathname();
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <motion.nav
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/10"
+      className={`fixed top-0 left-0 right-0 z-50 border-b transition-colors duration-300 ${
+        scrolled ? "glass border-white/10" : "bg-transparent border-transparent"
+      }`}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
@@ -41,11 +51,18 @@ const Navbar = () => {
             <span className="font-display text-xl md:text-2xl gradient-text font-bold hidden sm:block">codeninjavik</span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
-              <Link key={link.path} href={link.path} className={`font-display text-sm tracking-wider transition-all duration-300 relative group ${pathname === link.path ? "text-primary text-glow-cyan" : "text-foreground/70 hover:text-primary"}`}>
+              <Link
+                key={link.path}
+                href={link.path}
+                className={`px-3.5 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${
+                  pathname === link.path
+                    ? "bg-primary/15 text-primary"
+                    : "text-foreground/70 hover:text-foreground hover:bg-white/5"
+                }`}
+              >
                 {link.name}
-                <span className={`absolute -bottom-1 left-0 h-0.5 bg-gradient-neon transition-all duration-300 ${pathname === link.path ? "w-full" : "w-0 group-hover:w-full"}`} />
               </Link>
             ))}
           </div>
@@ -82,7 +99,7 @@ const Navbar = () => {
             <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
               {navLinks.map((link, index) => (
                 <motion.div key={link.path} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.1 }}>
-                  <Link href={link.path} onClick={() => setIsOpen(false)} className={`block font-display text-lg py-2 ${pathname === link.path ? "text-primary text-glow-cyan" : "text-foreground/70"}`}>
+                  <Link href={link.path} onClick={() => setIsOpen(false)} className={`block rounded-xl px-3 py-2.5 text-base font-medium ${pathname === link.path ? "bg-primary/15 text-primary" : "text-foreground/70 hover:bg-white/5"}`}>
                     {link.name}
                   </Link>
                 </motion.div>

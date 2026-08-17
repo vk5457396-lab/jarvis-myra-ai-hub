@@ -111,19 +111,19 @@ const myraFeatures = [
 const categories = [...new Set(myraFeatures.map(f => f.category))];
 
 const categoryColors: Record<string, string> = {
-  "Core": "from-purple-500/20 to-pink-500/20 border-purple-500/30",
-  "Window Control": "from-blue-500/20 to-cyan-500/20 border-blue-500/30",
+  "Core": "from-rose-500/20 to-pink-500/20 border-rose-500/30",
+  "Window Control": "from-red-500/20 to-orange-500/20 border-red-500/30",
   "WhatsApp": "from-green-500/20 to-emerald-500/20 border-green-500/30",
-  "Memory": "from-violet-500/20 to-purple-500/20 border-violet-500/30",
+  "Memory": "from-rose-600/20 to-red-500/20 border-rose-600/30",
   "Utils": "from-orange-500/20 to-yellow-500/20 border-orange-500/30",
-  "Mouse & Keyboard": "from-cyan-500/20 to-blue-500/20 border-cyan-500/30",
+  "Mouse & Keyboard": "from-orange-400/20 to-red-500/20 border-orange-400/30",
   "Image Tools": "from-pink-500/20 to-rose-500/20 border-pink-500/30",
   "Creative": "from-fuchsia-500/20 to-pink-500/20 border-fuchsia-500/30",
   "Screen Reader": "from-teal-500/20 to-green-500/20 border-teal-500/30",
   "System": "from-red-500/20 to-orange-500/20 border-red-500/30",
-  "Desktop": "from-indigo-500/20 to-violet-500/20 border-indigo-500/30",
+  "Desktop": "from-red-800/20 to-rose-600/20 border-red-800/30",
   "PDF Tools": "from-amber-500/20 to-orange-500/20 border-amber-500/30",
-  "Window Manager": "from-sky-500/20 to-blue-500/20 border-sky-500/30",
+  "Window Manager": "from-amber-600/20 to-orange-500/20 border-amber-600/30",
 };
 
 const MyraFeaturesShowcase = () => {

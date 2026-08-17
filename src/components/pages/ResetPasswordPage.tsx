@@ -47,10 +47,10 @@ const ResetPassword = () => {
               <div className="absolute inset-0 rounded-[2rem] p-px overflow-hidden">
                 <motion.div className="absolute inset-[-200%]" animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} style={{ background: "conic-gradient(from 0deg, hsla(160,70%,50%,0.4), transparent 50%, hsla(160,70%,50%,0.4))" }} />
               </div>
-              <div className="relative rounded-[calc(2rem-1px)] overflow-hidden m-px" style={{ background: "linear-gradient(165deg, hsla(160,70%,50%,0.06) 0%, hsla(220,20%,6%,0.97) 40%, hsla(220,20%,4%,0.99) 100%)" }}>
+              <div className="relative rounded-[calc(2rem-1px)] overflow-hidden m-px" style={{ background: "linear-gradient(165deg, hsla(160,70%,50%,0.06) 0%, hsla(0,0%,7%,0.97) 40%, hsla(0,0%,4%,0.99) 100%)" }}>
                 <div className="relative z-10 p-8 md:p-10">
                   <div className="text-center mb-8">
-                    <h1 className="font-display text-3xl font-black bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Set New Password</h1>
+                    <h1 className="font-display text-3xl font-black bg-gradient-to-r from-red-400 to-rose-500 bg-clip-text text-transparent">Set New Password</h1>
                   </div>
                   <form onSubmit={handleUpdate} className="space-y-5">
                     <div className="relative">
@@ -60,7 +60,7 @@ const ResetPassword = () => {
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     </div>
-                    <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 font-display font-black text-white">
+                    <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 font-display font-black text-white">
                       {loading ? "Updating..." : "Update Password"}
                     </Button>
                   </form>

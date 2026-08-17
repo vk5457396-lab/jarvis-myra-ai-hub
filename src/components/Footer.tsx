@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Mail, MessageCircle, Github, Twitter, Heart, LogIn, UserPlus } from "lucide-react";
+import { Mail, MessageCircle, Github, Twitter, Heart, LogIn, UserPlus, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const logo = "/assets/logo.png";
 
@@ -10,6 +11,25 @@ const Footer = () => {
   return (
     <footer className="relative border-t border-white/10 bg-background/50 backdrop-blur-lg">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-neon opacity-50" />
+
+      {/* CTA banner */}
+      <div className="container mx-auto px-4 pt-14">
+        <div className="relative rounded-3xl glass-card p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/[0.08] to-transparent pointer-events-none" />
+          <div className="relative text-center md:text-left">
+            <h3 className="font-display text-2xl md:text-3xl font-bold mb-1.5">
+              Ready to talk to your PC?
+            </h3>
+            <p className="text-muted-foreground text-sm md:text-base">Get started with Jarvis or MYRA in minutes.</p>
+          </div>
+          <Link href="/pricing" className="relative shrink-0">
+            <Button variant="hero" size="lg" className="group">
+              <span>Get Started</span>
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+        </div>
+      </div>
 
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8">

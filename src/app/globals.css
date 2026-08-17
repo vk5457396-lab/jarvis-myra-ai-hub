@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Sora:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,56 +6,59 @@
 
 @layer base {
   :root {
-    /* Dark Cyberpunk Theme */
-    --background: 240 20% 4%;
-    --foreground: 185 100% 95%;
+    /* Premium dark + crimson theme */
+    --background: 0 0% 5%;
+    --foreground: 0 0% 96%;
 
-    --card: 240 15% 8%;
-    --card-foreground: 185 100% 95%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 96%;
 
-    --popover: 240 15% 8%;
-    --popover-foreground: 185 100% 95%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 96%;
 
-    /* Neon Cyan Primary */
-    --primary: 185 100% 50%;
-    --primary-foreground: 240 20% 4%;
+    /* Crimson Primary */
+    --primary: 0 72% 51%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Neon Purple Secondary */
-    --secondary: 265 100% 65%;
+    /* Deep wine Secondary */
+    --secondary: 350 65% 38%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 240 15% 15%;
-    --muted-foreground: 220 10% 60%;
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 65%;
 
-    /* Electric Accent */
-    --accent: 185 100% 50%;
-    --accent-foreground: 240 20% 4%;
+    /* Ember Accent */
+    --accent: 0 72% 51%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 15% 20%;
-    --input: 240 15% 15%;
-    --ring: 185 100% 50%;
+    --border: 0 0% 18%;
+    --input: 0 0% 14%;
+    --ring: 0 72% 51%;
 
     --radius: 0.75rem;
 
-    /* Custom Colors */
-    --neon-cyan: 185 100% 50%;
-    --neon-purple: 265 100% 65%;
-    --neon-pink: 320 100% 60%;
-    --dark-bg: 240 20% 4%;
-    --glass-bg: 240 15% 10%;
+    /* Custom Colors (kept for compatibility with existing "neon-*" utility classes;
+       repurposed to the red/crimson brand palette instead of cyan/purple) */
+    --neon-cyan: 0 84% 58%;
+    --neon-purple: 350 70% 40%;
+    --neon-pink: 10 85% 58%;
+    --dark-bg: 0 0% 5%;
+    --glass-bg: 0 0% 10%;
 
     /* Gradients */
     --gradient-neon: linear-gradient(135deg, hsl(var(--neon-cyan)) 0%, hsl(var(--neon-purple)) 100%);
     --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%);
-    --gradient-dark: linear-gradient(180deg, hsl(240 20% 6%) 0%, hsl(240 20% 2%) 100%);
+    --gradient-dark: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%);
 
     /* Shadows */
-    --shadow-neon-cyan: 0 0 20px hsl(185 100% 50% / 0.4), 0 0 40px hsl(185 100% 50% / 0.2);
-    --shadow-neon-purple: 0 0 20px hsl(265 100% 65% / 0.4), 0 0 40px hsl(265 100% 65% / 0.2);
-    --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --shadow-neon-cyan: 0 0 8px hsl(var(--neon-cyan) / 0.25), 0 0 16px hsl(var(--neon-cyan) / 0.12);
+    --shadow-neon-purple: 0 0 8px hsl(var(--neon-purple) / 0.25), 0 0 16px hsl(var(--neon-purple) / 0.12);
+    --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.45);
+
+    --font-display: 'Sora', 'Inter', sans-serif;
 
     --sidebar-background: 240 15% 8%;
     --sidebar-foreground: 185 100% 95%;
@@ -65,6 +68,41 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 240 15% 20%;
     --sidebar-ring: 185 100% 50%;
+  }
+
+  /* Scoped opt-out: everything under /admin keeps the original dark-cyberpunk theme
+     unchanged, wrapped by AdminLayout (see src/app/admin/layout.tsx className="admin-legacy").
+     Public-site redesign lives entirely in :root above and must not bleed in here. */
+  .admin-legacy {
+    --background: 240 20% 4%;
+    --foreground: 185 100% 95%;
+    --card: 240 15% 8%;
+    --card-foreground: 185 100% 95%;
+    --popover: 240 15% 8%;
+    --popover-foreground: 185 100% 95%;
+    --primary: 185 100% 50%;
+    --primary-foreground: 240 20% 4%;
+    --secondary: 265 100% 65%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 240 15% 15%;
+    --muted-foreground: 220 10% 60%;
+    --accent: 185 100% 50%;
+    --accent-foreground: 240 20% 4%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 15% 20%;
+    --input: 240 15% 15%;
+    --ring: 185 100% 50%;
+    --neon-cyan: 185 100% 50%;
+    --neon-purple: 265 100% 65%;
+    --neon-pink: 320 100% 60%;
+    --dark-bg: 240 20% 4%;
+    --glass-bg: 240 15% 10%;
+    --gradient-dark: linear-gradient(180deg, hsl(240 20% 6%) 0%, hsl(240 20% 2%) 100%);
+    --shadow-neon-cyan: 0 0 20px hsl(185 100% 50% / 0.4), 0 0 40px hsl(185 100% 50% / 0.2);
+    --shadow-neon-purple: 0 0 20px hsl(265 100% 65% / 0.4), 0 0 40px hsl(265 100% 65% / 0.2);
+    --font-display: 'Orbitron', sans-serif;
+    background-color: hsl(var(--background));
   }
 }
 
@@ -80,15 +118,15 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
-    background-image: 
-      radial-gradient(ellipse at 20% 20%, hsl(265 100% 65% / 0.1) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 80%, hsl(185 100% 50% / 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 50%, hsl(240 20% 6%) 0%, hsl(240 20% 2%) 100%);
+    background-image:
+      radial-gradient(ellipse at 20% 20%, hsl(var(--neon-purple) / 0.10) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, hsl(var(--neon-cyan) / 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, hsl(var(--card)) 0%, hsl(var(--background)) 100%);
     background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Orbitron', sans-serif;
+    font-family: var(--font-display);
   }
 }
 
@@ -111,24 +149,24 @@
 
   /* Neon Glows */
   .glow-cyan {
-    box-shadow: 0 0 20px hsl(185 100% 50% / 0.4), 0 0 40px hsl(185 100% 50% / 0.2);
+    box-shadow: 0 0 8px hsl(var(--neon-cyan) / 0.3), 0 0 16px hsl(var(--neon-cyan) / 0.15);
   }
 
   .glow-purple {
-    box-shadow: 0 0 20px hsl(265 100% 65% / 0.4), 0 0 40px hsl(265 100% 65% / 0.2);
+    box-shadow: 0 0 8px hsl(var(--neon-purple) / 0.3), 0 0 16px hsl(var(--neon-purple) / 0.15);
   }
 
   .text-glow-cyan {
-    text-shadow: 0 0 10px hsl(185 100% 50% / 0.8), 0 0 20px hsl(185 100% 50% / 0.5);
+    text-shadow: 0 0 10px hsl(var(--neon-cyan) / 0.8), 0 0 20px hsl(var(--neon-cyan) / 0.5);
   }
 
   .text-glow-purple {
-    text-shadow: 0 0 10px hsl(265 100% 65% / 0.8), 0 0 20px hsl(265 100% 65% / 0.5);
+    text-shadow: 0 0 10px hsl(var(--neon-purple) / 0.8), 0 0 20px hsl(var(--neon-purple) / 0.5);
   }
 
   /* Gradient Text */
   .gradient-text {
-    background: linear-gradient(135deg, hsl(185 100% 50%) 0%, hsl(265 100% 65%) 100%);
+    background: linear-gradient(135deg, hsl(var(--neon-cyan)) 0%, hsl(var(--neon-purple)) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -136,6 +174,9 @@
 
   /* Circuit Pattern */
   .circuit-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0v10M30 50v10M0 30h10M50 30h10M10 10l5 5M45 10l-5 5M10 50l5-5M45 50l-5-5' stroke='%23dc2626' stroke-width='0.5' fill='none' opacity='0.1'/%3E%3Ccircle cx='30' cy='30' r='3' fill='%23dc2626' opacity='0.1'/%3E%3Ccircle cx='10' cy='10' r='2' fill='%237f1d1d' opacity='0.1'/%3E%3Ccircle cx='50' cy='50' r='2' fill='%237f1d1d' opacity='0.1'/%3E%3C/svg%3E");
+  }
+  .admin-legacy .circuit-pattern {
     background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0v10M30 50v10M0 30h10M50 30h10M10 10l5 5M45 10l-5 5M10 50l5-5M45 50l-5-5' stroke='%2300f0ff' stroke-width='0.5' fill='none' opacity='0.1'/%3E%3Ccircle cx='30' cy='30' r='3' fill='%2300f0ff' opacity='0.1'/%3E%3Ccircle cx='10' cy='10' r='2' fill='%239b4dff' opacity='0.1'/%3E%3Ccircle cx='50' cy='50' r='2' fill='%239b4dff' opacity='0.1'/%3E%3C/svg%3E");
   }
 
@@ -156,8 +197,8 @@
   }
 
   @keyframes border-glow {
-    0%, 100% { border-color: hsl(185 100% 50% / 0.5); }
-    50% { border-color: hsl(265 100% 65% / 0.5); }
+    0%, 100% { border-color: hsl(var(--neon-cyan) / 0.5); }
+    50% { border-color: hsl(var(--neon-purple) / 0.5); }
   }
 
   .animate-float {
@@ -212,7 +253,7 @@
     50% { background-position: 100% 50%; }
   }
   .text-aurora {
-    background: linear-gradient(90deg, hsl(185 100% 60%), hsl(265 100% 70%), hsl(330 90% 65%), hsl(185 100% 60%));
+    background: linear-gradient(90deg, hsl(var(--neon-cyan)), hsl(var(--neon-purple)), hsl(var(--neon-pink)), hsl(var(--neon-cyan)));
     background-size: 300% 100%;
     -webkit-background-clip: text;
     background-clip: text;
@@ -228,7 +269,7 @@
     border-radius: 9999px;
     pointer-events: none;
     z-index: 9999;
-    background: radial-gradient(circle, hsl(185 100% 60% / 0.55) 0%, hsl(265 100% 70% / 0.25) 50%, transparent 75%);
+    background: radial-gradient(circle, hsl(var(--neon-cyan) / 0.55) 0%, hsl(var(--neon-purple) / 0.25) 50%, transparent 75%);
     mix-blend-mode: screen;
     transform: translate(-50%, -50%);
     transition: width 0.2s ease, height 0.2s ease, opacity 0.3s ease;
@@ -244,8 +285,8 @@
     border-radius: 9999px;
     pointer-events: none;
     z-index: 9998;
-    background: hsl(185 100% 70% / 0.9);
-    box-shadow: 0 0 12px hsl(185 100% 60% / 0.8), 0 0 24px hsl(265 100% 70% / 0.5);
+    background: hsl(var(--neon-cyan) / 0.9);
+    box-shadow: 0 0 12px hsl(var(--neon-cyan) / 0.8), 0 0 24px hsl(var(--neon-purple) / 0.5);
     transform: translate(-50%, -50%);
     will-change: transform;
   }

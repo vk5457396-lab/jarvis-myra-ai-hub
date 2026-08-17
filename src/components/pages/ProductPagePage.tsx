@@ -222,7 +222,7 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
         <div className="flex-1 flex items-center justify-center flex-col gap-3">
           <Package size={48} className="text-muted-foreground/40" />
           <p className="text-muted-foreground">Product not found.</p>
-          <Link href="/products" className="text-cyan-400 underline">Back to products</Link>
+          <Link href="/products" className="text-red-400 underline">Back to products</Link>
         </div>
         <Footer />
       </div>
@@ -253,7 +253,7 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <Package size={80} className="text-cyan-400/30" />
+                    <Package size={80} className="text-red-400/30" />
                   </div>
                 )}
               </motion.div>
@@ -278,7 +278,7 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
                           setActiveShot(s);
                         }}
                         className={`aspect-video rounded-lg overflow-hidden border-2 transition-all ${
-                          activeShot === s ? "border-cyan-400" : "border-white/10 hover:border-white/30"
+                          activeShot === s ? "border-red-400" : "border-white/10 hover:border-white/30"
                         }`}
                       >
                         <img src={s} alt={`shot ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
@@ -294,11 +294,11 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
                 className="relative rounded-2xl overflow-hidden">
                 <div className="absolute inset-0 rounded-2xl p-px overflow-hidden">
-                  <div className="absolute inset-[-200%]" style={{ background: "conic-gradient(from 0deg, hsla(188,100%,50%,0.4), transparent 40%, hsla(263,70%,58%,0.4), transparent 80%, hsla(188,100%,50%,0.4))" }} />
+                  <div className="absolute inset-[-200%]" style={{ background: "conic-gradient(from 0deg, hsla(0,72%,51%,0.4), transparent 40%, hsla(350,65%,45%,0.4), transparent 80%, hsla(0,72%,51%,0.4))" }} />
                 </div>
-                <div className="relative rounded-[calc(1rem-1px)] m-px p-6" style={{ background: "linear-gradient(165deg, hsla(220,20%,8%,0.65) 0%, hsla(220,20%,4%,0.95) 100%)", backdropFilter: "blur(12px)" }}>
+                <div className="relative rounded-[calc(1rem-1px)] m-px p-6" style={{ background: "linear-gradient(165deg, hsla(0,0%,8%,0.65) 0%, hsla(0,0%,4%,0.95) 100%)", backdropFilter: "blur(12px)" }}>
                   {product.category && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-300 text-[10px] font-display font-bold tracking-wider uppercase mb-3">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-500/10 text-red-300 text-[10px] font-display font-bold tracking-wider uppercase mb-3">
                       <Tag size={10} /> {product.category}
                     </span>
                   )}

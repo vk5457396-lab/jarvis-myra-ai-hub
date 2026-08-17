@@ -9,17 +9,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-neon-cyan hover:shadow-neon-cyan/80",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md hover:shadow-primary/20",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline: "border border-primary/50 bg-transparent text-primary hover:bg-primary/10 hover:border-primary",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-neon-purple",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm",
         ghost: "hover:bg-primary/10 hover:text-primary",
         link: "text-primary underline-offset-4 hover:underline",
-        neonCyan: "bg-gradient-to-r from-neon-cyan to-neon-cyan/80 text-background font-bold shadow-neon-cyan hover:shadow-[0_0_30px_hsl(185_100%_50%/0.6),0_0_60px_hsl(185_100%_50%/0.3)] hover:scale-105 border border-neon-cyan/30",
-        neonPurple: "bg-gradient-to-r from-neon-purple to-neon-purple/80 text-background font-bold shadow-neon-purple hover:shadow-[0_0_30px_hsl(265_100%_65%/0.6),0_0_60px_hsl(265_100%_65%/0.3)] hover:scale-105 border border-neon-purple/30",
-        neonPink: "bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold shadow-[0_0_20px_rgba(236,72,153,0.4)] hover:shadow-[0_0_30px_rgba(236,72,153,0.6),0_0_60px_rgba(236,72,153,0.3)] hover:scale-105 border border-pink-400/30",
+        neonCyan: "bg-gradient-to-r from-neon-cyan to-neon-cyan/80 text-background font-bold shadow-sm hover:shadow-[0_0_16px_hsl(var(--neon-cyan)/0.4),0_0_28px_hsl(var(--neon-cyan)/0.15)] hover:scale-[1.02] border border-neon-cyan/30",
+        neonPurple: "bg-gradient-to-r from-neon-purple to-neon-purple/80 text-background font-bold shadow-sm hover:shadow-[0_0_16px_hsl(var(--neon-purple)/0.4),0_0_28px_hsl(var(--neon-purple)/0.15)] hover:scale-[1.02] border border-neon-purple/30",
+        neonPink: "bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold shadow-sm hover:shadow-[0_0_16px_rgba(236,72,153,0.35),0_0_28px_rgba(236,72,153,0.15)] hover:scale-[1.02] border border-pink-400/30",
         glass: "glass text-foreground hover:bg-white/10 border border-white/20",
-        hero: "bg-gradient-neon text-background font-bold shadow-neon-cyan hover:shadow-[0_0_40px_hsl(185_100%_50%/0.5),0_0_80px_hsl(265_100%_65%/0.3)] hover:scale-105 border border-white/20",
+        hero: "bg-gradient-neon text-background font-bold shadow-sm hover:shadow-[0_0_18px_hsl(var(--neon-cyan)/0.35),0_0_32px_hsl(var(--neon-purple)/0.15)] hover:scale-[1.02] border border-white/20",
       },
       size: {
         default: "h-10 px-4 py-2",

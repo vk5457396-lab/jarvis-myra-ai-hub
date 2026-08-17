@@ -27,30 +27,30 @@ interface ProductCardProps {
 const variantStyles = {
   jarvis: {
     productId: "jarvis",
-    gradient: "from-cyan-400 via-blue-500 to-indigo-600",
-    priceGradient: "from-cyan-300 to-blue-400",
+    gradient: "from-red-400 via-red-500 to-rose-700",
+    priceGradient: "from-red-300 to-red-400",
     badgeLabel: "⚡ POWER USERS",
     badgeIcon: Cpu,
     includesText: "Includes: Old Source Code",
     includesDesc: "Learn & customize the original codebase",
     buttonVariant: "neonCyan" as const,
-    accent: { h: 188, s: 100, l: 50 },
-    accent2: { h: 210, s: 100, l: 60 },
-    ringColor: "hsla(188,100%,50%,0.15)",
+    accent: { h: 0, s: 72, l: 51 },
+    accent2: { h: 10, s: 85, l: 58 },
+    ringColor: "hsla(0,72%,51%,0.15)",
     popularBadge: false,
   },
   myra: {
     productId: "myra",
-    gradient: "from-violet-400 via-purple-500 to-fuchsia-600",
-    priceGradient: "from-violet-300 to-fuchsia-400",
+    gradient: "from-rose-400 via-red-500 to-red-700",
+    priceGradient: "from-rose-300 to-red-400",
     badgeLabel: "🔥 MOST POPULAR",
     badgeIcon: Sparkles,
     includesText: "Includes: .exe File",
     includesDesc: "Ready-to-run executable for Windows",
     buttonVariant: "neonPurple" as const,
-    accent: { h: 263, s: 70, l: 58 },
-    accent2: { h: 290, s: 80, l: 65 },
-    ringColor: "hsla(263,70%,58%,0.15)",
+    accent: { h: 350, s: 65, l: 45 },
+    accent2: { h: 340, s: 75, l: 55 },
+    ringColor: "hsla(350,65%,45%,0.15)",
     popularBadge: true,
   },
   aria: {
@@ -143,7 +143,7 @@ const ProductCard = ({ name, tagline, price, features, variant, delay = 0, thumb
         </div>
 
         {/* Card body */}
-        <div className="relative rounded-[calc(1.5rem-1px)] overflow-hidden m-px backdrop-blur-xl" style={{ background: `linear-gradient(170deg, hsla(${hsl}, 0.08) 0%, hsla(220, 15%, 8%, 0.98) 30%, hsla(220, 20%, 5%, 0.99) 100%)` }}>
+        <div className="relative rounded-[calc(1.5rem-1px)] overflow-hidden m-px backdrop-blur-xl" style={{ background: `linear-gradient(170deg, hsla(${hsl}, 0.08) 0%, hsla(0, 0%, 8%, 0.98) 30%, hsla(0, 0%, 5%, 0.99) 100%)` }}>
 
           {/* Mesh gradient overlay */}
           <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ background: `radial-gradient(ellipse at 20% 0%, hsla(${hsl}, 0.15), transparent 50%), radial-gradient(ellipse at 80% 100%, hsla(${hsl2}, 0.1), transparent 50%)` }} />

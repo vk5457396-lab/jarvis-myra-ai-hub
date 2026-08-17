@@ -109,7 +109,7 @@ const MyraAndroidDownload = ({
             </div>
             <div
               className="relative rounded-[calc(1rem-1px)] m-px p-6 md:p-8"
-              style={{ background: `linear-gradient(165deg, hsla(${ACCENT}, 0.05) 0%, hsla(220,20%,6%,0.97) 100%)` }}
+              style={{ background: `linear-gradient(165deg, hsla(${ACCENT}, 0.05) 0%, hsla(0,0%,7%,0.97) 100%)` }}
             >
               {loading ? (
                 <div className="flex items-center justify-center py-10">

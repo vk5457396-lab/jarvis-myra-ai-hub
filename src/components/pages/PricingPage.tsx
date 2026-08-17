@@ -28,8 +28,8 @@ const Pricing = () => {
   };
 
   const sourceAis = [
-    { thumb: thumbJarvis, name: "Jarvis 2.0", hsl: "188 100% 50%" },
-    { thumb: thumbMyra, name: "MYRA 2.0", hsl: "263 70% 58%" },
+    { thumb: thumbJarvis, name: "Jarvis 2.0", hsl: "0 72% 51%" },
+    { thumb: thumbMyra, name: "MYRA 2.0", hsl: "350 65% 45%" },
   ];
 
   const exeAis = [
@@ -137,7 +137,7 @@ const Pricing = () => {
 
                   <div
                     className="relative rounded-[calc(1.5rem-1px)] overflow-hidden m-px p-8 md:p-10 backdrop-blur-xl transition-all duration-500"
-                    style={{ background: `linear-gradient(170deg, hsla(${cat.hsl}, 0.1) 0%, hsla(220, 15%, 8%, 0.96) 40%, hsla(220, 20%, 5%, 0.99) 100%)` }}
+                    style={{ background: `linear-gradient(170deg, hsla(${cat.hsl}, 0.1) 0%, hsla(0, 0%, 9%, 0.96) 40%, hsla(0, 0%, 5%, 0.99) 100%)` }}
                   >
                     {/* Glow */}
                     <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[80px] opacity-20 group-hover:opacity-50 transition-all duration-700" style={{ background: `hsla(${cat.hsl}, 0.6)` }} />

@@ -249,8 +249,8 @@ const Dashboard = () => {
   const totalEarnings = earnings.reduce((s, e) => s + e.commission_amount, 0);
 
   const stats = [
-    { icon: Wallet, label: "Wallet Balance", value: `₹${profile?.wallet_balance || 0}`, gradient: "from-emerald-500 to-cyan-500", accentHsl: "160 70% 50%" },
-    { icon: Users, label: "Referrals", value: referralCount.toString(), gradient: "from-violet-500 to-fuchsia-500", accentHsl: "263 70% 58%" },
+    { icon: Wallet, label: "Wallet Balance", value: `₹${profile?.wallet_balance || 0}`, gradient: "from-emerald-500 to-red-500", accentHsl: "160 70% 50%" },
+    { icon: Users, label: "Referrals", value: referralCount.toString(), gradient: "from-rose-500 to-red-600", accentHsl: "350 65% 45%" },
     { icon: TrendingUp, label: "Total Earnings", value: `₹${totalEarnings}`, gradient: "from-amber-500 to-orange-500", accentHsl: "38 92% 55%" },
     { icon: Gift, label: "Commission Rate", value: "5%", gradient: "from-pink-500 to-rose-500", accentHsl: "330 80% 60%" },
   ];
@@ -290,7 +290,7 @@ const Dashboard = () => {
                 <div className="absolute inset-0 rounded-2xl p-px overflow-hidden">
                   <div className="absolute inset-[-200%]" style={{ background: `conic-gradient(from 0deg, hsla(${stat.accentHsl}, 0.3), transparent 50%, hsla(${stat.accentHsl}, 0.3))` }} />
                 </div>
-                <div className="relative rounded-[calc(1rem-1px)] m-px p-5" style={{ background: `linear-gradient(165deg, hsla(${stat.accentHsl}, 0.06) 0%, hsla(220,20%,6%,0.97) 100%)` }}>
+                <div className="relative rounded-[calc(1rem-1px)] m-px p-5" style={{ background: `linear-gradient(165deg, hsla(${stat.accentHsl}, 0.06) 0%, hsla(0,0%,6%,0.97) 100%)` }}>
                   <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center mb-3`} style={{ boxShadow: `0 0 20px hsla(${stat.accentHsl}, 0.3)` }}>
                     <stat.icon size={18} className="text-white" />
                   </div>
@@ -306,9 +306,9 @@ const Dashboard = () => {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mb-10">
               <div className="relative rounded-2xl overflow-hidden">
                 <div className="absolute inset-0 rounded-2xl p-px overflow-hidden">
-                  <div className="absolute inset-[-200%]" style={{ background: "conic-gradient(from 0deg, hsla(160,70%,50%,0.3), transparent 40%, hsla(263,70%,58%,0.3), transparent 80%)" }} />
+                  <div className="absolute inset-[-200%]" style={{ background: "conic-gradient(from 0deg, hsla(160,70%,50%,0.3), transparent 40%, hsla(350,65%,45%,0.3), transparent 80%)" }} />
                 </div>
-                <div className="relative rounded-[calc(1rem-1px)] m-px p-6" style={{ background: "linear-gradient(165deg, hsla(160,70%,50%,0.04) 0%, hsla(220,20%,6%,0.97) 100%)" }}>
+                <div className="relative rounded-[calc(1rem-1px)] m-px p-6" style={{ background: "linear-gradient(165deg, hsla(160,70%,50%,0.04) 0%, hsla(0,0%,6%,0.97) 100%)" }}>
                   <h2 className="font-display text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                     <TrendingUp size={20} className="text-emerald-400" /> Earnings Chart
                   </h2>
@@ -341,9 +341,9 @@ const Dashboard = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mb-10">
             <div className="relative rounded-2xl overflow-hidden">
               <div className="absolute inset-0 rounded-2xl p-px overflow-hidden">
-                <div className="absolute inset-[-200%]" style={{ background: "conic-gradient(from 0deg, hsla(188,100%,50%,0.3), transparent 40%, hsla(263,70%,58%,0.3), transparent 80%)" }} />
+                <div className="absolute inset-[-200%]" style={{ background: "conic-gradient(from 0deg, hsla(0,72%,51%,0.3), transparent 40%, hsla(350,65%,45%,0.3), transparent 80%)" }} />
               </div>
-              <div className="relative rounded-[calc(1rem-1px)] m-px p-6" style={{ background: "linear-gradient(165deg, hsla(188,100%,50%,0.04) 0%, hsla(220,20%,6%,0.97) 100%)" }}>
+              <div className="relative rounded-[calc(1rem-1px)] m-px p-6" style={{ background: "linear-gradient(165deg, hsla(0,72%,51%,0.04) 0%, hsla(0,0%,6%,0.97) 100%)" }}>
                 <div className="flex items-center gap-3 mb-4">
                   <Shield size={20} className="text-primary" />
                   <h2 className="font-display text-lg font-bold text-foreground">Your Referral Link</h2>
@@ -367,7 +367,7 @@ const Dashboard = () => {
               <div className="absolute inset-0 rounded-2xl p-px overflow-hidden">
                 <div className="absolute inset-[-200%]" style={{ background: "conic-gradient(from 0deg, hsla(160,70%,50%,0.3), transparent 40%, hsla(38,92%,55%,0.3), transparent 80%)" }} />
               </div>
-              <div className="relative rounded-[calc(1rem-1px)] m-px p-6" style={{ background: "linear-gradient(165deg, hsla(160,70%,50%,0.04) 0%, hsla(220,20%,6%,0.97) 100%)" }}>
+              <div className="relative rounded-[calc(1rem-1px)] m-px p-6" style={{ background: "linear-gradient(165deg, hsla(160,70%,50%,0.04) 0%, hsla(0,0%,6%,0.97) 100%)" }}>
                 <div className="flex items-center gap-3 mb-4">
                   <Smartphone size={20} className="text-emerald-400" />
                   <h2 className="font-display text-lg font-bold text-foreground">MYRA Android App Access</h2>
@@ -430,22 +430,22 @@ const Dashboard = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="mb-10">
             <div className="relative rounded-2xl overflow-hidden">
               <div className="absolute inset-0 rounded-2xl p-px overflow-hidden">
-                <div className="absolute inset-[-200%]" style={{ background: "conic-gradient(from 0deg, hsla(263,70%,58%,0.3), transparent 50%, hsla(263,70%,58%,0.3))" }} />
+                <div className="absolute inset-[-200%]" style={{ background: "conic-gradient(from 0deg, hsla(350,65%,45%,0.3), transparent 50%, hsla(350,65%,45%,0.3))" }} />
               </div>
-              <div className="relative rounded-[calc(1rem-1px)] m-px p-6" style={{ background: "linear-gradient(165deg, hsla(263,70%,58%,0.04) 0%, hsla(220,20%,6%,0.97) 100%)" }}>
+              <div className="relative rounded-[calc(1rem-1px)] m-px p-6" style={{ background: "linear-gradient(165deg, hsla(350,65%,45%,0.04) 0%, hsla(0,0%,6%,0.97) 100%)" }}>
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
-                    <ArrowDownToLine size={20} className="text-violet-400" /> Withdraw Earnings
+                    <ArrowDownToLine size={20} className="text-rose-400" /> Withdraw Earnings
                   </h2>
                   <Button
                     onClick={() => setShowWithdrawForm(!showWithdrawForm)}
                     variant="outline"
-                    className="rounded-xl border-violet-500/30 text-violet-400 hover:bg-violet-500/10 gap-2"
+                    className="rounded-xl border-rose-500/30 text-rose-400 hover:bg-rose-500/10 gap-2"
                   >
                     <IndianRupee size={14} /> Withdraw
                   </Button>
                 </div>
-                <p className="text-muted-foreground text-sm mb-4">Maximum withdrawal: <span className="text-violet-400 font-bold">₹500</span> per request. Payment via UPI.</p>
+                <p className="text-muted-foreground text-sm mb-4">Maximum withdrawal: <span className="text-rose-400 font-bold">₹500</span> per request. Payment via UPI.</p>
 
                 <AnimatePresence>
                   {showWithdrawForm && (
@@ -456,7 +456,7 @@ const Dashboard = () => {
                           placeholder="UPI ID (e.g. name@upi)"
                           value={upiId}
                           onChange={e => setUpiId(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm focus:outline-none focus:border-violet-500/50 mt-3"
+                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm focus:outline-none focus:border-rose-500/50 mt-3"
                         />
                         <input
                           type="number"
@@ -464,12 +464,12 @@ const Dashboard = () => {
                           value={withdrawAmount}
                           onChange={e => setWithdrawAmount(e.target.value)}
                           max={500}
-                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm focus:outline-none focus:border-violet-500/50"
+                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm focus:outline-none focus:border-rose-500/50"
                         />
                         <Button
                           onClick={handleWithdraw}
                           disabled={withdrawing}
-                          className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 font-display font-bold"
+                          className="w-full rounded-xl bg-gradient-to-r from-rose-600 to-red-600 font-display font-bold"
                         >
                           {withdrawing ? "Processing..." : "Submit Withdrawal Request"}
                         </Button>
@@ -512,7 +512,7 @@ const Dashboard = () => {
               <div className="absolute inset-0 rounded-2xl p-px overflow-hidden">
                 <div className="absolute inset-[-200%]" style={{ background: "conic-gradient(from 0deg, hsla(38,92%,55%,0.3), transparent 50%, hsla(38,92%,55%,0.3))" }} />
               </div>
-              <div className="relative rounded-[calc(1rem-1px)] m-px p-6" style={{ background: "linear-gradient(165deg, hsla(38,92%,55%,0.04) 0%, hsla(220,20%,6%,0.97) 100%)" }}>
+              <div className="relative rounded-[calc(1rem-1px)] m-px p-6" style={{ background: "linear-gradient(165deg, hsla(38,92%,55%,0.04) 0%, hsla(0,0%,6%,0.97) 100%)" }}>
                 <h2 className="font-display text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                   <TrendingUp size={20} className="text-amber-400" /> Commission History
                 </h2>

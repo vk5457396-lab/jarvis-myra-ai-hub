@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     "apple-mobile-web-app-capable": "yes",
     "apple-mobile-web-app-status-bar-style": "black-translucent",
     "format-detection": "telephone=yes",
-    "msapplication-TileColor": "#7C3AED",
+    "msapplication-TileColor": "#DC2626",
   },
   alternates: {
     canonical: "/",
@@ -86,7 +86,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#7C3AED",
+  themeColor: "#DC2626",
 };
 
 const organizationJsonLd = {

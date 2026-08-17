@@ -54,7 +54,7 @@ const ContactFormModal = ({ isOpen, onClose, onSubmit, productName, accentHsl }:
             onClick={(e) => e.stopPropagation()}
             className="relative w-full max-w-md rounded-3xl overflow-hidden"
             style={{
-              background: `linear-gradient(165deg, hsla(${accentHsl}, 0.08) 0%, hsla(220, 20%, 7%, 0.98) 40%, hsla(220, 20%, 5%, 1) 100%)`,
+              background: `linear-gradient(165deg, hsla(${accentHsl}, 0.08) 0%, hsla(0, 0%, 7%, 0.98) 40%, hsla(0, 0%, 5%, 1) 100%)`,
               border: `1px solid hsla(${accentHsl}, 0.2)`,
               boxShadow: `0 0 80px -20px hsla(${accentHsl}, 0.3), 0 30px 60px -20px rgba(0,0,0,0.5)`,
             }}
@@ -127,7 +127,7 @@ const ContactFormModal = ({ isOpen, onClose, onSubmit, productName, accentHsl }:
                 style={{
                   height: "3.25rem",
                   background: `linear-gradient(135deg, hsla(${accentHsl}, 1), hsla(${accentHsl}, 0.7))`,
-                  color: "hsl(220, 20%, 4%)",
+                  color: "hsl(0, 0%, 4%)",
                   boxShadow: `0 0 30px hsla(${accentHsl}, 0.3)`,
                 }}
               >

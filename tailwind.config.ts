@@ -15,7 +15,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Orbitron', 'sans-serif'],
+        display: ['var(--font-display)'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -90,8 +90,8 @@ export default {
           "50%": { opacity: "0.6" },
         },
         "border-glow": {
-          "0%, 100%": { borderColor: "hsl(185 100% 50% / 0.5)" },
-          "50%": { borderColor: "hsl(265 100% 65% / 0.5)" },
+          "0%, 100%": { borderColor: "hsl(var(--neon-cyan) / 0.5)" },
+          "50%": { borderColor: "hsl(var(--neon-purple) / 0.5)" },
         },
         "slide-up": {
           "0%": { opacity: "0", transform: "translateY(20px)" },
@@ -112,13 +112,13 @@ export default {
         "fade-in": "fade-in 0.5s ease-out",
       },
       backgroundImage: {
-        'gradient-neon': 'linear-gradient(135deg, hsl(185 100% 50%) 0%, hsl(265 100% 65%) 100%)',
-        'gradient-neon-reverse': 'linear-gradient(135deg, hsl(265 100% 65%) 0%, hsl(185 100% 50%) 100%)',
-        'gradient-dark': 'linear-gradient(180deg, hsl(240 20% 6%) 0%, hsl(240 20% 2%) 100%)',
+        'gradient-neon': 'linear-gradient(135deg, hsl(var(--neon-cyan)) 0%, hsl(var(--neon-purple)) 100%)',
+        'gradient-neon-reverse': 'linear-gradient(135deg, hsl(var(--neon-purple)) 0%, hsl(var(--neon-cyan)) 100%)',
+        'gradient-dark': 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
       },
       boxShadow: {
-        'neon-cyan': '0 0 20px hsl(185 100% 50% / 0.4), 0 0 40px hsl(185 100% 50% / 0.2)',
-        'neon-purple': '0 0 20px hsl(265 100% 65% / 0.4), 0 0 40px hsl(265 100% 65% / 0.2)',
+        'neon-cyan': '0 0 8px hsl(var(--neon-cyan) / 0.25), 0 0 16px hsl(var(--neon-cyan) / 0.12)',
+        'neon-purple': '0 0 8px hsl(var(--neon-purple) / 0.25), 0 0 16px hsl(var(--neon-purple) / 0.12)',
         'glass': '0 8px 32px rgba(0, 0, 0, 0.4)',
       },
     },

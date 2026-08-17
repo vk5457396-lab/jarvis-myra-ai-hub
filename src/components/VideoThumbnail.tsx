@@ -51,9 +51,9 @@ const VideoThumbnail = ({ videoId, title, variant = "jarvis" }: VideoThumbnailPr
               whileHover={{ scale: 1.1 }}
               className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center ${
                 variant === "jarvis"
-                  ? "bg-primary/90 shadow-[0_0_30px_rgba(0,243,255,0.5)]"
-                  : "bg-secondary/90 shadow-[0_0_30px_rgba(168,85,247,0.5)]"
-              } backdrop-blur-sm transition-all duration-300 group-hover:shadow-[0_0_50px_rgba(0,243,255,0.7)]`}
+                  ? "bg-primary/90 shadow-[0_0_30px_hsl(var(--neon-cyan)/0.5)] group-hover:shadow-[0_0_50px_hsl(var(--neon-cyan)/0.7)]"
+                  : "bg-secondary/90 shadow-[0_0_30px_hsl(var(--neon-purple)/0.5)] group-hover:shadow-[0_0_50px_hsl(var(--neon-purple)/0.7)]"
+              } backdrop-blur-sm transition-all duration-300`}
             >
               <Play className="w-8 h-8 md:w-10 md:h-10 text-background ml-1" fill="currentColor" />
             </motion.div>

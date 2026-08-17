@@ -6,7 +6,6 @@ import HeroSection from "@/components/HeroSection";
 import FeatureCard from "@/components/FeatureCard";
 import ProductCard from "@/components/ProductCard";
 import Footer from "@/components/Footer";
-import VideoThumbnail from "@/components/VideoThumbnail";
 import ApiResourcesSection from "@/components/ApiResourcesSection";
 import WebsiteServiceCard from "@/components/WebsiteServiceCard";
 
@@ -129,57 +128,14 @@ const IndexPage = () => {
             />
           </div>
 
-          {/* Setup Videos */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-16"
-          >
-            <div className="text-center mb-8">
-              <h3 className="font-display text-2xl md:text-3xl font-bold mb-2">
-                <span className="gradient-text">Watch Setup Guides</span>
-              </h3>
-              <p className="text-muted-foreground">
-                Click to watch step-by-step tutorials
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-              {/* Jarvis Setup Video */}
-              <div>
-                <h4 className="font-display text-xl font-bold mb-4 text-center">
-                  <span className="text-primary text-glow-cyan">Jarvis</span> Setup Guide
-                </h4>
-                <VideoThumbnail
-                  videoId="cDaGBD_5AvA"
-                  title="Jarvis AI Voice Assistant Setup Guide"
-                  variant="jarvis"
-                />
-              </div>
-
-              {/* MYRA Setup Video */}
-              <div>
-                <h4 className="font-display text-xl font-bold mb-4 text-center">
-                  <span className="text-secondary text-glow-purple">{myraName}</span> Setup Guide
-                </h4>
-                <VideoThumbnail
-                  videoId="xw1IQJGzWI8"
-                  title={`${myraName} AI Voice Assistant Setup Guide`}
-                  variant="myra"
-                />
-              </div>
-            </div>
-
-            <div className="text-center mt-8">
-              <Link href="/demos">
-                <Button variant="outline" size="lg" className="group">
-                  <span>View All Tutorials</span>
-                  <ChevronRight className="group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
-            </div>
-          </motion.div>
+          <div className="text-center mt-12">
+            <Link href="/demos">
+              <Button variant="outline" size="lg" className="group">
+                <span>Watch Setup Tutorials</span>
+                <ChevronRight className="group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 

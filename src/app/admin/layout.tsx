@@ -11,7 +11,7 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
  */
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen">
+    <div className="admin-legacy min-h-screen">
       <Navbar />
       <div className="flex pt-16 md:pt-20">
         <AdminSidebar />

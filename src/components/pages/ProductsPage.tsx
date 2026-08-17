@@ -68,11 +68,11 @@ const Products = () => {
         <div className="absolute inset-0 circuit-pattern opacity-20" />
         <div className="container mx-auto px-4 relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-3xl mx-auto mb-10">
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-cyan-400 font-display text-sm tracking-wider mb-4">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-red-400 font-display text-sm tracking-wider mb-4">
               <Sparkles size={16} /> PRODUCTS HUB
             </span>
             <h1 className="font-display text-4xl md:text-5xl font-black mb-4">
-              <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-violet-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-red-400 via-red-500 to-rose-500 bg-clip-text text-transparent">
                 All Products & Downloads
               </span>
             </h1>
@@ -100,7 +100,7 @@ const Products = () => {
                     onClick={() => setCategory(c)}
                     className={`px-4 py-1.5 rounded-full text-xs font-display font-bold tracking-wider uppercase transition-all border ${
                       category === c
-                        ? "bg-gradient-to-r from-cyan-500 to-violet-500 text-white border-transparent"
+                        ? "bg-gradient-to-r from-red-500 to-rose-600 text-white border-transparent"
                         : "bg-white/5 border-white/10 text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -130,10 +130,10 @@ const Products = () => {
                   <Link href={`/products/${p.slug}`} className="block group">
                     <div className="relative rounded-2xl overflow-hidden h-full">
                       <div className="absolute inset-0 rounded-2xl p-px overflow-hidden">
-                        <div className="absolute inset-[-200%] group-hover:animate-spin-slow" style={{ background: "conic-gradient(from 0deg, hsla(188,100%,50%,0.4), transparent 40%, hsla(263,70%,58%,0.4), transparent 80%, hsla(188,100%,50%,0.4))" }} />
+                        <div className="absolute inset-[-200%] group-hover:animate-spin-slow" style={{ background: "conic-gradient(from 0deg, hsla(0,72%,51%,0.4), transparent 40%, hsla(350,65%,45%,0.4), transparent 80%, hsla(0,72%,51%,0.4))" }} />
                       </div>
-                      <div className="relative rounded-[calc(1rem-1px)] m-px overflow-hidden" style={{ background: "linear-gradient(165deg, hsla(220,20%,8%,0.6) 0%, hsla(220,20%,4%,0.95) 100%)", backdropFilter: "blur(12px)" }}>
-                        <div className="aspect-video bg-gradient-to-br from-cyan-500/10 to-violet-500/10 overflow-hidden">
+                      <div className="relative rounded-[calc(1rem-1px)] m-px overflow-hidden" style={{ background: "linear-gradient(165deg, hsla(0,0%,8%,0.6) 0%, hsla(0,0%,4%,0.95) 100%)", backdropFilter: "blur(12px)" }}>
+                        <div className="aspect-video bg-gradient-to-br from-red-500/10 to-rose-500/10 overflow-hidden">
                           {p.slug === "myra-android-apk" || (p.thumbnail_url && !brokenThumbs.has(p.id)) ? (
                             <img
                               src={p.slug === "myra-android-apk" ? MYRA_THUMB : p.thumbnail_url!}
@@ -144,14 +144,14 @@ const Products = () => {
                             />
                           ) : (
                             <div className="flex items-center justify-center h-full">
-                              <Package size={56} className="text-cyan-400/30" />
+                              <Package size={56} className="text-red-400/30" />
                             </div>
                           )}
                         </div>
                         <div className="p-5">
                           <div className="flex items-center justify-between gap-2 mb-2">
                             {p.category && (
-                              <span className="text-[10px] font-display tracking-wider uppercase text-cyan-400/80">
+                              <span className="text-[10px] font-display tracking-wider uppercase text-red-400/80">
                                 {p.category}
                               </span>
                             )}
@@ -169,7 +169,7 @@ const Products = () => {
                           {p.original_price != null && p.original_price > p.price && (
                             <p className="text-xs text-muted-foreground line-through -mt-1 mb-1">₹{p.original_price}</p>
                           )}
-                          <h3 className="font-display font-bold text-lg text-foreground group-hover:text-cyan-300 transition-colors line-clamp-1">
+                          <h3 className="font-display font-bold text-lg text-foreground group-hover:text-red-300 transition-colors line-clamp-1">
                             {p.title}
                           </h3>
                           <p className="text-sm text-muted-foreground line-clamp-2 mt-1 min-h-[2.5rem]">

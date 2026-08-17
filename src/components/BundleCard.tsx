@@ -35,8 +35,8 @@ const BundleCard = () => {
   const jarvisName = getJarvisName();
   const bundleSoldCount = purchaseCounts?.bundle || 0;
 
-  const hsl = "188 100% 50%";
-  const hsl2 = "263 70% 58%";
+  const hsl = "0 72% 51%";
+  const hsl2 = "350 65% 40%";
 
   const bundleFeatures = [
     `Both ${jarvisName} & ${myraName} included`,
@@ -84,7 +84,7 @@ const BundleCard = () => {
         </div>
 
         {/* Card body */}
-        <div className="relative rounded-[calc(1.5rem-1px)] overflow-hidden m-px backdrop-blur-xl" style={{ background: `linear-gradient(170deg, hsla(${hsl}, 0.07) 0%, hsla(${hsl2}, 0.04) 20%, hsla(220, 15%, 8%, 0.98) 40%, hsla(220, 20%, 5%, 0.99) 100%)` }}>
+        <div className="relative rounded-[calc(1.5rem-1px)] overflow-hidden m-px backdrop-blur-xl" style={{ background: `linear-gradient(170deg, hsla(${hsl}, 0.07) 0%, hsla(${hsl2}, 0.04) 20%, hsla(0, 0%, 8%, 0.98) 40%, hsla(0, 0%, 5%, 0.99) 100%)` }}>
 
           {/* Mesh gradient */}
           <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ background: `radial-gradient(ellipse at 10% 10%, hsla(${hsl}, 0.12), transparent 50%), radial-gradient(ellipse at 90% 90%, hsla(${hsl2}, 0.1), transparent 50%)` }} />
@@ -101,7 +101,7 @@ const BundleCard = () => {
             <motion.div
               animate={{ boxShadow: [`0 4px 20px hsla(${hsl}, 0.3)`, `0 4px 40px hsla(${hsl}, 0.6)`, `0 4px 20px hsla(${hsl}, 0.3)`] }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500 px-8 py-2.5 rounded-b-2xl"
+              className="bg-gradient-to-r from-red-400 via-red-500 to-rose-600 px-8 py-2.5 rounded-b-2xl"
             >
               <span className="text-[10px] font-display font-black text-white tracking-[0.25em] flex items-center gap-2">
                 <Crown size={12} /> BEST VALUE
@@ -111,24 +111,24 @@ const BundleCard = () => {
 
           <div className="relative z-10 p-8 md:p-10">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-display tracking-[0.15em] mb-7 mt-5 backdrop-blur-md border" style={{ background: `linear-gradient(135deg, hsla(${hsl}, 0.06), hsla(${hsl2}, 0.06))`, borderColor: `hsla(${hsl}, 0.2)` }}>
-              <Gift size={13} className="text-violet-400" />
+              <Gift size={13} className="text-rose-400" />
               <span className="text-foreground/80">BUNDLE DEAL</span>
             </div>
 
-            <h3 className="font-display text-3xl md:text-4xl font-black mb-3 bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400 bg-clip-text text-transparent tracking-tight">
+            <h3 className="font-display text-3xl md:text-4xl font-black mb-3 bg-gradient-to-r from-red-300 via-red-400 to-rose-400 bg-clip-text text-transparent tracking-tight">
               {jarvisName} + {myraName}
             </h3>
             <p className="text-muted-foreground text-sm mb-6 leading-relaxed">Get both AI assistants at a discounted price</p>
 
             {bundleSoldCount > 0 && (
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-display mb-6 border backdrop-blur-sm" style={{ background: `hsla(${hsl}, 0.05)`, borderColor: `hsla(${hsl}, 0.12)` }}>
-                <Users size={14} className="text-cyan-400" />
+                <Users size={14} className="text-red-400" />
                 <span className="text-foreground/60">{bundleSoldCount}+ bundles sold</span>
               </div>
             )}
 
             <div className="mb-2">
-              <span className="font-display text-5xl md:text-6xl font-black bg-gradient-to-r from-cyan-300 to-violet-400 bg-clip-text text-transparent tracking-tighter" style={{ textShadow: `0 0 60px hsla(${hsl}, 0.25)` }}>
+              <span className="font-display text-5xl md:text-6xl font-black bg-gradient-to-r from-red-300 to-rose-400 bg-clip-text text-transparent tracking-tighter" style={{ textShadow: `0 0 60px hsla(${hsl}, 0.25)` }}>
                 {formatPrice(bundlePrice)}
               </span>
             </div>
@@ -144,7 +144,7 @@ const BundleCard = () => {
             <ul className="space-y-3.5 mb-9">
               {bundleFeatures.map((feature, index) => (
                 <motion.li key={index} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 + index * 0.04 }} className="flex items-start gap-3 group/item">
-                  <motion.div whileHover={{ scale: 1.3, rotate: 10 }} className="w-5 h-5 rounded-lg flex items-center justify-center bg-gradient-to-br from-cyan-400 to-violet-500 flex-shrink-0 mt-0.5" style={{ boxShadow: `0 0 12px hsla(${hsl}, 0.3)` }}>
+                  <motion.div whileHover={{ scale: 1.3, rotate: 10 }} className="w-5 h-5 rounded-lg flex items-center justify-center bg-gradient-to-br from-red-400 to-rose-500 flex-shrink-0 mt-0.5" style={{ boxShadow: `0 0 12px hsla(${hsl}, 0.3)` }}>
                     <Check size={11} className="text-white" strokeWidth={3} />
                   </motion.div>
                   <span className="text-foreground/70 text-sm leading-relaxed group-hover/item:text-foreground transition-colors duration-300">{feature}</span>
@@ -156,7 +156,7 @@ const BundleCard = () => {
               <Button
                 variant="neonCyan"
                 size="xl"
-                className="w-full bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500 hover:opacity-90 group/btn font-black text-base tracking-wide relative overflow-hidden rounded-2xl"
+                className="w-full bg-gradient-to-r from-red-400 via-red-500 to-rose-600 hover:opacity-90 group/btn font-black text-base tracking-wide relative overflow-hidden rounded-2xl"
                 onClick={() => setShowContactForm(true)}
               >
                 <motion.div className="absolute inset-0 opacity-0 group-hover/btn:opacity-100" animate={{ x: ["-100%", "200%"] }} transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }} style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)", width: "40%" }} />
