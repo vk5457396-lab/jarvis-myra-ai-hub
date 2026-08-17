@@ -52,7 +52,22 @@ export const PUT = withApi(
     const apkAssetUrl = validateApkAssetUrl(body.apk_asset_url, 'apk_asset_url');
     // Optional for backward compatibility (existing rows/older admin-panel builds have none
     // yet) - but once a release does carry one, it must be well-formed, never silently dropped.
-    const sha256 = optionalSha256(body.sha256, 'sha256');
+    let sha256: string | null;
+    try {
+      sha256 = optionalSha256(body.sha256, 'sha256');
+    } catch (error) {
+      // Length only, never the value itself - this is exactly what's needed to diagnose an
+      // off-by-one paste error (a copy that silently dropped a character) without logging what
+      // is effectively a content-integrity secret. Dev-only: an admin's paste habits aren't
+      // useful production telemetry.
+      if (process.env.NODE_ENV !== 'production' && typeof body.sha256 === 'string') {
+        logger.warn('Rejected sha256 on app-release update', {
+          receivedLength: body.sha256.trim().length,
+          expectedLength: 64,
+        });
+      }
+      throw error;
+    }
     const fileSizeMb =
       body.file_size_mb === undefined || body.file_size_mb === null || body.file_size_mb === ''
         ? null
