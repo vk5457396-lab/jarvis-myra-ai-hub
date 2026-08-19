@@ -52,11 +52,25 @@ export async function effectiveDiscountPercent(profileDiscountPercent: number): 
 
 /** Admin-disabled connector ids right now (see setConnectorEnabled in myraAdminService.ts).
  *  On the hot path of every connect/execute call, same empty-on-missing-doc contract as
- *  getGlobalDiscountPercent above. */
+ *  getGlobalDiscountPercent above.
+ *
+ *  Cached in-memory per warm instance for a few seconds: unlike getGlobalDiscountPercent (which
+ *  feeds the order/verify payment amount and must always read fresh), this only gates whether a
+ *  connector button works, so a few seconds of propagation delay after an admin toggle is a safe
+ *  trade for skipping a Mongo read on every GET /api/connectors, connect, and execute call. */
+let disabledConnectorsCache: { value: string[]; expiresAt: number } | null = null;
+const DISABLED_CONNECTORS_CACHE_MS = 15_000;
+
 export async function getDisabledConnectors(): Promise<string[]> {
+  const now = Date.now();
+  if (disabledConnectorsCache && disabledConnectorsCache.expiresAt > now) {
+    return disabledConnectorsCache.value;
+  }
   await connectMongo();
   const doc = await MyraGlobalSettings.findById(GLOBAL_SETTINGS_ID).lean();
-  return (doc as any)?.disabledConnectors || [];
+  const value = (doc as any)?.disabledConnectors || [];
+  disabledConnectorsCache = { value, expiresAt: now + DISABLED_CONNECTORS_CACHE_MS };
+  return value;
 }
 
 export async function isConnectorDisabled(connectorId: string): Promise<boolean> {

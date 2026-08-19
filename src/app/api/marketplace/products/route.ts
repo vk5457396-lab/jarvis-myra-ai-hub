@@ -26,5 +26,9 @@ function toPublic(p: any) {
 export const GET = withApi(async () => {
   await connectMongo();
   const docs = await MarketplaceProduct.find({ isPublished: true }).sort({ createdAt: -1 }).lean();
-  return success({ products: docs.map(toPublic) });
+  const res = success({ products: docs.map(toPublic) });
+  // Public, non-personalized catalog - same edge-cache pattern as purchases/stats/route.ts.
+  // Shorter window than app/release since new products should surface reasonably promptly.
+  res.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
+  return res;
 });

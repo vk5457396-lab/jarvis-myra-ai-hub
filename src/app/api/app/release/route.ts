@@ -23,7 +23,7 @@ export const GET = withApi(async () => {
 
   if (!doc) throw ApiError.notFound('No release configured yet.', 'RELEASE_NOT_CONFIGURED');
 
-  return success({
+  const res = success({
     version_name: doc.publicVersionName ?? doc.versionName,
     version_code: doc.versionCode,
     release_notes: doc.publicReleaseNotes ?? doc.releaseNotes,
@@ -34,4 +34,9 @@ export const GET = withApi(async () => {
     sha256: doc.sha256 ?? null,
     updated_at: doc.updatedAt,
   });
+  // Public, non-personalized, and only changes when an admin publishes a release - same
+  // edge-cache pattern as purchases/stats/route.ts. Every download-page visitor and every
+  // MyraAndroidDownload/MyraAppGalleryCard mount was otherwise a full Mongo read.
+  res.headers.set('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600');
+  return res;
 });
