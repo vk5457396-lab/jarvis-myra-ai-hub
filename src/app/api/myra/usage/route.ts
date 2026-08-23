@@ -6,6 +6,7 @@ import { requireMobileUser } from '../../_lib/middleware/mobileAuth';
 import { success, ApiError } from '../../_lib/utils/response';
 import { validateEnum } from '../../_lib/utils/validation';
 import { ensureMyraState, publicMyraProfile, publicUsage } from '../../_lib/services/myraService';
+import { checkBackendBudget } from '../../_lib/services/backendBudget';
 import { MyraProfile, MyraUsage, Profile } from '@/lib/db/models';
 
 export const OPTIONS = handleOptions(['GET', 'POST']);
@@ -31,6 +32,16 @@ export const POST = withApi(
     );
     const rawAmount = Number(body.amount || 1);
     const amount = Number.isFinite(rawAmount) ? Math.min(Math.max(rawAmount, 1), 1000) : 1;
+    // Which actual MYRA tool this was (e.g. "OpenApp", "google_drive_list_files") - lets the
+    // per-tool daily budget below track real tools, not just this endpoint's 4 coarse action
+    // categories. Falls back to `action` for older app builds that don't send it yet.
+    const toolNameRaw = typeof body.toolName === 'string' ? body.toolName.trim() : '';
+    const toolName = (toolNameRaw || action).slice(0, 80);
+
+    // Vercel-quota protection - completely separate from the user's subscription credit below
+    // (see backendBudget.ts). MUST run before any credit deduction: a request blocked here never
+    // executed, so it must never cost the user a credit.
+    await checkBackendBudget(user._id.toString(), toolName);
 
     const profile = await MyraProfile.findOne({ userId: user._id });
     if (!profile) throw ApiError.notFound('MYRA profile not found.', 'MYRA_PROFILE_NOT_FOUND');

@@ -6,6 +6,7 @@ import { requireMobileUser } from '../../../_lib/middleware/mobileAuth';
 import { success } from '../../../_lib/utils/response';
 import { requireString } from '../../../_lib/utils/validation';
 import { executeConnectorTool } from '../../../_lib/services/connectorService';
+import { checkBackendBudget } from '../../../_lib/services/backendBudget';
 
 export const OPTIONS = handleOptions(['POST']);
 
@@ -19,6 +20,11 @@ export const POST = withApi(
     const toolId = requireString(body.tool_id, 'tool_id', { min: 1, max: 64 });
     const args: Record<string, string> | undefined =
       body.args && typeof body.args === 'object' ? body.args : undefined;
+
+    // Vercel-quota protection - this call (unlike myra/usage's credit bookkeeping) IS the real
+    // backend/API operation the budget exists to protect. See backendBudget.ts.
+    await checkBackendBudget(user._id.toString(), `${connectorId}_${toolId}`);
+
     const result = await executeConnectorTool(user._id.toString(), connectorId, toolId, args);
     return success(result);
   },

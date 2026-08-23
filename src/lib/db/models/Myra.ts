@@ -299,6 +299,16 @@ const myraGlobalSettingsSchema = new Schema(
     _id: { type: String, default: 'singleton' },
     discountPercent: { type: Number, default: 0, min: 0, max: 100 },
     disabledConnectors: { type: [String], default: [] },
+    // Vercel Function Invocations quota protection - a completely separate concept from user
+    // subscription credits above. See backendBudget.ts. Admin-adjustable without a redeploy, same
+    // reason discountPercent/disabledConnectors live here rather than as env vars.
+    backendDailyRequestLimit: { type: Number, default: 15000, min: 1 },
+    userBackendDailyRequestLimit: { type: Number, default: 300, min: 1 },
+    defaultToolDailyLimit: { type: Number, default: 100, min: 1 },
+    // Per-tool overrides keyed by the same toolName used in backendBudget.ts calls (e.g.
+    // "OpenApp", "google_drive_list_files") - falls back to defaultToolDailyLimit when a tool
+    // has no entry here. Empty by default.
+    toolDailyLimitOverrides: { type: Schema.Types.Mixed, default: {} },
   },
   { timestamps: true, collection: 'myra_global_settings' }
 );

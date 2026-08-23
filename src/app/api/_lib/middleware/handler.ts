@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiError, failure } from '../utils/response';
 import { rateLimit } from './rateLimit';
+import { BackendBudgetExceededError, type BudgetExceededReason } from '../services/backendBudget';
 import logger from '../utils/logger';
+
+const BUDGET_ERROR_CODE: Record<BudgetExceededReason, string> = {
+  GLOBAL: 'BACKEND_DAILY_BUDGET_EXHAUSTED',
+  USER: 'USER_DAILY_BUDGET_EXHAUSTED',
+  TOOL: 'TOOL_DAILY_BUDGET_EXHAUSTED',
+};
 
 const DEFAULT_ORIGINS = ['https://codeninjavik.in', 'https://www.codeninjavik.in'];
 
@@ -78,6 +85,20 @@ export function withApi(
       const res = await core(req);
       return applyHeaders(res, { ...sec, ...cors.headers });
     } catch (error) {
+      // Backend request budget exhausted (see backendBudget.ts) - a single central translation
+      // point so every route that calls checkBackendBudget() gets the correct 429 contract
+      // without its own try/catch. The client MUST NOT show this raw to the user; it translates
+      // this into a graceful "that's temporarily unavailable" - see FreemiumManager.kt (Android).
+      if (error instanceof BackendBudgetExceededError) {
+        const retryAfterSeconds = Math.max(1, Math.ceil((error.resetAt.getTime() - Date.now()) / 1000));
+        return applyHeaders(
+          failure(429, 'Backend request budget exhausted.', BUDGET_ERROR_CODE[error.reason], {
+            reset_at: error.resetAt.toISOString(),
+            retry_after_seconds: retryAfterSeconds,
+          }),
+          { ...sec, ...cors.headers }
+        );
+      }
       if (error instanceof ApiError) {
         return applyHeaders(failure(error.statusCode, error.message, error.errorCode, error.extra), {
           ...sec,
