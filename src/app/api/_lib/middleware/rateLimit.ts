@@ -60,3 +60,39 @@ export async function rateLimit(
     throw ApiError.tooMany('Too many requests. Please slow down.', 'RATE_LIMITED');
   }
 }
+
+/**
+ * Site-wide daily request cap, shared across every client/IP - not per-IP like `rateLimit()`
+ * above. Same fixed-window-document-per-window Mongo pattern (one atomic upsert, no race), just
+ * with a single fixed key instead of one keyed by client IP, and a 24h window instead of a
+ * per-route one. Window boundaries land on UTC midnight since Date.now() is epoch-ms and the
+ * epoch itself starts at UTC midnight, so this resets once per UTC day without needing a cron.
+ *
+ * Called from middleware.ts on every request, so it fails OPEN on a Mongo error for the same
+ * reason rateLimit() does: a DB hiccup should not take the whole site down harder than the outage
+ * this exists to prevent.
+ */
+export async function checkGlobalDailyLimit(
+  max: number
+): Promise<{ blocked: boolean; count: number }> {
+  const window = 86400000; // 24h
+  const now = Date.now();
+  const windowStart = Math.floor(now / window) * window;
+  const bucketId = `global-daily:${windowStart}`;
+
+  try {
+    await connectMongo();
+    const doc = await RateLimitBucket.findOneAndUpdate(
+      { _id: bucketId },
+      { $inc: { count: 1 }, $setOnInsert: { expiresAt: new Date(windowStart + window + 5000) } },
+      { upsert: true, new: true }
+    ).lean();
+    const count = (doc as any).count;
+    return { blocked: count > max, count };
+  } catch (error) {
+    logger.warn('Global daily limit check failed - allowing request through', {
+      detail: (error as Error)?.message,
+    });
+    return { blocked: false, count: -1 };
+  }
+}
