@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Smartphone, Globe, ArrowLeft, Save, Loader2 } from "lucide-react";
+import { Smartphone, Globe, Monitor, ArrowLeft, Save, Loader2 } from "lucide-react";
 
 interface ReleaseForm {
   version_name: string;
@@ -21,6 +21,12 @@ interface PublicDownloadForm {
   version_name: string;
   release_notes: string;
   apk_asset_url: string;
+  file_size_mb: string;
+}
+
+interface PcReleaseForm {
+  version_name: string;
+  download_url: string;
   file_size_mb: string;
 }
 
@@ -47,6 +53,12 @@ const EMPTY_PUBLIC: PublicDownloadForm = {
   file_size_mb: "",
 };
 
+const EMPTY_PC: PcReleaseForm = {
+  version_name: "",
+  download_url: "",
+  file_size_mb: "",
+};
+
 const AdminAppReleasePage = () => {
   const router = useRouter();
   const { status } = useSession();
@@ -59,14 +71,19 @@ const AdminAppReleasePage = () => {
   const [publicForm, setPublicForm] = useState<PublicDownloadForm>(EMPTY_PUBLIC);
   const [publicUpdatedAt, setPublicUpdatedAt] = useState<string | null>(null);
 
+  const [savingPc, setSavingPc] = useState(false);
+  const [pcForm, setPcForm] = useState<PcReleaseForm>(EMPTY_PC);
+  const [pcUpdatedAt, setPcUpdatedAt] = useState<string | null>(null);
+
   useEffect(() => {
     if (status === "loading") return;
     if (status === "unauthenticated") { router.push("/login"); return; }
 
     const init = async () => {
-      const [otaRes, publicRes] = await Promise.all([
+      const [otaRes, publicRes, pcRes] = await Promise.all([
         fetch("/api/app/release/admin"),
         fetch("/api/app/release/public-admin"),
+        fetch("/api/pc/release/admin"),
       ]);
       if (otaRes.status === 401 || otaRes.status === 403) { router.push("/dashboard"); return; }
 
@@ -94,6 +111,17 @@ const AdminAppReleasePage = () => {
           file_size_mb: d.file_size_mb ? String(d.file_size_mb) : "",
         });
         setPublicUpdatedAt(d.updated_at ?? null);
+      }
+
+      const pcBody = await pcRes.json();
+      if (pcBody.success && pcBody.data) {
+        const d = pcBody.data;
+        setPcForm({
+          version_name: d.version_name ?? "",
+          download_url: d.download_url ?? "",
+          file_size_mb: d.file_size_mb ? String(d.file_size_mb) : "",
+        });
+        setPcUpdatedAt(d.updated_at ?? null);
       }
 
       setLoading(false);
@@ -163,6 +191,29 @@ const AdminAppReleasePage = () => {
       setPublicUpdatedAt(body.data?.updated_at ?? null);
     }
     setSavingPublic(false);
+  };
+
+  const handleSavePc = async () => {
+    if (!pcForm.download_url.trim()) { toast.error("MediaFire download link daalo"); return; }
+
+    setSavingPc(true);
+    const res = await fetch("/api/pc/release/admin", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        version_name: pcForm.version_name.trim() || null,
+        download_url: pcForm.download_url.trim(),
+        file_size_mb: pcForm.file_size_mb ? Number(pcForm.file_size_mb) : null,
+      }),
+    });
+    const body = await res.json();
+    if (!res.ok || !body.success) {
+      toast.error(body.message || "Update failed");
+    } else {
+      toast.success("PC Controller download updated.");
+      setPcUpdatedAt(body.data?.updated_at ?? null);
+    }
+    setSavingPc(false);
   };
 
   if (loading) {
@@ -398,6 +449,74 @@ const AdminAppReleasePage = () => {
               >
                 {savingPublic ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                 {savingPublic ? "Saving..." : "Update Website Download"}
+              </Button>
+            </div>
+          </div>
+
+          {/* ============================================================ */}
+          {/* SECTION 3: MYRA PC Controller (.exe) */}
+          {/* ============================================================ */}
+          <div className="relative rounded-2xl overflow-hidden">
+            <div className="absolute inset-0 rounded-2xl p-px overflow-hidden">
+              <div className="absolute inset-[-200%]" style={{ background: "conic-gradient(from 0deg, hsla(0,84%,55%,0.3), transparent 50%, hsla(0,84%,55%,0.3))" }} />
+            </div>
+            <div className="relative rounded-[calc(1rem-1px)] m-px p-6 space-y-5" style={{ background: "linear-gradient(165deg, hsla(0,84%,55%,0.04) 0%, hsla(220,20%,6%,0.97) 100%)" }}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center shrink-0">
+                  <Monitor size={20} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="font-display font-bold text-lg">MYRA PC Controller (.exe)</h2>
+                  <p className="text-xs text-muted-foreground">
+                    Always free — shown on the home, pricing, download and products pages. Paste the MediaFire file-page link (the one ending in <span className="font-mono">/file</span>), not a direct CDN link — it never expires.
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground font-display tracking-wider mb-1.5 block">VERSION NAME (optional)</label>
+                <input
+                  type="text"
+                  placeholder="1.0.0"
+                  value={pcForm.version_name}
+                  onChange={(e) => setPcForm({ ...pcForm, version_name: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-base focus:outline-none focus:border-red-500/50"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground font-display tracking-wider mb-1.5 block">DOWNLOAD LINK (MEDIAFIRE)</label>
+                <input
+                  type="text"
+                  placeholder="https://www.mediafire.com/file/xxxxxxxxxxxxx/myra-companion.exe/file"
+                  value={pcForm.download_url}
+                  onChange={(e) => setPcForm({ ...pcForm, download_url: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-base font-mono focus:outline-none focus:border-red-500/50"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground font-display tracking-wider mb-1.5 block">FILE SIZE (MB, optional)</label>
+                <input
+                  type="number"
+                  placeholder="25"
+                  value={pcForm.file_size_mb}
+                  onChange={(e) => setPcForm({ ...pcForm, file_size_mb: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-base focus:outline-none focus:border-red-500/50"
+                />
+              </div>
+
+              {pcUpdatedAt && (
+                <p className="text-xs text-muted-foreground">Last updated: {new Date(pcUpdatedAt).toLocaleString()}</p>
+              )}
+
+              <Button
+                onClick={handleSavePc}
+                disabled={savingPc}
+                className="w-full rounded-xl bg-gradient-to-r from-red-600 to-orange-600 font-display font-bold gap-2"
+              >
+                {savingPc ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                {savingPc ? "Saving..." : "Update PC Controller Download"}
               </Button>
             </div>
           </div>

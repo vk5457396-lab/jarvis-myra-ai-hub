@@ -5,6 +5,7 @@ import { Smartphone } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MyraAndroidDownload from "@/components/MyraAndroidDownload";
+import MyraPcControllerDownload from "@/components/MyraPcControllerDownload";
 import MyraAppGalleryCard from "@/components/MyraAppGalleryCard";
 import VideoThumbnail from "@/components/VideoThumbnail";
 
@@ -61,6 +62,9 @@ const DownloadPage = () => {
       </section>
 
       <MyraAndroidDownload showHeading={false} className="pb-16 md:pb-20" />
+
+      {/* MYRA PC Controller (.exe) download — free companion for the Android app */}
+      <MyraPcControllerDownload className="pb-16 md:pb-20" />
 
       {/* How to install */}
       <section className="pb-20 md:pb-28">

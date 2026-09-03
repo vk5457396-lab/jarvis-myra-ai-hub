@@ -29,5 +29,6 @@ export { Notification, type NotificationDoc } from './Notification';
 export { NotificationDelivery, type NotificationDeliveryDoc } from './NotificationDelivery';
 export { AppRelease, APP_RELEASE_ID, type AppReleaseDoc } from './AppRelease';
 export { AppReleaseDownload, type AppReleaseDownloadDoc } from './AppReleaseDownload';
+export { PcRelease, PC_RELEASE_ID, type PcReleaseDoc } from './PcRelease';
 export { UserConnection, OAuthState } from './Connector';
 export { RateLimitBucket } from './RateLimit';

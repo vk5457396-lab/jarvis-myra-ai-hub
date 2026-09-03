@@ -11,6 +11,7 @@ import WebsiteServiceCard from "@/components/WebsiteServiceCard";
 
 import MyraInstallSection from "@/components/MyraInstallSection";
 import MyraAndroidDownload from "@/components/MyraAndroidDownload";
+import MyraPcControllerDownload from "@/components/MyraPcControllerDownload";
 import { features, jarvisFeatures, myraFeatures } from "@/data/features";
 import { ChevronRight, Shield, Zap, Clock } from "lucide-react";
 import Link from "next/link";
@@ -35,6 +36,9 @@ const IndexPage = () => {
 
       {/* MYRA Android APK download */}
       <MyraAndroidDownload className="py-16 md:py-24" />
+
+      {/* MYRA PC Controller (.exe) download — free companion for the Android app */}
+      <MyraPcControllerDownload className="py-16 md:py-24" />
 
       {/* Features Overview */}
       <section className="py-20 md:py-32 relative">

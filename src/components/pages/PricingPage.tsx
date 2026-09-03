@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import FlashSaleBanner from "@/components/FlashSaleBanner";
 import BinancePaymentModal from "@/components/BinancePaymentModal";
 import MyraAndroidDownload from "@/components/MyraAndroidDownload";
+import MyraPcControllerDownload from "@/components/MyraPcControllerDownload";
 
 import { Check, Shield, CreditCard, Zap, Code, Wallet, Monitor, FileCode, ArrowRight, Package } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -190,6 +191,9 @@ const Pricing = () => {
 
       {/* MYRA Android APK download — free, sits alongside the paid categories */}
       <MyraAndroidDownload className="py-8 md:py-12" />
+
+      {/* MYRA PC Controller (.exe) download — free companion for the Android app */}
+      <MyraPcControllerDownload className="py-8 md:py-12" />
 
       {/* Crypto Section */}
       <section className="py-6">

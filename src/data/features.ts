@@ -90,6 +90,15 @@ export const myraAndroidFeatures = [
   "Free to install, plans inside the app",
 ];
 
+export const myraPcControllerFeatures = [
+  "Control your PC screen remotely",
+  "Browse & manage files from your phone",
+  "Send WhatsApp messages from your PC",
+  "Open apps & websites with a voice command",
+  "Connects straight to the MYRA Android app",
+  "100% free — no plan, no login required",
+];
+
 
 export const ariaFeatures = [
   "AI Music & Creative Assistant",

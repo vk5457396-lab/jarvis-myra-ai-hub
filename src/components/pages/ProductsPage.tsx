@@ -7,6 +7,7 @@ import { Search, Package, Download, Tag, Sparkles } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
+import MyraPcControllerDownload from "@/components/MyraPcControllerDownload";
 
 interface MarketProduct {
   id: string;
@@ -110,6 +111,9 @@ const Products = () => {
               </div>
             )}
           </div>
+
+          {/* MYRA PC Controller (.exe) — free companion for the Android app, not part of the DB-listed products below */}
+          <MyraPcControllerDownload showHeading={false} showFeatures={false} className="mb-14" />
 
           {loading ? (
             <div className="text-center text-muted-foreground py-20">Loading products...</div>
