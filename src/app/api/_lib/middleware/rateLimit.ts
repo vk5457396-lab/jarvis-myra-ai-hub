@@ -1,25 +1,57 @@
 import { NextRequest } from 'next/server';
 import { ApiError } from '../utils/response';
-import { connectMongo } from '@/lib/db/mongoose';
-import { RateLimitBucket } from '@/lib/db/models';
+import { getRedis } from '@/lib/upstash/redis';
 import logger from '../utils/logger';
 
 /**
- * Distributed rate limiter, backed by Mongo instead of an in-memory Map.
+ * Distributed rate limiter, backed by Upstash Redis instead of Mongo (see git history for the
+ * Mongo version this replaced - moved off it because a findOneAndUpdate round trip on every
+ * matched request, across 70+ routes, was a meaningful chunk of the account's Fluid Active CPU).
  *
- * A per-instance Map cannot actually cap load on Vercel: every warm serverless instance keeps
- * its own independent counter, so the effective limit for one client is `max * (number of warm
- * instances)` - and Vercel scales instance count UP under exactly the traffic spike this is
- * supposed to guard against, weakening the limit precisely when it matters most. This uses a
- * fixed-window counter in Mongo (see RateLimitBucket) so every instance, in every region, agrees
- * on the same count for the same window - the limit holds regardless of how many calls a client
- * makes or how many instances are handling them.
+ * Same fixed-window-per-key design as before, just with Redis INCR (atomic on a single key,
+ * single Redis command) instead of a Mongo atomic upsert. `bucketId` embeds the window's start
+ * timestamp, so a new window is simply a new key - nothing to explicitly "reset".
  *
- * Fails OPEN on a Mongo error (logs and allows the request through) rather than closed - a
- * database hiccup rate-limiting every request to 0 would take the whole API down over something
- * that was supposed to be a lightweight guard, which is a worse outage than the one this exists
- * to prevent.
+ * EXPIRE is set ONLY on the call that creates the key (INCR's return value is 1), not on every
+ * call - a Redis command costs the same whether or not it does anything useful, so re-sending an
+ * identical EXPIRE on every one of a window's thousands of calls was pure waste (this is the
+ * conditional-EXPIRE optimization; see the earlier unconditional-pipeline version in git history
+ * for comparison). This is safe under concurrency: INCR is atomic (Redis executes commands one at
+ * a time), so under any number of truly simultaneous callers on a brand-new key, EXACTLY ONE of
+ * them will ever observe the return value 1 - that caller, and only that caller, sets the TTL.
+ * There is no race where two callers both think they're "first," and no race where nobody sets it.
+ *
+ * If that one caller's EXPIRE call itself fails (rare - a transient network blip between the
+ * already-successful INCR and the follow-up EXPIRE), the key is left without a TTL and lives in
+ * Redis until manually cleaned up. This is a storage-cleanup nit, NOT a rate-limiting correctness
+ * issue: window identity comes from the key name (which still changes every window regardless of
+ * TTL), so the limit keeps working correctly either way. Failing the whole check in this case
+ * would be wrong in both directions - it must NOT be folded into the fail-open path below, because
+ * the INCR already succeeded and produced a real, correct count that the caller must enforce
+ * against; swallowing it as "fail open" would incorrectly ALLOW a request that should be blocked.
+ * So this specific failure is caught and logged right here, and the real count is still returned.
+ *
+ * The INCR call itself fails OPEN on a Redis error same as before (logs and allows the request
+ * through, via the try/catch in each exported function below) rather than closed - a backend
+ * hiccup rate-limiting every request to 0 would take the whole API down over something that was
+ * supposed to be a lightweight guard, which is a worse outage than the one this exists to prevent.
  */
+export async function incrWithWindow(bucketId: string, ttlSeconds: number): Promise<number> {
+  const redis = getRedis();
+  const count = await redis.incr(bucketId);
+  if (count === 1) {
+    try {
+      await redis.expire(bucketId, ttlSeconds);
+    } catch (error) {
+      logger.warn('Failed to set TTL on a new rate-limit window key - key will not auto-expire', {
+        bucketId,
+        detail: (error as Error)?.message,
+      });
+    }
+  }
+  return count;
+}
+
 function clientKey(req: NextRequest, scope: string): string {
   const forwarded = req.headers.get('x-forwarded-for');
   const ip = (forwarded || '').split(',')[0].trim();
@@ -33,21 +65,12 @@ export async function rateLimit(
   const limit = Number(max || process.env.RATE_LIMIT_MAX || 60);
   const window = Number(windowMs || process.env.RATE_LIMIT_WINDOW_MS || 60000);
   const key = clientKey(req, scope);
+  const windowStart = Math.floor(Date.now() / window) * window;
+  const bucketId = `rl:${key}:${windowStart}`;
 
   let count: number;
   try {
-    await connectMongo();
-    const now = Date.now();
-    const windowStart = Math.floor(now / window) * window;
-    const bucketId = `${key}:${windowStart}`;
-    // Every window is its own document, so this upsert is the entire operation - no read-check-
-    // write race between two requests landing on different instances in the same window.
-    const doc = await RateLimitBucket.findOneAndUpdate(
-      { _id: bucketId },
-      { $inc: { count: 1 }, $setOnInsert: { expiresAt: new Date(windowStart + window + 5000) } },
-      { upsert: true, new: true }
-    ).lean();
-    count = (doc as any).count;
+    count = await incrWithWindow(bucketId, Math.ceil(window / 1000) + 5);
   } catch (error) {
     logger.warn('Rate limit check failed - allowing request through', {
       scope,
@@ -63,34 +86,59 @@ export async function rateLimit(
 
 /**
  * Site-wide daily request cap, shared across every client/IP - not per-IP like `rateLimit()`
- * above. Same fixed-window-document-per-window Mongo pattern (one atomic upsert, no race), just
- * with a single fixed key instead of one keyed by client IP, and a 24h window instead of a
- * per-route one. Window boundaries land on UTC midnight since Date.now() is epoch-ms and the
- * epoch itself starts at UTC midnight, so this resets once per UTC day without needing a cron.
+ * above. Same incrWithWindow helper, just with a single fixed key instead of one keyed by client
+ * IP, and a 24h window instead of a per-route one. Window boundaries land on UTC midnight since
+ * Date.now() is epoch-ms and the epoch itself starts at UTC midnight, so this resets once per UTC
+ * day without needing a cron.
  *
- * Called from middleware.ts on every request, so it fails OPEN on a Mongo error for the same
- * reason rateLimit() does: a DB hiccup should not take the whole site down harder than the outage
- * this exists to prevent.
+ * Called from middleware.ts on every request, so it fails OPEN on a Redis error for the same
+ * reason rateLimit() does: a backend hiccup should not take the whole site down harder than the
+ * outage this exists to prevent.
  */
 export async function checkGlobalDailyLimit(
-  max: number
+  max: number,
+  key: string = 'global-daily'
 ): Promise<{ blocked: boolean; count: number }> {
   const window = 86400000; // 24h
-  const now = Date.now();
-  const windowStart = Math.floor(now / window) * window;
-  const bucketId = `global-daily:${windowStart}`;
+  const windowStart = Math.floor(Date.now() / window) * window;
+  const bucketId = `gdl:${key}:${windowStart}`;
 
   try {
-    await connectMongo();
-    const doc = await RateLimitBucket.findOneAndUpdate(
-      { _id: bucketId },
-      { $inc: { count: 1 }, $setOnInsert: { expiresAt: new Date(windowStart + window + 5000) } },
-      { upsert: true, new: true }
-    ).lean();
-    const count = (doc as any).count;
+    const count = await incrWithWindow(bucketId, 86400 + 5);
     return { blocked: count > max, count };
   } catch (error) {
     logger.warn('Global daily limit check failed - allowing request through', {
+      detail: (error as Error)?.message,
+    });
+    return { blocked: false, count: -1 };
+  }
+}
+
+/**
+ * ONE global MONTHLY request cap for the entire application, mapped directly to Vercel's real
+ * Hobby-plan Function Invocations quota (1,000,000 per calendar month). Not currently wired into
+ * middleware.ts (see its own comments) - kept in case a monthly-quota-anchored limit is wanted
+ * again. Same incrWithWindow helper, except the window is a real UTC CALENDAR MONTH (28-31 days),
+ * which can't be computed by dividing epoch-ms into a fixed-size window the way the daily version
+ * does - it's computed from the UTC year/month fields instead, so it rolls over correctly at the
+ * real end of each month (including the December -> January year rollover, which Date.UTC handles
+ * via month overflow).
+ */
+export async function checkGlobalMonthlyLimit(
+  max: number,
+  key: string = 'global-monthly'
+): Promise<{ blocked: boolean; count: number }> {
+  const now = new Date();
+  const monthStart = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
+  const monthEnd = Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1); // exclusive
+  const bucketId = `gml:${key}:${monthStart}`;
+  const ttlSeconds = Math.ceil((monthEnd - Date.now()) / 1000) + 5 * 86400;
+
+  try {
+    const count = await incrWithWindow(bucketId, ttlSeconds);
+    return { blocked: count > max, count };
+  } catch (error) {
+    logger.warn('Global monthly limit check failed - allowing request through', {
       detail: (error as Error)?.message,
     });
     return { blocked: false, count: -1 };
