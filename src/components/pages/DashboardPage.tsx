@@ -51,11 +51,11 @@ interface MyraKey {
   created_at: string;
 }
 
+// Only Membership is sold from the dashboard now - Basic/Premium/Elite/Elite Pro were removed
+// from this buy UI per an explicit request (2026-09-18), leaving Membership as the sole purchase
+// option here. The plan values themselves still exist elsewhere (admin key issuance, existing
+// redeemed keys, backend validation) - this only trims what a user can BUY from their dashboard.
 const MYRA_PLAN_OPTIONS: { value: string; label: string; price: number }[] = [
-  { value: "basic", label: "Basic", price: 299 },
-  { value: "premium", label: "Premium", price: 349 },
-  { value: "elite", label: "Elite", price: 449 },
-  { value: "elite_pro", label: "Elite Pro", price: 559 },
   { value: "membership", label: "Membership (Unlimited)", price: 999 },
 ];
 
@@ -377,7 +377,7 @@ const Dashboard = () => {
                   activate it, using this same email.
                 </p>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6 [&:has(>:only-child)]:grid-cols-1 [&:has(>:only-child)]:sm:w-56">
                   {MYRA_PLAN_OPTIONS.map((p) => (
                     <button
                       key={p.value}

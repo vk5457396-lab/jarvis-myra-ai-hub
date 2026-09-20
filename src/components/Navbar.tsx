@@ -27,6 +27,15 @@ const Navbar = () => {
   const { data: session } = useSession();
   const user = session?.user ?? null;
   const pathname = usePathname();
+  // Admin pages have no hero section to sit transparently (or even glassily) over - their content
+  // (tables, cards) starts flush with the top of the page. `.glass` (globals.css) is only an
+  // 8%-opacity white tint plus blur - built to look frosted over a colorful marketing hero, but
+  // against dark admin table rows it's barely distinguishable from fully transparent, so the
+  // header reads as "missing" the instant you land on the page (reported 2026-09-18, on a real
+  // phone at /admin/myra/live-devices - true even scrolled to the very top, i.e. even in the
+  // "scrolled" glass state, not just the transparent one). Admin pages get an actually solid bar
+  // instead of gating on scroll position at all.
+  const isAdmin = pathname?.startsWith("/admin") ?? false;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -41,7 +50,11 @@ const Navbar = () => {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
       className={`fixed top-0 left-0 right-0 z-50 border-b transition-colors duration-300 ${
-        scrolled ? "glass border-white/10" : "bg-transparent border-transparent"
+        isAdmin
+          ? "bg-black/90 backdrop-blur-md border-white/10"
+          : scrolled
+            ? "glass border-white/10"
+            : "bg-transparent border-transparent"
       }`}
     >
       <div className="container mx-auto px-4">

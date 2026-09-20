@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
@@ -14,11 +14,31 @@ import {
   Loader2,
   Check,
   ExternalLink,
+  IndianRupee,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppRelease } from "@/hooks/useAppRelease";
 import { startAppDownload, openDownload } from "@/lib/appDownload";
 import { myraAndroidFeatures } from "@/data/features";
+
+const LIFETIME_PLAN = "membership";
+const LIFETIME_PRICE = 999;
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
+const loadRazorpayScript = () =>
+  new Promise<boolean>((resolve) => {
+    if (window.Razorpay) return resolve(true);
+    const s = document.createElement("script");
+    s.src = "https://checkout.razorpay.com/v1/checkout.js";
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.body.appendChild(s);
+  });
 
 interface MyraAndroidDownloadProps {
   /** Section heading + badge. Turn off when the page already introduces the block. */
@@ -45,6 +65,94 @@ const MyraAndroidDownload = ({
   const { release, loading } = useAppRelease();
   const [downloading, setDownloading] = useState(false);
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
+
+  // Free for anyone who's ever paid before (in-app purchase, admin grant, or an earlier website
+  // key) - see /api/myra/download-access. null while unchecked/checking, so the paid-vs-free UI
+  // never flashes the wrong state before the check lands.
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  const [checkingAccess, setCheckingAccess] = useState(false);
+  const [buying, setBuying] = useState(false);
+  const [issuedKey, setIssuedKey] = useState<string | null>(null);
+
+  const checkAccess = async () => {
+    setCheckingAccess(true);
+    try {
+      const res = await fetch("/api/myra/download-access");
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setHasAccess(!!json.data.has_access);
+        setIssuedKey(json.data.key ?? null);
+      }
+    } catch {
+      // Leave hasAccess null - the buy button stays the safe default until this succeeds.
+    } finally {
+      setCheckingAccess(false);
+    }
+  };
+
+  useEffect(() => {
+    if (session?.user) checkAccess();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user]);
+
+  const handleBuyLifetime = async () => {
+    setBuying(true);
+    try {
+      const scriptOk = await loadRazorpayScript();
+      if (!scriptOk) {
+        toast.error("Could not load payment gateway.");
+        return;
+      }
+      const orderRes = await fetch("/api/myra/website-purchase/order", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ plan: LIFETIME_PLAN }),
+      });
+      const orderJson = await orderRes.json();
+      if (!orderRes.ok || !orderJson.success) {
+        toast.error(orderJson.message || "Could not start payment");
+        return;
+      }
+      const order = orderJson.data;
+
+      const checkout = new window.Razorpay({
+        key: order.key_id,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.order_id,
+        name: "MYRA",
+        description: "MYRA for Android - lifetime access",
+        prefill: { email: session?.user?.email || "" },
+        theme: { color: "#10b981" },
+        handler: async (response: any) => {
+          const verifyRes = await fetch("/api/myra/website-purchase/verify", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              plan: LIFETIME_PLAN,
+              order_id: response.razorpay_order_id,
+              payment_id: response.razorpay_payment_id,
+              signature: response.razorpay_signature,
+            }),
+          });
+          const verifyJson = await verifyRes.json();
+          if (!verifyRes.ok || !verifyJson.success) {
+            toast.error(verifyJson.message || "Payment succeeded but key issuance failed. Contact support.");
+            return;
+          }
+          toast.success(`Payment successful — your access key: ${verifyJson.data.key}`);
+          setHasAccess(true);
+          setIssuedKey(verifyJson.data.key);
+        },
+        modal: { ondismiss: () => setBuying(false) },
+      });
+      checkout.open();
+    } catch {
+      toast.error("Could not start payment. Try again.");
+    } finally {
+      setBuying(false);
+    }
+  };
 
   const handleDownload = async () => {
     if (!session?.user) {
@@ -87,7 +195,7 @@ const MyraAndroidDownload = ({
               Get <span className="text-emerald-400">MYRA</span> on Your Phone
             </h2>
             <p className="text-muted-foreground text-base md:text-lg">
-              Free to install. Sign in once, download the APK, and your voice assistant lives in your pocket.
+              One-time ₹999, lifetime access. Sign in, pay once, download the APK — your voice assistant lives in your pocket forever.
             </p>
           </motion.div>
         )}
@@ -129,7 +237,7 @@ const MyraAndroidDownload = ({
                       </p>
                     </div>
                     <span className="ml-auto text-[10px] font-display font-black px-3 py-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 text-emerald-300 shrink-0">
-                      FREE
+                      {session?.user && hasAccess ? "UNLOCKED" : `₹${LIFETIME_PRICE} · LIFETIME`}
                     </span>
                   </div>
 
@@ -157,7 +265,23 @@ const MyraAndroidDownload = ({
                     <div className="flex items-center justify-center py-3">
                       <Loader2 size={18} className="animate-spin text-muted-foreground" />
                     </div>
-                  ) : session?.user ? (
+                  ) : !session?.user ? (
+                    <>
+                      <Button
+                        onClick={() => router.push("/login")}
+                        className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary font-display font-bold gap-2 h-12"
+                      >
+                        <LogIn size={18} /> Login to Continue
+                      </Button>
+                      <p className="text-xs text-muted-foreground text-center mt-3 flex items-center justify-center gap-1.5">
+                        <ShieldCheck size={12} /> Login required — keeps downloads secure and trackable.
+                      </p>
+                    </>
+                  ) : checkingAccess || hasAccess === null ? (
+                    <div className="flex items-center justify-center py-3">
+                      <Loader2 size={18} className="animate-spin text-muted-foreground" />
+                    </div>
+                  ) : hasAccess ? (
                     <>
                       <Button
                         onClick={handleDownload}
@@ -175,17 +299,28 @@ const MyraAndroidDownload = ({
                           <ExternalLink size={12} /> Download didn&apos;t start? Tap here
                         </button>
                       )}
+                      {issuedKey && (
+                        <p className="text-[11px] text-muted-foreground text-center mt-3">
+                          Your access key ({issuedKey}) is also on your{" "}
+                          <button onClick={() => router.push("/dashboard")} className="underline hover:text-emerald-300">
+                            dashboard
+                          </button>{" "}
+                          any time.
+                        </p>
+                      )}
                     </>
                   ) : (
                     <>
                       <Button
-                        onClick={() => router.push("/login")}
-                        className="w-full rounded-xl bg-gradient-to-r from-primary to-secondary font-display font-bold gap-2 h-12"
+                        onClick={handleBuyLifetime}
+                        disabled={buying}
+                        className="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-display font-bold gap-2 h-12"
                       >
-                        <LogIn size={18} /> Login to Download
+                        {buying ? <Loader2 size={18} className="animate-spin" /> : <IndianRupee size={18} />}
+                        {buying ? "Opening payment..." : `Buy MYRA — ₹${LIFETIME_PRICE} (Lifetime)`}
                       </Button>
                       <p className="text-xs text-muted-foreground text-center mt-3 flex items-center justify-center gap-1.5">
-                        <ShieldCheck size={12} /> Login required — keeps downloads secure and trackable.
+                        <ShieldCheck size={12} /> One-time payment. You&apos;ll get an access key + the download instantly.
                       </p>
                     </>
                   )}

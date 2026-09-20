@@ -2,11 +2,11 @@ import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import Google from 'next-auth/providers/google';
 import { MongoDBAdapter } from '@auth/mongodb-adapter';
-import clientPromise from '@/lib/db/mongodbClient';
+import { getMongoClientPromise } from '@/lib/db/mongodbClient';
 import { authenticateCredentials, syncAdapterUser } from '@/lib/auth/users';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: MongoDBAdapter(clientPromise),
+  adapter: MongoDBAdapter(getMongoClientPromise),
   session: { strategy: 'jwt' },
   pages: { signIn: '/login' },
   // Auth.js's default logger only prints `error.cause` when it's shaped as `{ err: Error }`,

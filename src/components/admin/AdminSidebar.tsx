@@ -96,7 +96,15 @@ export default function AdminSidebar() {
 
       {/* Mobile: no room for a fixed sidebar, so a horizontally-scrolling strip of the same
        *  links sits under the Navbar instead - otherwise small screens would have no way to
-       *  move between admin pages at all. */}
+       *  move between admin pages at all.
+       *
+       *  AdminLayout stacks this <nav> and <main> in a column on mobile (flex-col, see the
+       *  comment there) - each gets the full container WIDTH via the default cross-axis stretch,
+       *  and its own natural HEIGHT along the main axis (no more stretching to match the other's
+       *  height, which is what previously turned this ~50px strip into a full-screen colored
+       *  block on tall pages, and what previously starved <main> down to 0px width - both were
+       *  artifacts of the old row-based layout, not of anything in this file, so no self-start/
+       *  min-w-0 workaround is needed here anymore - fixed 2026-09-18 on a real phone). */}
       <nav className="md:hidden sticky top-16 z-40 flex gap-2 overflow-x-auto border-b border-white/10 bg-black/40 px-3 py-2 backdrop-blur-md">
         {flatItems.map((item) => {
           const active = isActive(pathname, item.href);

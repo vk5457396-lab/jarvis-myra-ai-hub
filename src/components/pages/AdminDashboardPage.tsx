@@ -286,32 +286,61 @@ const AdminDashboard = () => {
                 <div className="absolute inset-0 rounded-2xl p-px overflow-hidden">
                   <div className="absolute inset-[-200%]" style={{ background: "conic-gradient(from 0deg, hsla(188,100%,50%,0.2), transparent 50%, hsla(188,100%,50%,0.2))" }} />
                 </div>
-                <div className="relative rounded-[calc(1rem-1px)] m-px p-6 overflow-x-auto" style={{ background: "linear-gradient(165deg, hsla(188,100%,50%,0.03) 0%, hsla(220,20%,6%,0.97) 100%)" }}>
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-white/10">
-                        <th className="text-left py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">USER</th>
-                        <th className="text-left py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">EMAIL</th>
-                        <th className="text-right py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">WALLET</th>
-                        <th className="text-right py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">EARNINGS</th>
-                        <th className="text-center py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">JOINED</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.map(u => {
-                        const userEarnings = allEarnings.filter(e => e.referrer_id === u.id).reduce((s, e) => s + e.commission_amount, 0);
-                        return (
-                          <tr key={u.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                            <td className="py-3 px-3 font-medium text-foreground">{u.full_name || "—"}</td>
-                            <td className="py-3 px-3 text-muted-foreground">{u.email}</td>
-                            <td className="py-3 px-3 text-right text-emerald-400 font-bold">₹{u.wallet_balance}</td>
-                            <td className="py-3 px-3 text-right text-amber-400 font-bold">₹{userEarnings}</td>
-                            <td className="py-3 px-3 text-center text-muted-foreground text-xs">{new Date(u.created_at).toLocaleDateString()}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                <div className="relative rounded-[calc(1rem-1px)] m-px p-4 md:p-6" style={{ background: "linear-gradient(165deg, hsla(188,100%,50%,0.03) 0%, hsla(220,20%,6%,0.97) 100%)" }}>
+                  {/* Below md: a dense multi-column table just gets an endless horizontal
+                      scrollbar on a phone-width screen - stacked cards instead. */}
+                  {/* max-h + overflow-y-auto is load-bearing, not cosmetic: `users` is the
+                      FULL unpaginated list (thousands of rows in production). Without a height
+                      cap here, this subtree's real layout height scales with the row count -
+                      at ~6,700 users that's on the order of 900,000px of DOM, which desktop-class
+                      hardware can still limp through compositing but real mobile GPUs cannot,
+                      corrupting the paint for most of the page (discovered 2026-09-17: a phone
+                      showed almost everything blank/invisible below the very top of the screen). */}
+                  <div className="md:hidden max-h-[70vh] overflow-y-auto space-y-3">
+                    {users.map(u => {
+                      const userEarnings = allEarnings.filter(e => e.referrer_id === u.id).reduce((s, e) => s + e.commission_amount, 0);
+                      return (
+                        <div key={u.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="font-medium text-foreground truncate">{u.full_name || "—"}</p>
+                            <span className="text-xs text-muted-foreground shrink-0">{new Date(u.created_at).toLocaleDateString()}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate mt-1">{u.email}</p>
+                          <div className="flex items-center gap-4 mt-3 text-sm">
+                            <span className="text-emerald-400 font-bold">₹{u.wallet_balance} <span className="text-muted-foreground font-normal text-xs">wallet</span></span>
+                            <span className="text-amber-400 font-bold">₹{userEarnings} <span className="text-muted-foreground font-normal text-xs">earnings</span></span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="hidden md:block max-h-[70vh] overflow-y-auto overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-white/10">
+                          <th className="text-left py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">USER</th>
+                          <th className="text-left py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">EMAIL</th>
+                          <th className="text-right py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">WALLET</th>
+                          <th className="text-right py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">EARNINGS</th>
+                          <th className="text-center py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">JOINED</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {users.map(u => {
+                          const userEarnings = allEarnings.filter(e => e.referrer_id === u.id).reduce((s, e) => s + e.commission_amount, 0);
+                          return (
+                            <tr key={u.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                              <td className="py-3 px-3 font-medium text-foreground">{u.full_name || "—"}</td>
+                              <td className="py-3 px-3 text-muted-foreground">{u.email}</td>
+                              <td className="py-3 px-3 text-right text-emerald-400 font-bold">₹{u.wallet_balance}</td>
+                              <td className="py-3 px-3 text-right text-amber-400 font-bold">₹{userEarnings}</td>
+                              <td className="py-3 px-3 text-center text-muted-foreground text-xs">{new Date(u.created_at).toLocaleDateString()}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -324,29 +353,21 @@ const AdminDashboard = () => {
                 <div className="absolute inset-0 rounded-2xl p-px overflow-hidden">
                   <div className="absolute inset-[-200%]" style={{ background: "conic-gradient(from 0deg, hsla(263,70%,58%,0.2), transparent 50%, hsla(263,70%,58%,0.2))" }} />
                 </div>
-                <div className="relative rounded-[calc(1rem-1px)] m-px p-6 overflow-x-auto" style={{ background: "linear-gradient(165deg, hsla(263,70%,58%,0.03) 0%, hsla(220,20%,6%,0.97) 100%)" }}>
+                <div className="relative rounded-[calc(1rem-1px)] m-px p-4 md:p-6" style={{ background: "linear-gradient(165deg, hsla(263,70%,58%,0.03) 0%, hsla(220,20%,6%,0.97) 100%)" }}>
                   {withdrawals.length === 0 ? (
                     <div className="text-center py-10 text-muted-foreground">No withdrawal requests yet.</div>
                   ) : (
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-white/10">
-                          <th className="text-left py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">USER</th>
-                          <th className="text-left py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">UPI ID</th>
-                          <th className="text-right py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">AMOUNT</th>
-                          <th className="text-center py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">STATUS</th>
-                          <th className="text-center py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">DATE</th>
-                          <th className="text-center py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">ACTION</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    <>
+                      {/* Below md: stacked cards instead of a 6-column table forced into a
+                          horizontal scrollbar. max-h + overflow-y-auto for the same reason as
+                          the users list above - unpaginated, so height must be capped, not
+                          allowed to scale with row count. */}
+                      <div className="md:hidden max-h-[70vh] overflow-y-auto space-y-3">
                         {withdrawals.map(w => (
-                          <tr key={w.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                            <td className="py-3 px-3 font-medium text-foreground">{getUserName(w.user_id)}</td>
-                            <td className="py-3 px-3 text-muted-foreground font-mono text-xs">{w.upi_id}</td>
-                            <td className="py-3 px-3 text-right text-violet-400 font-bold">₹{w.amount}</td>
-                            <td className="py-3 px-3 text-center">
-                              <span className={`inline-flex items-center gap-1 text-xs font-display font-bold px-2 py-1 rounded-lg ${
+                          <div key={w.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="font-medium text-foreground truncate">{getUserName(w.user_id)}</p>
+                              <span className={`inline-flex items-center gap-1 text-xs font-display font-bold px-2 py-1 rounded-lg shrink-0 ${
                                 w.status === "completed" ? "bg-emerald-500/20 text-emerald-400" :
                                 w.status === "rejected" ? "bg-red-500/20 text-red-400" :
                                 "bg-amber-500/20 text-amber-400"
@@ -354,37 +375,96 @@ const AdminDashboard = () => {
                                 {w.status === "completed" ? <CheckCircle2 size={12} /> : w.status === "rejected" ? <XCircle size={12} /> : <Clock size={12} />}
                                 {w.status.toUpperCase()}
                               </span>
-                            </td>
-                            <td className="py-3 px-3 text-center text-muted-foreground text-xs">{new Date(w.created_at).toLocaleDateString()}</td>
-                            <td className="py-3 px-3 text-center">
-                              {w.status === "pending" ? (
-                                <div className="flex gap-2 justify-center">
-                                  <Button
-                                    size="sm"
-                                    onClick={() => processWithdrawal(w.id, "completed")}
-                                    disabled={processing === w.id}
-                                    className="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-xs h-8 px-3"
-                                  >
-                                    <CheckCircle2 size={12} className="mr-1" /> Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    onClick={() => processWithdrawal(w.id, "rejected")}
-                                    disabled={processing === w.id}
-                                    variant="outline"
-                                    className="rounded-lg border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs h-8 px-3"
-                                  >
-                                    <XCircle size={12} className="mr-1" /> Reject
-                                  </Button>
-                                </div>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">—</span>
-                              )}
-                            </td>
-                          </tr>
+                            </div>
+                            <p className="text-xs text-muted-foreground font-mono truncate mt-1">{w.upi_id}</p>
+                            <div className="flex items-center justify-between mt-3">
+                              <span className="text-violet-400 font-bold text-sm">₹{w.amount}</span>
+                              <span className="text-xs text-muted-foreground">{new Date(w.created_at).toLocaleDateString()}</span>
+                            </div>
+                            {w.status === "pending" && (
+                              <div className="flex gap-2 mt-3">
+                                <Button
+                                  size="sm"
+                                  onClick={() => processWithdrawal(w.id, "completed")}
+                                  disabled={processing === w.id}
+                                  className="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-xs h-8 px-3 flex-1"
+                                >
+                                  <CheckCircle2 size={12} className="mr-1" /> Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => processWithdrawal(w.id, "rejected")}
+                                  disabled={processing === w.id}
+                                  variant="outline"
+                                  className="rounded-lg border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs h-8 px-3 flex-1"
+                                >
+                                  <XCircle size={12} className="mr-1" /> Reject
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
+                      </div>
+                      <div className="hidden md:block max-h-[70vh] overflow-y-auto overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-white/10">
+                              <th className="text-left py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">USER</th>
+                              <th className="text-left py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">UPI ID</th>
+                              <th className="text-right py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">AMOUNT</th>
+                              <th className="text-center py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">STATUS</th>
+                              <th className="text-center py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">DATE</th>
+                              <th className="text-center py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">ACTION</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {withdrawals.map(w => (
+                              <tr key={w.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                <td className="py-3 px-3 font-medium text-foreground">{getUserName(w.user_id)}</td>
+                                <td className="py-3 px-3 text-muted-foreground font-mono text-xs">{w.upi_id}</td>
+                                <td className="py-3 px-3 text-right text-violet-400 font-bold">₹{w.amount}</td>
+                                <td className="py-3 px-3 text-center">
+                                  <span className={`inline-flex items-center gap-1 text-xs font-display font-bold px-2 py-1 rounded-lg ${
+                                    w.status === "completed" ? "bg-emerald-500/20 text-emerald-400" :
+                                    w.status === "rejected" ? "bg-red-500/20 text-red-400" :
+                                    "bg-amber-500/20 text-amber-400"
+                                  }`}>
+                                    {w.status === "completed" ? <CheckCircle2 size={12} /> : w.status === "rejected" ? <XCircle size={12} /> : <Clock size={12} />}
+                                    {w.status.toUpperCase()}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-3 text-center text-muted-foreground text-xs">{new Date(w.created_at).toLocaleDateString()}</td>
+                                <td className="py-3 px-3 text-center">
+                                  {w.status === "pending" ? (
+                                    <div className="flex gap-2 justify-center">
+                                      <Button
+                                        size="sm"
+                                        onClick={() => processWithdrawal(w.id, "completed")}
+                                        disabled={processing === w.id}
+                                        className="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-xs h-8 px-3"
+                                      >
+                                        <CheckCircle2 size={12} className="mr-1" /> Approve
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        onClick={() => processWithdrawal(w.id, "rejected")}
+                                        disabled={processing === w.id}
+                                        variant="outline"
+                                        className="rounded-lg border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs h-8 px-3"
+                                      >
+                                        <XCircle size={12} className="mr-1" /> Reject
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">—</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>

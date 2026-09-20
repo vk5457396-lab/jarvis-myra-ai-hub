@@ -112,18 +112,22 @@ const RATE_LIMIT_TRACKING_ENABLED = process.env.RATE_LIMIT_TRACKING_ENABLED !== 
 /**
  * Session/login-continuity paths the global daily limit must NEVER block, no matter how
  * exhausted the counter is - '/auth/myra' is the Android app's Google-login handoff (redirects
- * into `myra://auth?token=...`; see that route's own comment) and '/api/auth/' covers NextAuth
- * plus every mobile session endpoint (login/refresh/logout/me). Blocking either one doesn't just
- * degrade one feature - to a real user it looks exactly like "I got logged out". This exemption
- * is intentionally kept even with the site otherwise hard-capped at 10K/day: the site being
- * mostly unavailable past the cap is an accepted, explicit tradeoff; the app silently logging
- * real users out was never one, and broke exactly this way once already.
+ * into `myra://auth?token=...`; see that route's own comment), '/api/auth/' covers NextAuth plus
+ * every mobile session endpoint (login/refresh/logout/me), and '/login' is the page itself.
+ * Blocking any of these doesn't just degrade one feature - to a real user it looks exactly like
+ * "I got logged out" (API/handoff paths) or "the site is completely broken" (the login page: a
+ * bare JSON 429 with no layout/branding, exactly what a real user - or the site owner - hits when
+ * trying to sign in on a device/browser that isn't already authenticated, discovered 2026-09-17
+ * when the admin account itself got shown this instead of the login form). This exemption is
+ * intentionally kept even with the site otherwise hard-capped at 10K/day: the site being mostly
+ * unavailable past the cap is an accepted, explicit tradeoff; nobody being able to sign in at all
+ * - including the owner - was never one.
  *
  * Still COUNTED by checkGlobalDailyLimit() above (this only skips the 429, not the measurement) -
  * a spike here still shows up in the real daily total.
  */
 function isAuthCriticalPath(pathname: string): boolean {
-  return pathname === '/auth/myra' || pathname.startsWith('/api/auth/');
+  return pathname === '/auth/myra' || pathname === '/login' || pathname.startsWith('/api/auth/');
 }
 
 export async function middleware(req: NextRequest) {

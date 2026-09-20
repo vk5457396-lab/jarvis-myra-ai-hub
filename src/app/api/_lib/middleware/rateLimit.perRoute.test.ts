@@ -123,6 +123,25 @@ test('window expiry: a new window resets the count for the same IP/scope', async
   await cleanup(scope);
 });
 
+test('multi-value x-forwarded-for: only the first IP is used as identity (matches pre-optimization split(",")[0] behavior)', async () => {
+  const scope = uniqueScope('xff-multi');
+  const max = 2;
+
+  // Same first IP, different (and differently-spaced) trailing proxy hops - must land in the same
+  // bucket, proving the indexOf/slice rewrite extracts the same leading IP as the old split(',').
+  await rateLimit(reqFrom('9.9.9.1, 10.0.0.1'), { scope, max, windowMs: 60000 });
+  await assert.doesNotReject(() => rateLimit(reqFrom('9.9.9.1,10.0.0.2,10.0.0.3'), { scope, max, windowMs: 60000 }));
+  await assert.rejects(
+    () => rateLimit(reqFrom('9.9.9.1'), { scope, max, windowMs: 60000 }),
+    'third call sharing the same leading IP must hit the same 2-request bucket'
+  );
+
+  // A different leading IP (even with the same trailing hop) must be a separate bucket.
+  await assert.doesNotReject(() => rateLimit(reqFrom('9.9.9.2, 10.0.0.1'), { scope, max, windowMs: 60000 }));
+
+  await cleanup(scope);
+});
+
 test('fails open: an unresolvable identity still allows the request through', async () => {
   // rateLimit() already wraps the Redis call in try/catch and returns normally (no throw) on any
   // backend error (see its implementation) - this documents that contract, since deliberately

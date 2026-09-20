@@ -21,7 +21,17 @@ export async function connectMongo(): Promise<typeof mongoose> {
   }
 
   if (!cache.promise) {
-    cache.promise = mongoose.connect(MONGODB_URI, { bufferCommands: false });
+    const promise = mongoose.connect(MONGODB_URI, { bufferCommands: false });
+    cache.promise = promise;
+    // A rejected connection attempt must not stay cached forever - on a warm serverless
+    // instance, every future request would otherwise keep awaiting the same dead promise
+    // instead of ever retrying. Only clear the cache if it still points at THIS promise - a
+    // concurrent request may already have installed a newer one after an earlier reset.
+    promise.catch(() => {
+      if (cache.promise === promise) {
+        cache.promise = null;
+      }
+    });
   }
 
   cache.conn = await cache.promise;

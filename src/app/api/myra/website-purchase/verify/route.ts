@@ -7,7 +7,7 @@ import { success, ApiError } from '../../../_lib/utils/response';
 import { requireString, validateEnum } from '../../../_lib/utils/validation';
 import { auth } from '@/lib/auth/config';
 import { MYRA_PLANS } from '../../../_lib/services/myraService';
-import { generateMyraAccessKeys } from '../../../_lib/services/myraAdminService';
+import { claimPaymentOnce, generateFirebaseAccessKeys } from '../../../_lib/services/myraAccessKeyFirestoreService';
 import logger from '../../../_lib/utils/logger';
 
 export const OPTIONS = handleOptions(['POST']);
@@ -19,7 +19,11 @@ function validSignature(orderId: string, paymentId: string, signature: string, s
   return expectedBuffer.length === actualBuffer.length && crypto.timingSafeEqual(expectedBuffer, actualBuffer);
 }
 
-/** Verifies the Razorpay payment and issues a MYRA access key for the plan, assigned to the buyer's email. */
+/**
+ * Verifies the Razorpay payment and issues a MYRA access key for the plan, assigned to the
+ * buyer's email. Firestore-backed (see myraAccessKeyFirestoreService.ts) - the Android app
+ * redeems this key directly against Firestore, with no further HTTP call to this website.
+ */
 export const POST = withApi(
   async (req) => {
     const session = await auth();
@@ -61,22 +65,21 @@ export const POST = withApi(
       throw ApiError.badRequest('Payment details do not match the selected plan.', 'PAYMENT_MISMATCH');
     }
 
-    try {
-      const [record] = await generateMyraAccessKeys({
-        plan,
-        count: 1,
-        assignedEmail: email,
-        note: `Website purchase (${paymentId})`,
-        createdBy: 'website_purchase',
-        paymentId,
-      });
-      return success({ key: record.key, plan, plan_price: planConfig.price }, 'Access key issued.');
-    } catch (error: any) {
-      if (error?.code === 11000) {
-        throw ApiError.conflict('This payment has already been used to issue a key.', 'PAYMENT_ALREADY_USED');
-      }
-      throw error;
+    // Atomic dedupe: a retried verify call (network retry, double click) for the SAME payment
+    // must never issue a second key - claimPaymentOnce() only succeeds the first time.
+    const claimed = await claimPaymentOnce(paymentId);
+    if (!claimed) {
+      throw ApiError.conflict('This payment has already been used to issue a key.', 'PAYMENT_ALREADY_USED');
     }
+
+    const [record] = await generateFirebaseAccessKeys({
+      plan,
+      count: 1,
+      assignedEmail: email,
+      note: `Website purchase (${paymentId})`,
+      createdBy: 'website_purchase',
+    });
+    return success({ key: record.key, plan, plan_price: planConfig.price }, 'Access key issued.');
   },
   { rateLimit: { scope: 'myra-website-purchase-verify', max: 20 } }
 );

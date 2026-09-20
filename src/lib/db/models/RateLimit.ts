@@ -1,4 +1,4 @@
-import { Schema, model, models, type Model } from 'mongoose';
+import mongoose, { Schema, model, type Model } from 'mongoose';
 
 /**
  * Fixed-window distributed rate-limit counter - see ../../../app/api/_lib/middleware/rateLimit.ts
@@ -19,4 +19,4 @@ const rateLimitBucketSchema = new Schema(
 rateLimitBucketSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export const RateLimitBucket: Model<any> =
-  models.RateLimitBucket || model('RateLimitBucket', rateLimitBucketSchema);
+  mongoose.models.RateLimitBucket || model('RateLimitBucket', rateLimitBucketSchema);

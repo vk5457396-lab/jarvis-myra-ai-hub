@@ -428,13 +428,24 @@ const MyraAdminPage = () => {
   };
 
   const toggleKeyStatus = async (key: AccessKeyRow) => {
-    const nextStatus = key.status === "disabled" ? "available" : "disabled";
+    const blocking = key.status !== "disabled";
+    // Blocking a key a device has already redeemed actually revokes that device's access (see
+    // LicenseRepository.checkRemoteStatus on the app side) - worth a confirm so it's not one
+    // misclick away from kicking a real, currently-active user back to the license screen.
+    if (blocking && key.status === "redeemed") {
+      const ok = window.confirm(
+        "This key is already active on a device. Blocking it will log that device out of MYRA " +
+          "premium the next time it checks in (within ~1 hour) and show the access-key screen. Continue?"
+      );
+      if (!ok) return;
+    }
+    const nextStatus = blocking ? "disabled" : "available";
     try {
       await api("/api/admin/myra/access-keys", {
         method: "PATCH",
         body: JSON.stringify({ key: key.key, status: nextStatus }),
       });
-      toast.success(`Key ${nextStatus}`);
+      toast.success(blocking ? "Key blocked" : "Key unblocked");
       await loadKeys();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to update key");
@@ -499,65 +510,109 @@ const MyraAdminPage = () => {
             </Button>
           </div>
 
-          <div className="mt-4 max-h-80 overflow-auto rounded-xl border border-border">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
-                  <th className="p-2 text-left">Email</th>
-                  <th className="p-2 text-left">Role</th>
-                  <th className="p-2 text-right">Credits</th>
-                  <th className="p-2 text-left">Plan</th>
-                  <th className="p-2 text-left">Status</th>
-                  <th className="p-2 text-left">Expiry</th>
-                  <th className="p-2 text-left">Badge</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr
-                    key={u.id}
-                    onClick={() => {
-                      setSelectedEmail(u.email);
-                      setBadgeValue(u.badge_override || "clear");
-                      setDiscountValue(u.discount_percent || 0);
-                      setCustomNameEnabled(u.custom_name_enabled);
-                      setCustomNameCurrent(u.custom_assistant_name);
-                      loadDevices(u.email);
-                      toast.message(`Selected ${u.email}`);
-                    }}
-                    className={`cursor-pointer border-b border-border/60 hover:bg-muted/40 ${
-                      selectedEmail === u.email ? "bg-primary/10" : ""
-                    }`}
-                  >
-                    <td className="p-2">{u.email}</td>
-                    <td className="p-2">{u.role}</td>
-                    <td className="p-2 text-right">{u.credits ?? "—"}</td>
-                    <td className="p-2">{u.subscription_type ?? "—"}</td>
-                    <td className="p-2">{u.subscription_status ?? "—"}</td>
-                    <td className="p-2 text-xs text-muted-foreground">
-                      {u.subscription_expiry ? new Date(u.subscription_expiry).toLocaleDateString() : "—"}
-                    </td>
-                    <td className="p-2 text-xs">
-                      {u.badge_override ? (
-                        <span className={
-                          u.badge_override === "red" ? "text-red-400" :
-                          u.badge_override === "blue" ? "text-blue-400" :
-                          u.badge_override === "yellow" ? "text-amber-400" : "text-muted-foreground"
-                        }>
-                          {u.badge_override}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">auto</span>
+          {(() => {
+            const selectUser = (u: typeof users[number]) => {
+              setSelectedEmail(u.email);
+              setBadgeValue(u.badge_override || "clear");
+              setDiscountValue(u.discount_percent || 0);
+              setCustomNameEnabled(u.custom_name_enabled);
+              setCustomNameCurrent(u.custom_assistant_name);
+              loadDevices(u.email);
+              toast.message(`Selected ${u.email}`);
+            };
+            return (
+              <>
+                {/* A 7-column table is unusable below md - a phone gets an endless
+                    horizontal scrollbar instead of a real layout. Stacked cards instead,
+                    same click-to-select behavior as the desktop table rows. */}
+                <div className="mt-4 max-h-80 overflow-auto rounded-xl border border-border md:hidden">
+                  {users.length === 0 ? (
+                    <p className="p-4 text-center text-muted-foreground text-sm">No users found.</p>
+                  ) : (
+                    <div className="divide-y divide-border/60">
+                      {users.map((u) => (
+                        <button
+                          key={u.id}
+                          type="button"
+                          onClick={() => selectUser(u)}
+                          className={`w-full p-3 text-left hover:bg-muted/40 ${selectedEmail === u.email ? "bg-primary/10" : ""}`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-medium truncate">{u.email}</span>
+                            <span className="text-xs text-muted-foreground shrink-0">{u.role}</span>
+                          </div>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                            <span>Credits: {u.credits ?? "—"}</span>
+                            <span>Plan: {u.subscription_type ?? "—"}</span>
+                            <span>Status: {u.subscription_status ?? "—"}</span>
+                            <span>Expiry: {u.subscription_expiry ? new Date(u.subscription_expiry).toLocaleDateString() : "—"}</span>
+                            <span className={
+                              u.badge_override === "red" ? "text-red-400" :
+                              u.badge_override === "blue" ? "text-blue-400" :
+                              u.badge_override === "yellow" ? "text-amber-400" : ""
+                            }>
+                              Badge: {u.badge_override || "auto"}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="mt-4 hidden max-h-80 overflow-auto rounded-xl border border-border md:block">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
+                        <th className="p-2 text-left">Email</th>
+                        <th className="p-2 text-left">Role</th>
+                        <th className="p-2 text-right">Credits</th>
+                        <th className="p-2 text-left">Plan</th>
+                        <th className="p-2 text-left">Status</th>
+                        <th className="p-2 text-left">Expiry</th>
+                        <th className="p-2 text-left">Badge</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.map((u) => (
+                        <tr
+                          key={u.id}
+                          onClick={() => selectUser(u)}
+                          className={`cursor-pointer border-b border-border/60 hover:bg-muted/40 ${
+                            selectedEmail === u.email ? "bg-primary/10" : ""
+                          }`}
+                        >
+                          <td className="p-2">{u.email}</td>
+                          <td className="p-2">{u.role}</td>
+                          <td className="p-2 text-right">{u.credits ?? "—"}</td>
+                          <td className="p-2">{u.subscription_type ?? "—"}</td>
+                          <td className="p-2">{u.subscription_status ?? "—"}</td>
+                          <td className="p-2 text-xs text-muted-foreground">
+                            {u.subscription_expiry ? new Date(u.subscription_expiry).toLocaleDateString() : "—"}
+                          </td>
+                          <td className="p-2 text-xs">
+                            {u.badge_override ? (
+                              <span className={
+                                u.badge_override === "red" ? "text-red-400" :
+                                u.badge_override === "blue" ? "text-blue-400" :
+                                u.badge_override === "yellow" ? "text-amber-400" : "text-muted-foreground"
+                              }>
+                                {u.badge_override}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">auto</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                      {users.length === 0 && (
+                        <tr><td colSpan={7} className="p-4 text-center text-muted-foreground">No users found.</td></tr>
                       )}
-                    </td>
-                  </tr>
-                ))}
-                {users.length === 0 && (
-                  <tr><td colSpan={7} className="p-4 text-center text-muted-foreground">No users found.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            );
+          })()}
         </motion.div>
 
         {/* Credits + plan actions */}
@@ -929,7 +984,49 @@ const MyraAdminPage = () => {
             </Button>
           </div>
 
-          <div className="max-h-96 overflow-auto rounded-xl border border-border">
+          {/* Below md: a 6-column table (including a monospace key) just gets an endless
+              horizontal scrollbar on a phone - stacked cards with the same actions instead. */}
+          <div className="max-h-96 overflow-auto rounded-xl border border-border md:hidden">
+            {keys.length === 0 ? (
+              <p className="p-4 text-center text-muted-foreground text-sm">No access keys yet.</p>
+            ) : (
+              <div className="divide-y divide-border/60">
+                {keys.map((k) => (
+                  <div key={k.id} className="p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono text-xs truncate">{k.key}</span>
+                      <div className="flex gap-1 shrink-0">
+                        <Button variant="ghost" size="icon" onClick={() => copyKey(k.key)}>
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title={k.status === "disabled" ? "Unblock key" : "Block key"}
+                          className={k.status === "disabled" ? "" : "text-red-400"}
+                          onClick={() => toggleKeyStatus(k)}
+                        >
+                          <Ban className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span>Plan: {k.plan}</span>
+                      <span className={
+                        k.status === "available" ? "text-emerald-400" :
+                        k.status === "redeemed" ? "" : "text-red-400"
+                      }>
+                        Status: {k.status}
+                      </span>
+                      <span>Assigned: {k.assigned_email ?? "anyone"}</span>
+                      <span>Redeemed: {k.redeemed_at ? new Date(k.redeemed_at).toLocaleString() : "—"}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="hidden max-h-96 overflow-auto rounded-xl border border-border md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
@@ -963,11 +1060,15 @@ const MyraAdminPage = () => {
                         <Button variant="ghost" size="icon" onClick={() => copyKey(k.key)}>
                           <Copy className="h-3.5 w-3.5" />
                         </Button>
-                        {k.status !== "redeemed" && (
-                          <Button variant="ghost" size="icon" onClick={() => toggleKeyStatus(k)}>
-                            <Ban className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title={k.status === "disabled" ? "Unblock key" : "Block key"}
+                          className={k.status === "disabled" ? "" : "text-red-400"}
+                          onClick={() => toggleKeyStatus(k)}
+                        >
+                          <Ban className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     </td>
                   </tr>

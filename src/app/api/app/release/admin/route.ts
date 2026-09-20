@@ -14,6 +14,7 @@ import {
 import { connectMongo } from '@/lib/db/mongoose';
 import { AppRelease, APP_RELEASE_ID } from '@/lib/db/models';
 import { dispatchNotification } from '../../../_lib/services/notificationService';
+import { publishForceUpdateGate } from '../../../_lib/services/myraAppVersionGateService';
 import logger from '../../../_lib/utils/logger';
 
 export const OPTIONS = handleOptions(['GET', 'PUT']);
@@ -105,6 +106,15 @@ export const PUT = withApi(
         target: 'all',
       }).catch((error) => {
         logger.error('Failed to push app-update notification', { detail: (error as Error)?.message });
+      });
+
+      // Every new release becomes the mandatory floor - an older installed APK gets a
+      // blocking "update now" prompt on next launch (see SplashActivity.kt). Best-effort: a
+      // Firestore hiccup here must never fail the release publish itself.
+      publishForceUpdateGate({ versionCode, versionName, releaseNotes }).catch((error) => {
+        logger.error('Failed to publish force-update gate to Firestore', {
+          detail: (error as Error)?.message,
+        });
       });
     }
 

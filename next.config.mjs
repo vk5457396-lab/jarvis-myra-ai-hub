@@ -24,11 +24,23 @@ const nextConfig = {
   // InvalidCheck: pkceCodeVerifier value could not be parsed ("Configuration" error).
   // Forcing everything onto one canonical host keeps the whole OAuth round trip
   // (signin cookie-set + callback cookie-read) on the same origin.
+  //
+  // Same reasoning applies to the raw Vercel deployment alias
+  // (jarvis-myra-ai-hub-wheat.vercel.app) - it was the only URL before the custom domain was
+  // attached, so old bookmarks/shared links still point there. Left un-redirected, it's a second
+  // live origin with its own separate cookie jar, splitting sessions and PKCE verifiers the exact
+  // same way `www` did.
   async redirects() {
     return [
       {
         source: "/:path*",
         has: [{ type: "host", value: "www.codeninjavik.in" }],
+        destination: "https://codeninjavik.in/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "jarvis-myra-ai-hub-wheat.vercel.app" }],
         destination: "https://codeninjavik.in/:path*",
         permanent: true,
       },

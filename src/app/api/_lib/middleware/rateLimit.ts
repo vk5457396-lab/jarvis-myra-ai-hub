@@ -52,9 +52,18 @@ export async function incrWithWindow(bucketId: string, ttlSeconds: number): Prom
   return count;
 }
 
+// Module-scope, read once at cold start instead of on every rateLimit() call that omits
+// max/windowMs (most call sites pass both explicitly, so process.env is already skipped via ||
+// short-circuit for them - this only matters for the few that don't).
+const DEFAULT_RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 60);
+const DEFAULT_RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS || 60000);
+
 function clientKey(req: NextRequest, scope: string): string {
-  const forwarded = req.headers.get('x-forwarded-for');
-  const ip = (forwarded || '').split(',')[0].trim();
+  const forwarded = req.headers.get('x-forwarded-for') || '';
+  // Avoids the array allocation from split(',') for the common single-IP case; identical result
+  // to (forwarded || '').split(',')[0].trim() for any input.
+  const commaIndex = forwarded.indexOf(',');
+  const ip = (commaIndex === -1 ? forwarded : forwarded.slice(0, commaIndex)).trim();
   return `${scope}:${ip || 'unknown'}`;
 }
 
@@ -62,8 +71,8 @@ export async function rateLimit(
   req: NextRequest,
   { scope = 'default', max, windowMs }: { scope?: string; max?: number; windowMs?: number } = {}
 ): Promise<void> {
-  const limit = Number(max || process.env.RATE_LIMIT_MAX || 60);
-  const window = Number(windowMs || process.env.RATE_LIMIT_WINDOW_MS || 60000);
+  const limit = Number(max || DEFAULT_RATE_LIMIT_MAX);
+  const window = Number(windowMs || DEFAULT_RATE_LIMIT_WINDOW_MS);
   const key = clientKey(req, scope);
   const windowStart = Math.floor(Date.now() / window) * window;
   const bucketId = `rl:${key}:${windowStart}`;

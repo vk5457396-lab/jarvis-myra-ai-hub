@@ -388,7 +388,7 @@ const AdminProductsTab = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Category</label>
                   <Input
