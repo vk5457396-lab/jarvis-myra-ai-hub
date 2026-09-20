@@ -14,7 +14,7 @@ import {
 import { toast } from "sonner";
 import {
   ArrowLeft, Loader2, Search, Sparkles, Coins, KeyRound, Copy, Ban, RefreshCw, BadgeCheck, Smartphone, ShieldOff,
-  Percent, UserCog, Globe2, Plug,
+  Percent, UserCog, Globe2, Plug, Unlink, X,
 } from "lucide-react";
 
 const PLAN_OPTIONS = [
@@ -148,6 +148,8 @@ const MyraAdminPage = () => {
   const [keys, setKeys] = useState<AccessKeyRow[]>([]);
   const [generatingKeys, setGeneratingKeys] = useState(false);
   const [loadingKeys, setLoadingKeys] = useState(false);
+  const [keySearch, setKeySearch] = useState("");
+  const [resettingDeviceKey, setResettingDeviceKey] = useState<string | null>(null);
 
   const loadUsers = useCallback(async (q: string) => {
     setSearching(true);
@@ -174,10 +176,18 @@ const MyraAdminPage = () => {
     }
   }, []);
 
-  const loadKeys = useCallback(async () => {
+  // No arg (or blank) = full recent-keys list. A "@" in the search box searches by assigned
+  // email (exact, case-insensitive - matches listFirebaseAccessKeysForEmail); anything else
+  // searches by the exact key string (O(1) doc lookup, so even a key older than the recent-500
+  // list is found instantly) - see the GET route's `?key=`/`?email=` handling.
+  const loadKeys = useCallback(async (search?: string) => {
     setLoadingKeys(true);
     try {
-      const data = await api("/api/admin/myra/access-keys");
+      const q = (search ?? "").trim();
+      const path = q
+        ? `/api/admin/myra/access-keys?${q.includes("@") ? "email" : "key"}=${encodeURIComponent(q)}`
+        : "/api/admin/myra/access-keys";
+      const data = await api(path);
       setKeys(data.keys);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not load access keys");
@@ -446,9 +456,36 @@ const MyraAdminPage = () => {
         body: JSON.stringify({ key: key.key, status: nextStatus }),
       });
       toast.success(blocking ? "Key blocked" : "Key unblocked");
-      await loadKeys();
+      await loadKeys(keySearch);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to update key");
+    }
+  };
+
+  // Deliberately separate from toggleKeyStatus/"Unblock" above: unblocking a redeemed key
+  // restores it to 'redeemed' (same device gets its access back), which does nothing for a key
+  // stuck "already active on another device" because the bound device's OWN identity changed
+  // (e.g. the app was reinstalled under a different signing key - see DeviceManager.kt) rather
+  // than it genuinely being someone else's device. This clears the lock outright.
+  const resetKeyDevice = async (key: AccessKeyRow) => {
+    const ok = window.confirm(
+      `Clear the device lock on ${key.key}? It will become freshly redeemable by whichever ` +
+        "device enters it next - only do this if you've confirmed it's the same person/device, " +
+        "just with a changed device identity."
+    );
+    if (!ok) return;
+    setResettingDeviceKey(key.key);
+    try {
+      await api("/api/admin/myra/access-keys", {
+        method: "PATCH",
+        body: JSON.stringify({ key: key.key, reset_device: true }),
+      });
+      toast.success("Device lock cleared - key is freshly redeemable");
+      await loadKeys(keySearch);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to reset device lock");
+    } finally {
+      setResettingDeviceKey(null);
     }
   };
 
@@ -979,9 +1016,45 @@ const MyraAdminPage = () => {
               {generatingKeys ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Generate
             </Button>
-            <Button variant="outline" onClick={loadKeys} disabled={loadingKeys}>
+            <Button variant="outline" onClick={() => loadKeys(keySearch)} disabled={loadingKeys}>
               <RefreshCw className={`h-4 w-4 ${loadingKeys ? "animate-spin" : ""}`} />
             </Button>
+          </div>
+
+          {/* Search by exact key (O(1) doc lookup, finds even an old key instantly) or by
+              assigned email (auto-detected via "@") - so a specific key doesn't need scrolling
+              through the newest-500 list below to find. */}
+          <div className="mb-4 flex flex-wrap items-end gap-2">
+            <div>
+              <Label className="mb-1 block text-xs">Search key or email</Label>
+              <div className="flex gap-1">
+                <Input
+                  placeholder="MYRA... or user@email.com"
+                  className="w-64"
+                  value={keySearch}
+                  onChange={(e) => setKeySearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") loadKeys(keySearch);
+                  }}
+                />
+                <Button variant="outline" onClick={() => loadKeys(keySearch)} disabled={loadingKeys}>
+                  <Search className="h-4 w-4" />
+                </Button>
+                {keySearch && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Clear search"
+                    onClick={() => {
+                      setKeySearch("");
+                      loadKeys();
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Below md: a 6-column table (including a monospace key) just gets an endless
@@ -999,6 +1072,22 @@ const MyraAdminPage = () => {
                         <Button variant="ghost" size="icon" onClick={() => copyKey(k.key)}>
                           <Copy className="h-3.5 w-3.5" />
                         </Button>
+                        {k.redeemed_by && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Reset device lock (fixes 'already active on another device' when it's the same device with a changed identity)"
+                            className="text-amber-400"
+                            disabled={resettingDeviceKey === k.key}
+                            onClick={() => resetKeyDevice(k)}
+                          >
+                            {resettingDeviceKey === k.key ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Unlink className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -1060,6 +1149,22 @@ const MyraAdminPage = () => {
                         <Button variant="ghost" size="icon" onClick={() => copyKey(k.key)}>
                           <Copy className="h-3.5 w-3.5" />
                         </Button>
+                        {k.redeemed_by && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Reset device lock (fixes 'already active on another device' when it's the same device with a changed identity)"
+                            className="text-amber-400"
+                            disabled={resettingDeviceKey === k.key}
+                            onClick={() => resetKeyDevice(k)}
+                          >
+                            {resettingDeviceKey === k.key ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Unlink className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"

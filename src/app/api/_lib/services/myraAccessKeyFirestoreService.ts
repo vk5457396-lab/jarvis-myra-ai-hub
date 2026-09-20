@@ -119,6 +119,17 @@ export async function listFirebaseAccessKeys(limit = 500) {
   return snap.docs.map((d) => toPublic(d.data() as AccessKeyDoc));
 }
 
+/** Direct O(1) doc lookup by the exact key string - the admin panel's "search by key" box uses
+ *  this instead of scanning listFirebaseAccessKeys' (capped at 500, newest-first) results, so an
+ *  older key is still found instantly. Returns null (not a throw) when the key doesn't exist, so
+ *  the caller can render "no key found" instead of an error. */
+export async function getFirebaseAccessKeyByKey(key: string) {
+  const ref = db().collection(COLLECTION).doc(key.trim().toUpperCase());
+  const snap = await ref.get();
+  if (!snap.exists) return null;
+  return toPublic(snap.data() as AccessKeyDoc);
+}
+
 /**
  * Admin-only block/unblock - runs with the Admin SDK so it isn't subject to firestore.rules at
  * all, which is what lets it do the one thing the app's own redeem transition can't: touch a key
@@ -147,6 +158,29 @@ export async function setFirebaseAccessKeyStatus(key: string, status: 'available
         : 'available';
 
   await ref.update({ status: nextStatus });
+  const updated = await ref.get();
+  return toPublic(updated.data() as AccessKeyDoc);
+}
+
+/**
+ * Clears a key's device lock entirely (redeemedByDeviceId + redeemedAt) and forces it back to
+ * 'available' - deliberately NOT the same as setFirebaseAccessKeyStatus's block/unblock, whose
+ * "unblock" restores 'redeemed' (same device gets its access back) whenever a device is already
+ * bound. That's the wrong move when the bound device id itself is stale/wrong rather than the
+ * key being legitimately blocked - e.g. the Android app's signing key changed, which changes its
+ * stored device identity even on the exact same physical phone (see DeviceManager.kt's own doc).
+ * This is for exactly that case: the key becomes freshly redeemable by whichever device enters
+ * it next, same as a never-redeemed key.
+ */
+export async function resetFirebaseAccessKeyDevice(key: string) {
+  const ref = db().collection(COLLECTION).doc(key.trim().toUpperCase());
+  const snap = await ref.get();
+  if (!snap.exists) throw ApiError.notFound('Access key not found.', 'ACCESS_KEY_NOT_FOUND');
+  await ref.update({
+    status: 'available',
+    redeemedByDeviceId: null,
+    redeemedAt: null,
+  });
   const updated = await ref.get();
   return toPublic(updated.data() as AccessKeyDoc);
 }
