@@ -4,9 +4,7 @@ export const maxDuration = 30;
 import { withApi, handleOptions } from '../../../_lib/middleware/handler';
 import { requireAdmin } from '../../../_lib/middleware/admin';
 import { success, ApiError } from '../../../_lib/utils/response';
-import logger from '../../../_lib/utils/logger';
 import { uploadToSupabaseStorage } from '@/lib/supabaseStorage';
-import { isFirebaseStorageConfigured, uploadToFirebaseStorage } from '@/lib/firebaseStorage';
 
 export const OPTIONS = handleOptions(['POST']);
 
@@ -31,18 +29,7 @@ export const POST = withApi(
     // admin UI instead of the handler's generic "Internal server error."
     let url: string;
     try {
-      const contentType = file.type || 'application/octet-stream';
-      // Supabase is the primary store; Firebase only catches uploads while Supabase is down
-      // (e.g. the free-tier project gets paused), so the admin panel keeps working.
-      try {
-        url = await uploadToSupabaseStorage(pathname, buffer, contentType);
-      } catch (supabaseErr) {
-        if (!isFirebaseStorageConfigured()) throw supabaseErr;
-        logger.warn('Supabase upload failed - falling back to Firebase Storage', {
-          detail: (supabaseErr as Error)?.message,
-        });
-        url = await uploadToFirebaseStorage(pathname, buffer, contentType);
-      }
+      url = await uploadToSupabaseStorage(pathname, buffer, file.type || 'application/octet-stream');
     } catch (err) {
       const detail = (err as Error)?.message || 'unknown error';
       throw ApiError.internal(`Image upload failed: ${detail}`, 'STORAGE_UPLOAD_FAILED');
