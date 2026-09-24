@@ -25,7 +25,15 @@ export const POST = withApi(
     const pathname = `${folder}/${Date.now()}-${file.name}`;
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    const url = await uploadToSupabaseStorage(pathname, buffer, file.type || 'application/octet-stream');
+    // Surface the real storage failure (missing env, unreachable project, bucket error) to the
+    // admin UI instead of the handler's generic "Internal server error."
+    let url: string;
+    try {
+      url = await uploadToSupabaseStorage(pathname, buffer, file.type || 'application/octet-stream');
+    } catch (err) {
+      const detail = (err as Error)?.message || 'unknown error';
+      throw ApiError.internal(`Image upload failed: ${detail}`, 'STORAGE_UPLOAD_FAILED');
+    }
     return success({ url }, 'Uploaded.');
   },
   { rateLimit: { scope: 'admin-storage-upload', max: 60 } }
