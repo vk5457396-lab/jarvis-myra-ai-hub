@@ -5,6 +5,7 @@ import { withApi, handleOptions } from '../../../_lib/middleware/handler';
 import { requireAdmin } from '../../../_lib/middleware/admin';
 import { success, ApiError } from '../../../_lib/utils/response';
 import { uploadToSupabaseStorage } from '@/lib/supabaseStorage';
+import { isFirebaseStorageConfigured, uploadToFirebaseStorage } from '@/lib/firebaseStorage';
 
 export const OPTIONS = handleOptions(['POST']);
 
@@ -29,7 +30,10 @@ export const POST = withApi(
     // admin UI instead of the handler's generic "Internal server error."
     let url: string;
     try {
-      url = await uploadToSupabaseStorage(pathname, buffer, file.type || 'application/octet-stream');
+      const contentType = file.type || 'application/octet-stream';
+      url = isFirebaseStorageConfigured()
+        ? await uploadToFirebaseStorage(pathname, buffer, contentType)
+        : await uploadToSupabaseStorage(pathname, buffer, contentType);
     } catch (err) {
       const detail = (err as Error)?.message || 'unknown error';
       throw ApiError.internal(`Image upload failed: ${detail}`, 'STORAGE_UPLOAD_FAILED');
