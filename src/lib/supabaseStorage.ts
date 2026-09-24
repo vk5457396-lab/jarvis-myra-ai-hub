@@ -12,9 +12,11 @@ import { createClient } from '@supabase/supabase-js';
  */
 function supabaseAdmin() {
   const url = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // SUPABASE_SECRET_KEY is the newer (sb_secret_...) equivalent of the legacy service-role JWT -
+  // production only has the new one set.
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
   if (!url || !serviceRoleKey) {
-    throw new Error('Supabase storage is not configured (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY).');
+    throw new Error('Supabase storage is not configured (SUPABASE_URL / SUPABASE_SECRET_KEY).');
   }
   return createClient(url, serviceRoleKey, { auth: { persistSession: false } });
 }
