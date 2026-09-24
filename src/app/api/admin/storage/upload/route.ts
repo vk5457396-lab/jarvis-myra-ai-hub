@@ -4,6 +4,7 @@ export const maxDuration = 30;
 import { withApi, handleOptions } from '../../../_lib/middleware/handler';
 import { requireAdmin } from '../../../_lib/middleware/admin';
 import { success, ApiError } from '../../../_lib/utils/response';
+import logger from '../../../_lib/utils/logger';
 import { uploadToSupabaseStorage } from '@/lib/supabaseStorage';
 
 export const OPTIONS = handleOptions(['POST']);
@@ -32,6 +33,7 @@ export const POST = withApi(
       url = await uploadToSupabaseStorage(pathname, buffer, file.type || 'application/octet-stream');
     } catch (err) {
       const detail = (err as Error)?.message || 'unknown error';
+      logger.error('Admin storage upload failed', { pathname, detail });
       throw ApiError.internal(`Image upload failed: ${detail}`, 'STORAGE_UPLOAD_FAILED');
     }
     return success({ url }, 'Uploaded.');

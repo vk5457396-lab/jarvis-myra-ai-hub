@@ -32,7 +32,8 @@ let bucketEnsured = false;
 async function ensureBucket(): Promise<void> {
   if (bucketEnsured) return;
   const client = supabaseAdmin();
-  const { data: buckets } = await client.storage.listBuckets();
+  const { data: buckets, error: listError } = await client.storage.listBuckets();
+  if (listError) throw listError;
   if (!buckets?.some((b) => b.name === BUCKET)) {
     const { error } = await client.storage.createBucket(BUCKET, { public: true });
     // A concurrent request may have created it a moment earlier - only a real failure matters.
