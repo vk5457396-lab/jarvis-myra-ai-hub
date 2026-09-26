@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { invokeBackendFunction } from "@/lib/backend/invokeFunction";
+import { getStoredReferralCode } from "@/lib/referral";
 
 declare global {
   interface Window {
@@ -99,10 +100,9 @@ export const useRazorpay = () => {
               productType = lowerName.includes('source') ? 'bundle_source' : 'bundle';
             }
 
-            // Check if user was referred
-            const refCode = new URLSearchParams(window.location.search).get("ref") || localStorage.getItem("referral_code");
-            
-            invokeBackendFunction("send-telegram-notification", {
+            // Await so the purchase + referral commission are recorded before we navigate away.
+            toast.loading("Confirming payment...", { id: "payment-confirm" });
+            await invokeBackendFunction("send-telegram-notification", {
               payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature,
@@ -112,8 +112,9 @@ export const useRazorpay = () => {
               customer_name: customerName,
               customer_email: customerEmail,
               customer_phone: customerPhone,
-              referral_code: refCode || undefined,
+              referral_code: getStoredReferralCode(),
             }).catch(() => {});
+            toast.dismiss("payment-confirm");
 
 
             try {

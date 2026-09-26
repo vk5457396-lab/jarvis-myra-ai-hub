@@ -6,7 +6,8 @@ import { NextResponse } from 'next/server';
 import { withApi, handleOptions } from '../../_lib/middleware/handler';
 import logger from '../../_lib/utils/logger';
 import { connectMongo } from '@/lib/db/mongoose';
-import { Purchase, Profile, ReferralEarning } from '@/lib/db/models';
+import { Purchase } from '@/lib/db/models';
+import { creditReferralCommission } from '../../_lib/services/referralService';
 
 export const OPTIONS = handleOptions(['POST']);
 
@@ -15,28 +16,6 @@ function timingSafeEqualStr(a: string, b: string): boolean {
   const bufB = Buffer.from(b);
   if (bufA.length !== bufB.length) return false;
   return crypto.timingSafeEqual(bufA, bufB);
-}
-
-/** Mirrors credit_referral_wallet(): idempotent (unique index), atomic wallet increment. */
-async function creditReferralWallet(referrerId: string, purchaseId: string, purchaseAmount: number, referredUserId: string | null) {
-  const commission = Math.floor(purchaseAmount * 0.05);
-  if (commission <= 0) return;
-
-  try {
-    await ReferralEarning.create({
-      referrerId,
-      referredUserId: referredUserId || referrerId,
-      purchaseId,
-      purchaseAmount,
-      commissionAmount: commission,
-      status: 'credited',
-    });
-  } catch (err: any) {
-    if (err?.code === 11000) return; // already credited for this purchase — idempotent no-op
-    throw err;
-  }
-
-  await Profile.findByIdAndUpdate(referrerId, { $inc: { walletBalance: commission } });
 }
 
 /** Replaces the `send-telegram-notification` Supabase Edge Function — records the purchase, credits referral commission, and alerts admin on Telegram. */
@@ -124,38 +103,26 @@ export const POST = withApi(
         logger.error('Database insert failed', { detail: (err as Error)?.message });
       }
 
-      let referrerName = '';
       let referrerInfo = '';
-      let commission = 0;
-
-      if (referral_code && verifiedAmount > 0) {
-        const referrer = await Profile.findOne({ referralCode: referral_code }).select('_id fullName');
-
-        if (referrer) {
-          referrerName = referrer.fullName || 'Unknown';
-          commission = Math.floor(verifiedAmount * 0.05);
-
-          let referredUserId: string | null = null;
-          if (customer_email) {
-            const buyerProfile = await Profile.findOne({ email: String(customer_email).toLowerCase() }).select('_id');
-            referredUserId = buyerProfile?._id?.toString() || null;
-          }
-
-          try {
-            await creditReferralWallet(referrer._id.toString(), payment_id, verifiedAmount, referredUserId);
-          } catch (err) {
-            logger.error('Referral credit failed', { detail: (err as Error)?.message });
-          }
-
+      try {
+        const credited = await creditReferralCommission({
+          referralCode: referral_code,
+          buyerEmail: customer_email,
+          paymentId: payment_id,
+          amount: verifiedAmount,
+        });
+        if (credited) {
           referrerInfo = `
 ━━━━━━━━━━━━━━━━━━━━━━
 🔗 *Referral Information*
 ━━━━━━━━━━━━━━━━━━━━━━
-• Referred by: *${referrerName}*
-• Referral Code: \`${referral_code}\`
-• Commission (5%): *₹${commission}*
+• Referred by: *${credited.referrerName}*
+• Referral Code: \`${credited.referralCode}\`
+• Commission (5%): *₹${credited.commission}*
 • ✅ Commission credited to wallet`;
         }
+      } catch (err) {
+        logger.error('Referral credit failed', { detail: (err as Error)?.message });
       }
 
       const formattedAmount = new Intl.NumberFormat('en-IN', {

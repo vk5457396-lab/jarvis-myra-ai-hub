@@ -9,6 +9,8 @@ import { auth } from '@/lib/auth/config';
 import { MYRA_PLANS } from '../../../_lib/services/myraService';
 import { claimPaymentOnce, generateFirebaseAccessKeys } from '../../../_lib/services/myraAccessKeyFirestoreService';
 import logger from '../../../_lib/utils/logger';
+import { connectMongo } from '@/lib/db/mongoose';
+import { creditReferralCommission } from '../../../_lib/services/referralService';
 
 export const OPTIONS = handleOptions(['POST']);
 
@@ -79,6 +81,18 @@ export const POST = withApi(
       note: `Website purchase (${paymentId})`,
       createdBy: 'website_purchase',
     });
+    try {
+      await connectMongo();
+      await creditReferralCommission({
+        referralCode: body.referral_code,
+        buyerEmail: email,
+        paymentId,
+        amount: planConfig.price,
+      });
+    } catch (error) {
+      logger.error('MYRA website purchase referral credit failed', { detail: (error as Error)?.message });
+    }
+
     return success({ key: record.key, plan, plan_price: planConfig.price }, 'Access key issued.');
   },
   { rateLimit: { scope: 'myra-website-purchase-verify', max: 20 } }

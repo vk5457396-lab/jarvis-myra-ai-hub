@@ -16,6 +16,7 @@ import {
 } from "recharts";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { getStoredReferralCode } from "@/lib/referral";
 
 interface Profile {
   id: string;
@@ -132,6 +133,7 @@ const Dashboard = () => {
               order_id: response.razorpay_order_id,
               payment_id: response.razorpay_payment_id,
               signature: response.razorpay_signature,
+              referral_code: getStoredReferralCode(),
             }),
           });
           const verifyJson = await verifyRes.json();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Eye, EyeOff, UserPlus, Mail, Lock, User, ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { getStoredReferralCode } from "@/lib/referral";
 
 const Signup = () => {
   const [fullName, setFullName] = useState("");
@@ -21,7 +22,12 @@ const Signup = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const referralCode = searchParams.get("ref") || "";
+  const [referralCode, setReferralCode] = useState(searchParams.get("ref") || "");
+  // The shared link lands on /pricing?ref=…, so fall back to the code ReferralBanner stored.
+  useEffect(() => {
+    if (!referralCode) setReferralCode(getStoredReferralCode() || "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const isMyraLogin = searchParams.get("redirect") === "myra://auth";
   const successUrl = isMyraLogin ? "/auth/myra" : "/dashboard";
   const loginUrl = isMyraLogin ? "/login?redirect=myra%3A%2F%2Fauth" : "/login";

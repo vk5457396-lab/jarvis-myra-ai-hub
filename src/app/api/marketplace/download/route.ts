@@ -11,6 +11,7 @@ import logger from '../../_lib/utils/logger';
 import { connectMongo } from '@/lib/db/mongoose';
 import { MarketplaceProduct, MarketplaceDownload } from '@/lib/db/models';
 import { auth } from '@/lib/auth/config';
+import { creditReferralCommission } from '../../_lib/services/referralService';
 
 export const OPTIONS = handleOptions(['POST']);
 
@@ -24,8 +25,15 @@ export const POST = withApi(
     const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
 
     const body = await req.json();
-    const { product_id, razorpay_payment_id, razorpay_order_id, razorpay_signature, customer_name, customer_email } =
-      body;
+    const {
+      product_id,
+      razorpay_payment_id,
+      razorpay_order_id,
+      razorpay_signature,
+      customer_name,
+      customer_email,
+      referral_code,
+    } = body;
 
     if (!product_id) return NextResponse.json({ error: 'product_id required' }, { status: 400 });
 
@@ -49,6 +57,43 @@ export const POST = withApi(
         .digest('hex');
       if (expected !== razorpay_signature) {
         return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 });
+      }
+
+      // The signature proves this order was paid, but not WHICH product it was for — confirm with
+      // Razorpay (our server set notes.product_id at order creation) so a cheap product's payment
+      // can't unlock an expensive one.
+      const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
+      if (!RAZORPAY_KEY_ID) {
+        return NextResponse.json({ error: 'Payment verification unavailable' }, { status: 500 });
+      }
+      const basic = Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString('base64');
+      let order: any = null;
+      try {
+        const orderRes = await fetch(`https://api.razorpay.com/v1/orders/${encodeURIComponent(razorpay_order_id)}`, {
+          headers: { Authorization: `Basic ${basic}` },
+        });
+        order = orderRes.ok ? await orderRes.json() : null;
+      } catch (error) {
+        logger.error('Marketplace order lookup failed', { detail: (error as Error)?.message });
+      }
+      if (!order) {
+        return NextResponse.json({ error: 'Unable to verify payment. Please contact support.' }, { status: 502 });
+      }
+      const paidRupees = Math.round((order.amount || 0) / 100);
+      if (order.notes?.product_id !== product._id.toString()) {
+        return NextResponse.json({ error: 'This payment does not match this product.' }, { status: 400 });
+      }
+
+      // Referral commission on the verified amount. Never blocks the download.
+      try {
+        await creditReferralCommission({
+          referralCode: referral_code,
+          buyerEmail: customer_email || session?.user?.email,
+          paymentId: razorpay_payment_id,
+          amount: paidRupees,
+        });
+      } catch (error) {
+        logger.error('Marketplace referral credit failed', { detail: (error as Error)?.message });
       }
     }
 

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ContactFormModal from "@/components/ContactFormModal";
 import { openDownload } from "@/lib/appDownload";
+import { getStoredReferralCode } from "@/lib/referral";
 import VideoThumbnail from "@/components/VideoThumbnail";
 
 interface MarketProduct {
@@ -196,6 +197,7 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
             razorpay_signature: response.razorpay_signature,
             customer_name: contact.name,
             customer_email: contact.email,
+            referral_code: getStoredReferralCode(),
           });
           if (ok) toast.success("Payment successful! Download started.");
         },
