@@ -38,7 +38,9 @@ interface Earning {
 interface Withdrawal {
   id: string;
   amount: number;
-  upi_id: string;
+  method: "upi" | "bank";
+  upi_id: string | null;
+  payout_to: string;
   status: string;
   created_at: string;
   processed_at: string | null;
@@ -66,6 +68,11 @@ declare global {
   }
 }
 
+const MIN_WITHDRAWAL = 500;
+
+const fieldClass =
+  "w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:border-rose-500/50 focus-visible:ring-2 focus-visible:ring-rose-500/30";
+
 const loadRazorpayScript = () =>
   new Promise<boolean>((resolve) => {
     if (window.Razorpay) return resolve(true);
@@ -83,7 +90,11 @@ const Dashboard = () => {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [referralCount, setReferralCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [payoutMethod, setPayoutMethod] = useState<"upi" | "bank">("upi");
   const [upiId, setUpiId] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [bankAccount, setBankAccount] = useState("");
+  const [bankIfsc, setBankIfsc] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawing, setWithdrawing] = useState(false);
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
@@ -196,17 +207,30 @@ const Dashboard = () => {
   };
 
   const handleWithdraw = async () => {
-    if (!upiId.trim()) { toast.error("UPI ID daalo"); return; }
     const amt = parseInt(withdrawAmount);
     if (!amt || amt <= 0) { toast.error("Valid amount daalo"); return; }
-    if (amt > 500) { toast.error("Maximum ₹500 withdraw kar sakte ho"); return; }
+    if (amt < MIN_WITHDRAWAL) { toast.error(`Minimum ₹${MIN_WITHDRAWAL} withdraw kar sakte ho`); return; }
     if (amt > (profile?.wallet_balance || 0)) { toast.error("Insufficient balance"); return; }
+    if (payoutMethod === "upi" && !upiId.trim()) { toast.error("UPI ID daalo"); return; }
+    if (payoutMethod === "bank" && (!bankName.trim() || !bankAccount.trim() || !bankIfsc.trim())) {
+      toast.error("Bank ki saari details daalo"); return;
+    }
 
     setWithdrawing(true);
     const res = await fetch("/api/wallet/withdraw", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ amount: amt, upi_id: upiId.trim() }),
+      body: JSON.stringify(
+        payoutMethod === "upi"
+          ? { amount: amt, method: "upi", upi_id: upiId.trim() }
+          : {
+              amount: amt,
+              method: "bank",
+              bank_account_name: bankName.trim(),
+              bank_account_number: bankAccount.replace(/\s+/g, ""),
+              bank_ifsc: bankIfsc.trim().toUpperCase(),
+            }
+      ),
     });
     const json = await res.json();
 
@@ -216,6 +240,9 @@ const Dashboard = () => {
       toast.success("Withdrawal request submitted!");
       setProfile((prev) => (prev ? { ...prev, wallet_balance: prev.wallet_balance - amt } : prev));
       setUpiId("");
+      setBankName("");
+      setBankAccount("");
+      setBankIfsc("");
       setWithdrawAmount("");
       setShowWithdrawForm(false);
       const walletJson = await (await fetch("/api/wallet")).json();
@@ -249,6 +276,8 @@ const Dashboard = () => {
   }, []).reverse();
 
   const totalEarnings = earnings.reduce((s, e) => s + e.commission_amount, 0);
+  const walletBalance = profile?.wallet_balance || 0;
+  const canWithdraw = walletBalance >= MIN_WITHDRAWAL;
 
   const stats = [
     { icon: Wallet, label: "Wallet Balance", value: `₹${profile?.wallet_balance || 0}`, gradient: "from-emerald-500 to-red-500", accentHsl: "160 70% 50%" },
@@ -435,47 +464,126 @@ const Dashboard = () => {
                 <div className="absolute inset-[-200%]" style={{ background: "conic-gradient(from 0deg, hsla(350,65%,45%,0.3), transparent 50%, hsla(350,65%,45%,0.3))" }} />
               </div>
               <div className="relative rounded-[calc(1rem-1px)] m-px p-6" style={{ background: "linear-gradient(165deg, hsla(350,65%,45%,0.04) 0%, hsla(0,0%,6%,0.97) 100%)" }}>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between gap-3 mb-4">
                   <h2 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
-                    <ArrowDownToLine size={20} className="text-rose-400" /> Withdraw Earnings
+                    <ArrowDownToLine size={20} className="text-rose-400" aria-hidden="true" /> Withdraw Earnings
                   </h2>
                   <Button
                     onClick={() => setShowWithdrawForm(!showWithdrawForm)}
+                    disabled={!canWithdraw}
+                    aria-expanded={showWithdrawForm}
+                    aria-controls="withdraw-form"
                     variant="outline"
-                    className="rounded-xl border-rose-500/30 text-rose-400 hover:bg-rose-500/10 gap-2"
+                    className="rounded-xl border-rose-500/30 text-rose-400 hover:bg-rose-500/10 gap-2 min-h-11"
                   >
-                    <IndianRupee size={14} /> Withdraw
+                    <IndianRupee size={14} aria-hidden="true" /> Withdraw
                   </Button>
                 </div>
-                <p className="text-muted-foreground text-sm mb-4">Maximum withdrawal: <span className="text-rose-400 font-bold">₹500</span> per request. Payment via UPI.</p>
+                <p className="text-muted-foreground text-sm mb-4">
+                  Minimum withdrawal: <span className="text-rose-400 font-bold">₹{MIN_WITHDRAWAL}</span>. Paid to your UPI ID or bank account.
+                </p>
+
+                {!canWithdraw && (
+                  <div className="mb-4">
+                    <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+                      <span>₹{walletBalance} earned</span>
+                      <span>₹{MIN_WITHDRAWAL - walletBalance} more to withdraw</span>
+                    </div>
+                    <div
+                      className="h-2 rounded-full bg-white/5 overflow-hidden"
+                      role="progressbar"
+                      aria-label="Progress to minimum withdrawal"
+                      aria-valuemin={0}
+                      aria-valuemax={MIN_WITHDRAWAL}
+                      aria-valuenow={walletBalance}
+                    >
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-rose-500 to-amber-400 transition-[width] duration-500 motion-reduce:transition-none"
+                        style={{ width: `${Math.min(100, (walletBalance / MIN_WITHDRAWAL) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <AnimatePresence>
-                  {showWithdrawForm && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                      <div className="space-y-3 pt-2 pb-4 border-t border-white/5">
-                        <input
-                          type="text"
-                          placeholder="UPI ID (e.g. name@upi)"
-                          value={upiId}
-                          onChange={e => setUpiId(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm focus:outline-none focus:border-rose-500/50 mt-3"
-                        />
-                        <input
-                          type="number"
-                          placeholder="Amount (max ₹500)"
-                          value={withdrawAmount}
-                          onChange={e => setWithdrawAmount(e.target.value)}
-                          max={500}
-                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm focus:outline-none focus:border-rose-500/50"
-                        />
+                  {showWithdrawForm && canWithdraw && (
+                    <motion.div id="withdraw-form" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                      <form
+                        onSubmit={e => { e.preventDefault(); handleWithdraw(); }}
+                        className="space-y-4 pt-4 pb-4 border-t border-white/5"
+                      >
+                        <fieldset>
+                          <legend className="text-xs text-muted-foreground font-display tracking-wider mb-2">PAYOUT METHOD</legend>
+                          <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-white/5 border border-white/10" role="radiogroup" aria-label="Payout method">
+                            {(["upi", "bank"] as const).map(m => (
+                              <button
+                                key={m}
+                                type="button"
+                                role="radio"
+                                aria-checked={payoutMethod === m}
+                                onClick={() => setPayoutMethod(m)}
+                                className={`min-h-11 rounded-lg text-sm font-display font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 ${
+                                  payoutMethod === m ? "bg-gradient-to-r from-rose-600 to-red-600 text-white" : "text-muted-foreground hover:text-foreground"
+                                }`}
+                              >
+                                {m === "upi" ? "UPI" : "Bank Account"}
+                              </button>
+                            ))}
+                          </div>
+                        </fieldset>
+
+                        {payoutMethod === "upi" ? (
+                          <div>
+                            <label htmlFor="wd-upi" className="block text-sm text-foreground mb-1.5">UPI ID</label>
+                            <input id="wd-upi" type="text" autoComplete="off" placeholder="name@upi" value={upiId} onChange={e => setUpiId(e.target.value)} className={fieldClass} />
+                          </div>
+                        ) : (
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="sm:col-span-2">
+                              <label htmlFor="wd-bank-name" className="block text-sm text-foreground mb-1.5">Account holder name</label>
+                              <input id="wd-bank-name" type="text" autoComplete="name" value={bankName} onChange={e => setBankName(e.target.value)} className={fieldClass} />
+                            </div>
+                            <div>
+                              <label htmlFor="wd-bank-acct" className="block text-sm text-foreground mb-1.5">Account number</label>
+                              <input id="wd-bank-acct" type="text" inputMode="numeric" autoComplete="off" value={bankAccount} onChange={e => setBankAccount(e.target.value.replace(/[^\d\s]/g, ""))} className={`${fieldClass} font-mono`} />
+                            </div>
+                            <div>
+                              <label htmlFor="wd-bank-ifsc" className="block text-sm text-foreground mb-1.5">IFSC code</label>
+                              <input id="wd-bank-ifsc" type="text" autoComplete="off" placeholder="SBIN0001234" maxLength={11} value={bankIfsc} onChange={e => setBankIfsc(e.target.value.toUpperCase())} className={`${fieldClass} font-mono uppercase`} />
+                            </div>
+                          </div>
+                        )}
+
+                        <div>
+                          <label htmlFor="wd-amount" className="block text-sm text-foreground mb-1.5">Amount (₹)</label>
+                          <input
+                            id="wd-amount"
+                            type="number"
+                            inputMode="numeric"
+                            min={MIN_WITHDRAWAL}
+                            max={walletBalance}
+                            placeholder={`₹${MIN_WITHDRAWAL} – ₹${walletBalance}`}
+                            value={withdrawAmount}
+                            onChange={e => setWithdrawAmount(e.target.value)}
+                            aria-describedby="wd-amount-help"
+                            className={fieldClass}
+                          />
+                          <div id="wd-amount-help" className="flex justify-between mt-1.5 text-xs text-muted-foreground">
+                            <span>Minimum ₹{MIN_WITHDRAWAL}</span>
+                            <button type="button" onClick={() => setWithdrawAmount(String(walletBalance))} className="text-rose-400 hover:underline focus-visible:outline-none focus-visible:underline">
+                              Withdraw all (₹{walletBalance})
+                            </button>
+                          </div>
+                        </div>
+
                         <Button
-                          onClick={handleWithdraw}
+                          type="submit"
                           disabled={withdrawing}
-                          className="w-full rounded-xl bg-gradient-to-r from-rose-600 to-red-600 font-display font-bold"
+                          className="w-full min-h-11 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 font-display font-bold"
                         >
                           {withdrawing ? "Processing..." : "Submit Withdrawal Request"}
                         </Button>
-                      </div>
+                      </form>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -489,7 +597,7 @@ const Dashboard = () => {
                         <div className="flex items-center gap-3">
                           {statusIcon(w.status)}
                           <div>
-                            <p className="text-sm font-medium text-foreground">₹{w.amount} → {w.upi_id}</p>
+                            <p className="text-sm font-medium text-foreground">₹{w.amount} → {w.payout_to || w.upi_id}</p>
                             <p className="text-xs text-muted-foreground">{new Date(w.created_at).toLocaleDateString()}</p>
                           </div>
                         </div>

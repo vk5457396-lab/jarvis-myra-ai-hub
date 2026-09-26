@@ -5,7 +5,7 @@ import { withApi, handleOptions } from '../_lib/middleware/handler';
 import { requireUser } from '../_lib/middleware/user';
 import { success } from '../_lib/utils/response';
 import { connectMongo } from '@/lib/db/mongoose';
-import { Profile, ReferralEarning, Withdrawal } from '@/lib/db/models';
+import { Profile, ReferralEarning, Withdrawal, MIN_WITHDRAWAL_AMOUNT, toPublicWithdrawal } from '@/lib/db/models';
 
 export const OPTIONS = handleOptions(['GET']);
 
@@ -28,14 +28,8 @@ export const GET = withApi(async () => {
       status: e.status,
       created_at: e.createdAt,
     })),
-    withdrawals: withdrawals.map((w: any) => ({
-      id: w._id.toString(),
-      amount: w.amount,
-      upi_id: w.upiId,
-      status: w.status,
-      created_at: w.createdAt,
-      processed_at: w.processedAt,
-    })),
+    withdrawals: withdrawals.map((w: any) => toPublicWithdrawal(w, { maskAccount: true })),
     referral_count: referralCount,
+    min_withdrawal: MIN_WITHDRAWAL_AMOUNT,
   });
 });

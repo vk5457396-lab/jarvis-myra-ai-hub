@@ -18,7 +18,7 @@ export {
 } from './Myra';
 export { ReferralEarning, type ReferralEarningDoc } from './ReferralEarning';
 export { Purchase, type PurchaseDoc } from './Purchase';
-export { Withdrawal, type WithdrawalDoc } from './Withdrawal';
+export { Withdrawal, MIN_WITHDRAWAL_AMOUNT, toPublicWithdrawal, type WithdrawalDoc } from './Withdrawal';
 export { TelegramAlertSetting, type TelegramAlertSettingDoc } from './TelegramAlertSetting';
 export { MarketplaceProduct, type MarketplaceProductDoc } from './MarketplaceProduct';
 export { MarketplaceDownload, type MarketplaceDownloadDoc } from './MarketplaceDownload';

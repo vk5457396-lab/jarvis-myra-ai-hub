@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import AdminProductsTab from "@/components/admin/AdminProductsTab";
 import NotificationCenter from "@/components/admin/NotificationCenter";
+import CreditMissedReferral from "@/components/admin/CreditMissedReferral";
 
 interface UserProfile {
   id: string;
@@ -38,13 +39,33 @@ interface WithdrawalRow {
   id: string;
   user_id: string;
   amount: number;
-  upi_id: string;
+  method: "upi" | "bank";
+  upi_id: string | null;
+  bank_account_name: string | null;
+  bank_account_number: string | null;
+  bank_ifsc: string | null;
   status: string;
   created_at: string;
   processed_at: string | null;
 }
 
 const COLORS = ["#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
+
+/** Full payout destination so the admin can send the money: UPI ID, or bank name / A/C / IFSC. */
+const PayoutDetails = ({ w }: { w: WithdrawalRow }) =>
+  w.method === "bank" ? (
+    <div className="font-mono text-xs text-muted-foreground space-y-0.5">
+      <p className="font-sans text-[10px] font-display font-bold tracking-wider text-sky-400">BANK</p>
+      <p className="text-foreground">{w.bank_account_name}</p>
+      <p>A/C {w.bank_account_number}</p>
+      <p>IFSC {w.bank_ifsc}</p>
+    </div>
+  ) : (
+    <div className="font-mono text-xs text-muted-foreground">
+      <p className="font-sans text-[10px] font-display font-bold tracking-wider text-violet-400">UPI</p>
+      <p className="break-all">{w.upi_id}</p>
+    </div>
+  );
 
 const AdminDashboard = () => {
   const { status } = useSession();
@@ -239,6 +260,8 @@ const AdminDashboard = () => {
             )}
           </div>
 
+          <CreditMissedReferral onCredited={loadOverview} />
+
           {/* Tabs */}
           <div className="flex gap-3 mb-6">
             <button
@@ -376,7 +399,7 @@ const AdminDashboard = () => {
                                 {w.status.toUpperCase()}
                               </span>
                             </div>
-                            <p className="text-xs text-muted-foreground font-mono truncate mt-1">{w.upi_id}</p>
+                            <div className="mt-2"><PayoutDetails w={w} /></div>
                             <div className="flex items-center justify-between mt-3">
                               <span className="text-violet-400 font-bold text-sm">₹{w.amount}</span>
                               <span className="text-xs text-muted-foreground">{new Date(w.created_at).toLocaleDateString()}</span>
@@ -410,7 +433,7 @@ const AdminDashboard = () => {
                           <thead>
                             <tr className="border-b border-white/10">
                               <th className="text-left py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">USER</th>
-                              <th className="text-left py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">UPI ID</th>
+                              <th className="text-left py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">PAY TO</th>
                               <th className="text-right py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">AMOUNT</th>
                               <th className="text-center py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">STATUS</th>
                               <th className="text-center py-3 px-3 text-muted-foreground font-display text-xs tracking-wider">DATE</th>
@@ -421,7 +444,7 @@ const AdminDashboard = () => {
                             {withdrawals.map(w => (
                               <tr key={w.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                                 <td className="py-3 px-3 font-medium text-foreground">{getUserName(w.user_id)}</td>
-                                <td className="py-3 px-3 text-muted-foreground font-mono text-xs">{w.upi_id}</td>
+                                <td className="py-3 px-3"><PayoutDetails w={w} /></td>
                                 <td className="py-3 px-3 text-right text-violet-400 font-bold">₹{w.amount}</td>
                                 <td className="py-3 px-3 text-center">
                                   <span className={`inline-flex items-center gap-1 text-xs font-display font-bold px-2 py-1 rounded-lg ${

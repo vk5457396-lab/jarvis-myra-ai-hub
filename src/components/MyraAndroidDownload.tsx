@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { useAppRelease } from "@/hooks/useAppRelease";
 import { startAppDownload, openDownload } from "@/lib/appDownload";
 import { myraAndroidFeatures } from "@/data/features";
+import { getStoredReferralCode } from "@/lib/referral";
 
 const LIFETIME_PLAN = "membership";
 const LIFETIME_PRICE = 999;
@@ -133,6 +134,7 @@ const MyraAndroidDownload = ({
               order_id: response.razorpay_order_id,
               payment_id: response.razorpay_payment_id,
               signature: response.razorpay_signature,
+              referral_code: getStoredReferralCode(),
             }),
           });
           const verifyJson = await verifyRes.json();
