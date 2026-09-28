@@ -12,12 +12,25 @@ import { ApiError } from '../utils/response';
  * Firebase project, never a live backend connection.
  */
 const COLLECTION = 'myra_access_keys';
-const KEY_PREFIX = 'MYRA';
+
+/**
+ * Which app a key was generated for - cosmetic/bookkeeping only. Both apps redeem from this
+ * SAME collection by raw key string (see LicenseRepository.kt / AccessKeyManager.kt), so a key's
+ * prefix or `app` field never gates which app can redeem it - either app will happily claim any
+ * key here. This exists purely so the admin panel can label/filter keys by intended product,
+ * since a single key still can't be simultaneously "active" in both apps: MYRA and LIA are
+ * separately signed, so they compute different device ids for the same physical phone (see
+ * DeviceManager.kt's doc comment and resetFirebaseAccessKeyDevice below) - a key redeemed in one
+ * app shows as "already active on a different phone" in the other until its device lock is reset.
+ */
+export type KeyApp = 'myra' | 'lia';
+const KEY_PREFIXES: Record<KeyApp, string> = { myra: 'MYRA', lia: 'LIA' };
 
 type KeyStatus = 'available' | 'redeemed' | 'disabled';
 
 interface AccessKeyDoc {
   key: string;
+  app: KeyApp;
   plan: string;
   durationDays: number | null;
   status: KeyStatus;
@@ -37,6 +50,7 @@ function toPublic(data: AccessKeyDoc) {
   return {
     id: data.key,
     key: data.key,
+    app: data.app ?? 'myra', // legacy docs predate this field - they were all MYRA at the time
     plan: data.plan,
     credits: MYRA_PLANS[data.plan]?.credits ?? null,
     duration_days: data.durationDays,
@@ -56,7 +70,7 @@ function toPublic(data: AccessKeyDoc) {
 async function createUniqueKeyDoc(payload: Omit<AccessKeyDoc, 'key' | 'createdAt'>): Promise<AccessKeyDoc> {
   const col = db().collection(COLLECTION);
   for (let attempt = 0; attempt < 8; attempt++) {
-    const key = generateKey(KEY_PREFIX, 16);
+    const key = generateKey(KEY_PREFIXES[payload.app], 16);
     const ref = col.doc(key);
     try {
       await ref.create({ ...payload, key, createdAt: FieldValue.serverTimestamp() });
@@ -72,6 +86,7 @@ async function createUniqueKeyDoc(payload: Omit<AccessKeyDoc, 'key' | 'createdAt
 }
 
 export async function generateFirebaseAccessKeys({
+  app,
   plan,
   count,
   durationDays,
@@ -79,6 +94,7 @@ export async function generateFirebaseAccessKeys({
   assignedEmail,
   createdBy,
 }: {
+  app?: KeyApp;
   plan: string;
   count: number;
   durationDays?: number | null;
@@ -86,6 +102,7 @@ export async function generateFirebaseAccessKeys({
   assignedEmail?: string | null;
   createdBy?: string | null;
 }) {
+  const resolvedApp: KeyApp = app === 'lia' ? 'lia' : 'myra';
   if (!MYRA_PLANS[plan]) {
     throw ApiError.badRequest(`plan must be one of: ${Object.keys(MYRA_PLANS).join(', ')}.`, 'INVALID_PLAN');
   }
@@ -100,6 +117,7 @@ export async function generateFirebaseAccessKeys({
   for (let i = 0; i < count; i++) {
     docs.push(
       await createUniqueKeyDoc({
+        app: resolvedApp,
         plan,
         durationDays: resolvedDuration,
         status: 'available',

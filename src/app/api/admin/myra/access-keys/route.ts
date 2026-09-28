@@ -58,6 +58,10 @@ export const POST = withApi(
     if (!MYRA_PLANS[plan]) {
       throw ApiError.badRequest(`plan must be one of: ${Object.keys(MYRA_PLANS).join(', ')}.`, 'INVALID_PLAN');
     }
+    const app = String(body.app || '').trim().toLowerCase();
+    if (app && app !== 'myra' && app !== 'lia') {
+      throw ApiError.badRequest('app must be "myra" or "lia".', 'INVALID_FIELD', { field: 'app' });
+    }
     const count = Math.min(Math.max(Math.trunc(Number(body.count) || 1), 1), 100);
     const durationDays =
       body.duration_days !== undefined && body.duration_days !== null ? Number(body.duration_days) : undefined;
@@ -65,6 +69,7 @@ export const POST = withApi(
     const assignedEmail = body.assigned_email ? validateEmail(body.assigned_email) : null;
 
     const keys = await generateFirebaseAccessKeys({
+      app: app as 'myra' | 'lia' | undefined,
       plan,
       count,
       durationDays,

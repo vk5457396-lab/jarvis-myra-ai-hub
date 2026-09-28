@@ -72,9 +72,15 @@ interface ConnectorRow {
   enabled: boolean;
 }
 
+const KEY_APP_OPTIONS = [
+  { value: "myra", label: "MYRA" },
+  { value: "lia", label: "LIA" },
+];
+
 interface AccessKeyRow {
   id: string;
   key: string;
+  app: string;
   plan: string;
   credits: number | null;
   duration_days: number | null;
@@ -142,6 +148,7 @@ const MyraAdminPage = () => {
   const [blockingDeviceId, setBlockingDeviceId] = useState<string | null>(null);
   const [unlinkingDeviceId, setUnlinkingDeviceId] = useState<string | null>(null);
 
+  const [keyApp, setKeyApp] = useState("myra");
   const [keyPlan, setKeyPlan] = useState("premium");
   const [keyCount, setKeyCount] = useState(1);
   const [keyAssignedEmail, setKeyAssignedEmail] = useState("");
@@ -425,9 +432,9 @@ const MyraAdminPage = () => {
     try {
       await api("/api/admin/myra/access-keys", {
         method: "POST",
-        body: JSON.stringify({ plan: keyPlan, count: qty, assigned_email: assignedEmail || undefined }),
+        body: JSON.stringify({ app: keyApp, plan: keyPlan, count: qty, assigned_email: assignedEmail || undefined }),
       });
-      toast.success(`${qty} access key${qty > 1 ? "s" : ""} generated`);
+      toast.success(`${qty} ${keyApp === "lia" ? "LIA" : "MYRA"} access key${qty > 1 ? "s" : ""} generated`);
       setKeyAssignedEmail("");
       await loadKeys();
     } catch (e) {
@@ -980,6 +987,17 @@ const MyraAdminPage = () => {
 
           <div className="mb-4 flex flex-wrap items-end gap-2">
             <div>
+              <Label className="mb-1 block text-xs">App</Label>
+              <Select value={keyApp} onValueChange={setKeyApp}>
+                <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {KEY_APP_OPTIONS.map((a) => (
+                    <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label className="mb-1 block text-xs">Plan</Label>
               <Select value={keyPlan} onValueChange={setKeyPlan}>
                 <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
@@ -1100,6 +1118,7 @@ const MyraAdminPage = () => {
                       </div>
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span className="uppercase">{k.app === "lia" ? "LIA" : "MYRA"}</span>
                       <span>Plan: {k.plan}</span>
                       <span className={
                         k.status === "available" ? "text-emerald-400" :
@@ -1120,6 +1139,7 @@ const MyraAdminPage = () => {
               <thead>
                 <tr className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
                   <th className="p-2 text-left">Key</th>
+                  <th className="p-2 text-left">App</th>
                   <th className="p-2 text-left">Plan</th>
                   <th className="p-2 text-left">Status</th>
                   <th className="p-2 text-left">Assigned to</th>
@@ -1131,6 +1151,7 @@ const MyraAdminPage = () => {
                 {keys.map((k) => (
                   <tr key={k.id} className="border-b border-border/60">
                     <td className="p-2 font-mono text-xs">{k.key}</td>
+                    <td className="p-2 uppercase text-xs">{k.app === "lia" ? "LIA" : "MYRA"}</td>
                     <td className="p-2">{k.plan}</td>
                     <td className="p-2">
                       <span className={
