@@ -12,6 +12,8 @@ const siteSettingsSchema = new Schema(
       jarvis: { type: Number, default: 0, min: 0 },
       myra: { type: Number, default: 0, min: 0 },
       bundle: { type: Number, default: 0, min: 0 },
+      /** Real sales whose product isn't known — counted in the total only. */
+      other: { type: Number, default: 0, min: 0 },
     },
     updatedBy: { type: String, default: null },
   },

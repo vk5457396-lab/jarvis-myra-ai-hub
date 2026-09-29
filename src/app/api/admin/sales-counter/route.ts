@@ -35,6 +35,7 @@ export const PUT = withApi(
       jarvis: count(body.jarvis, 'jarvis'),
       myra: count(body.myra, 'myra'),
       bundle: count(body.bundle, 'bundle'),
+      other: count(body.other, 'other'),
     };
     await connectMongo();
     await SiteSettings.findByIdAndUpdate(

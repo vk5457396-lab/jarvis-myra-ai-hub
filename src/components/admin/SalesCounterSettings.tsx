@@ -6,7 +6,14 @@ import { BarChart3, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type Row = { product_type: string; count: number; source: string };
-type Offline = { jarvis: number; myra: number; bundle: number };
+type Offline = { jarvis: number; myra: number; bundle: number; other: number };
+
+const OFFLINE_FIELDS: { key: keyof Offline; label: string }[] = [
+  { key: "jarvis", label: "Jarvis sales" },
+  { key: "myra", label: "MYRA sales" },
+  { key: "bundle", label: "Bundle sales" },
+  { key: "other", label: "Other sales (product not known)" },
+];
 
 const SOURCE_LABEL: Record<string, string> = {
   purchases: "Website checkouts",
@@ -23,7 +30,8 @@ const fieldClass =
  */
 const SalesCounterSettings = () => {
   const [rows, setRows] = useState<Row[]>([]);
-  const [offline, setOffline] = useState<Offline>({ jarvis: 0, myra: 0, bundle: 0 });
+  const [offline, setOffline] = useState<Offline>({ jarvis: 0, myra: 0, bundle: 0, other: 0 });
+  const [target, setTarget] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -49,7 +57,18 @@ const SalesCounterSettings = () => {
     return acc;
   }, {});
   const countedTotal = counted.reduce((s, r) => s + r.count, 0);
-  const offlineTotal = offline.jarvis + offline.myra + offline.bundle;
+  const offlineTotal = offline.jarvis + offline.myra + offline.bundle + offline.other;
+
+  /** Sets "Other" so the homepage total equals the number the admin knows is right. */
+  const applyTarget = () => {
+    const t = Math.floor(Number(target));
+    const knownWithoutOther = countedTotal + offline.jarvis + offline.myra + offline.bundle;
+    if (!Number.isFinite(t) || t < knownWithoutOther) {
+      toast.error(`Total can't be less than the ${knownWithoutOther} sales already counted`);
+      return;
+    }
+    setOffline((o) => ({ ...o, other: t - knownWithoutOther }));
+  };
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,13 +110,29 @@ const SalesCounterSettings = () => {
           <p className="text-xs text-muted-foreground mt-3 mb-3">
             Add real sales the website never recorded — Telegram, direct UPI, in-app or before this site. Enter actual numbers only; they appear publicly on the homepage.
           </p>
-          <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
-            {(["jarvis", "myra", "bundle"] as const).map((k) => (
-              <div key={k}>
-                <label htmlFor={`offline-${k}`} className="block text-xs text-foreground mb-1.5">
-                  {k === "jarvis" ? "Jarvis sales" : k === "myra" ? "MYRA sales" : "Bundle sales"}
-                </label>
-                <input id={`offline-${k}`} type="number" inputMode="numeric" min={0} value={offline[k]} onChange={set(k)} className={fieldClass} />
+          <div className="flex flex-wrap items-end gap-2 mb-4">
+            <div>
+              <label htmlFor="sales-target" className="block text-xs text-foreground mb-1.5">Set total to</label>
+              <input
+                id="sales-target"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                placeholder="600"
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
+                className={`${fieldClass} w-32`}
+              />
+            </div>
+            <Button type="button" variant="outline" onClick={applyTarget} className="min-h-11 rounded-xl">
+              Fill "Other" to match
+            </Button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1.4fr_auto] lg:items-end">
+            {OFFLINE_FIELDS.map(({ key, label }) => (
+              <div key={key}>
+                <label htmlFor={`offline-${key}`} className="block text-xs text-foreground mb-1.5">{label}</label>
+                <input id={`offline-${key}`} type="number" inputMode="numeric" min={0} value={offline[key]} onChange={set(key)} className={fieldClass} />
               </div>
             ))}
             <Button type="submit" disabled={saving} className="min-h-11 rounded-xl font-display font-bold">
@@ -105,7 +140,7 @@ const SalesCounterSettings = () => {
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-3">
-            Homepage total: <span className="font-bold text-foreground tabular-nums">{countedTotal + offlineTotal}</span>
+            Homepage total after saving: <span className="font-bold text-foreground tabular-nums">{countedTotal + offlineTotal}</span>
           </p>
         </>
       )}

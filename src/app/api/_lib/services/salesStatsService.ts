@@ -4,7 +4,7 @@ import logger from '../utils/logger';
 
 export type SalesRow = { product_type: string; count: number; revenue: number; source: string };
 
-export type OfflineSales = { jarvis: number; myra: number; bundle: number };
+export type OfflineSales = { jarvis: number; myra: number; bundle: number; other: number };
 
 export async function getOfflineSales(): Promise<OfflineSales> {
   const doc: any = await SiteSettings.findById(SITE_SETTINGS_ID).lean();
@@ -12,6 +12,8 @@ export async function getOfflineSales(): Promise<OfflineSales> {
     jarvis: doc?.offlineSales?.jarvis ?? 0,
     myra: doc?.offlineSales?.myra ?? 0,
     bundle: doc?.offlineSales?.bundle ?? 0,
+    // product_type "other" matches no product in usePurchaseCounts, so it only raises the total.
+    other: doc?.offlineSales?.other ?? 0,
   };
 }
 
