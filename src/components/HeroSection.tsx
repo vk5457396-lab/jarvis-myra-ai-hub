@@ -1,146 +1,186 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { ChevronRight, Mic, Cpu, Zap } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Check, ChevronRight, Mic, ShieldCheck, Infinity as InfinityIcon, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SalesSummary from "@/components/SalesSummary";
+import type { CorePhase } from "@/components/home/VoiceCore";
 
-const logo = "/assets/logo.png";
+// WebGL is client-only and not needed for first paint — load it after the text is on screen.
+const VoiceCore = dynamic(() => import("@/components/home/VoiceCore"), { ssr: false, loading: () => null });
+
+/** Real things Jarvis/MYRA do (see data/features.ts), shown as the core "speaks". */
+const COMMANDS = [
+  { say: "Open Chrome and search today's weather", done: "Chrome opened with the weather" },
+  { say: "Send WhatsApp to Rahul: running 10 minutes late", done: "WhatsApp message sent" },
+  { say: "Set volume to 40 percent", done: "Volume set to 40%" },
+  { say: "Shut down the PC in 10 minutes", done: "Shutdown scheduled for 10 minutes" },
+];
+
+const TRUST = [
+  { icon: InfinityIcon, label: "One-time payment" },
+  { icon: RefreshCw, label: "Free updates" },
+  { icon: ShieldCheck, label: "Secure Razorpay checkout" },
+];
+
+const HEADLINE = ["Your PC,", "run entirely", "by voice."];
+
+/** Soft CSS stand-in shown before WebGL loads, and permanently if WebGL is unavailable. */
+function CoreFallback() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
+      <div className="h-[46%] w-[46%] rounded-full bg-[radial-gradient(circle_at_40%_35%,#ff6b6b,#7f1d1d_55%,#1a0304_80%)] shadow-[0_0_120px_20px_rgba(220,38,38,0.35)]" />
+    </div>
+  );
+}
+
+function Waveform({ active }: { active: boolean }) {
+  return (
+    <span className="flex h-4 items-end gap-[3px]" aria-hidden="true">
+      {[0, 1, 2, 3, 4].map((i) => (
+        <span
+          key={i}
+          className="w-[3px] origin-bottom rounded-full bg-primary motion-safe:animate-[voicebar_0.9s_ease-in-out_infinite]"
+          style={{ height: "100%", animationDelay: `${i * 0.12}s`, animationPlayState: active ? "running" : "paused", transform: active ? undefined : "scaleY(0.3)" }}
+        />
+      ))}
+    </span>
+  );
+}
 
 const HeroSection = () => {
-  const sectionRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
-  const contentY = useTransform(scrollYProgress, [0, 1], [0, -80]);
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-  const glowY = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  const reduceMotion = useReducedMotion();
+  const [phase, setPhase] = useState<CorePhase>("listening");
+  const [cycle, setCycle] = useState(0);
+  const [webglFailed, setWebglFailed] = useState(false);
+
+  const command = COMMANDS[(Math.max(cycle, 1) - 1) % COMMANDS.length];
+  const showCommand = cycle > 0;
 
   return (
-    <section ref={sectionRef} className="relative overflow-hidden pt-32 pb-16 md:pt-40 md:pb-24">
-      {/* Ambient glow */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          style={{ y: glowY }}
-          animate={{ x: [0, 60, 0] }}
-          transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[620px] h-[620px] rounded-full bg-primary/10 blur-[140px]"
-        />
-      </div>
+    <section className="relative overflow-hidden pt-28 pb-14 md:pt-36 md:pb-20">
+      <div className="container mx-auto max-w-6xl px-4">
+        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-6">
+          {/* Copy */}
+          <div className="relative z-10 text-center lg:text-left">
+            <h1 className="font-display text-[2.6rem] font-extrabold leading-[1.02] tracking-tight text-foreground sm:text-6xl lg:text-[4.4rem] [perspective:800px]">
+              {HEADLINE.map((line, i) => (
+                <motion.span
+                  key={line}
+                  className="block origin-bottom"
+                  initial={reduceMotion ? false : { opacity: 0, y: 28, rotateX: -55 }}
+                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                  transition={{ duration: 0.8, delay: 0.1 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {line}
+                </motion.span>
+              ))}
+            </h1>
 
-      <motion.div style={{ y: contentY, opacity: contentOpacity }} className="container mx-auto px-4 relative z-10">
-        {/* Centered text block */}
-        <div className="max-w-3xl mx-auto text-center">
+            <motion.p
+              initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.45 }}
+              className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground lg:mx-0"
+            >
+              Jarvis and MYRA open apps, send WhatsApp messages, control volume and power, and run your daily tasks when you ask out loud.
+            </motion.p>
+
+            <motion.div
+              initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.55 }}
+              className="mt-9 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start"
+            >
+              <Link href="/pricing">
+                <Button variant="hero" size="xl" className="group w-full sm:w-auto">
+                  <span>Buy Jarvis for ₹899</span>
+                  <ChevronRight size={18} className="transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                </Button>
+              </Link>
+              <Link href="/pricing#myra-buy">
+                <Button variant="glass" size="xl" className="group w-full sm:w-auto">
+                  <span>Get MYRA for ₹999</span>
+                  <ChevronRight size={18} className="transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                </Button>
+              </Link>
+            </motion.div>
+
+            <motion.ul
+              initial={reduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.7 }}
+              className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground lg:justify-start"
+            >
+              {TRUST.map(({ icon: Icon, label }) => (
+                <li key={label} className="flex items-center gap-2">
+                  <Icon size={15} className="text-primary" aria-hidden="true" /> {label}
+                </li>
+              ))}
+            </motion.ul>
+          </div>
+
+          {/* 3D voice core with live command bubbles */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass border border-primary/30 mb-7"
+            initial={reduceMotion ? false : { opacity: 0, scale: 0.86 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="relative mx-auto aspect-square w-full max-w-[520px]"
           >
-            <Zap size={14} className="text-primary" />
-            <span className="text-xs font-semibold text-primary/90 tracking-wide">
-              Next-gen AI voice automation
-            </span>
-          </motion.div>
+            <CoreFallback />
+            {!webglFailed && (
+              <VoiceCore
+                className="absolute inset-0"
+                onUnsupported={() => setWebglFailed(true)}
+                onPhase={(p, c) => {
+                  setPhase(p);
+                  setCycle(c);
+                }}
+              />
+            )}
 
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.08 }}
-            className="font-display text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.08] mb-6 text-balance"
-          >
-            <span className="text-foreground">Your PC, run entirely by</span>{" "}
-            <span className="gradient-text">voice</span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.16 }}
-            className="text-lg text-muted-foreground max-w-xl mx-auto mb-9"
-          >
-            Automate daily tasks, control apps, and get things done hands-free with{" "}
-            <span className="text-primary font-semibold">Jarvis</span> &amp;{" "}
-            <span className="text-foreground font-semibold">MYRA</span>.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.24 }}
-            className="flex flex-col sm:flex-row gap-3 justify-center"
-          >
-            <Link href="/pricing">
-              <Button variant="hero" size="xl" className="group w-full sm:w-auto">
-                <span>Buy Jarvis — ₹899</span>
-                <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
-            <Link href="/pricing#myra-buy">
-              <Button variant="glass" size="xl" className="group w-full sm:w-auto">
-                <span>Buy MYRA — ₹999</span>
-                <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
+            <div className="pointer-events-none absolute inset-x-0 bottom-[6%] flex flex-col items-center gap-2 px-4" aria-live="polite">
+              <AnimatePresence mode="popLayout">
+                {showCommand && (
+                  <motion.div
+                    key={`say-${cycle}`}
+                    initial={{ opacity: 0, y: 14, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, transition: { duration: 0.2 } }}
+                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex max-w-full items-center gap-3 rounded-2xl border border-white/10 bg-black/60 px-4 py-2.5 backdrop-blur-md"
+                  >
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                      <Mic size={14} aria-hidden="true" />
+                    </span>
+                    <span className="truncate text-sm text-foreground/90">&ldquo;{command.say}&rdquo;</span>
+                    <Waveform active={phase === "speaking"} />
+                  </motion.div>
+                )}
+                {showCommand && phase === "listening" && (
+                  <motion.div
+                    key={`done-${cycle}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-sm text-emerald-300 backdrop-blur-md"
+                  >
+                    <Check size={14} aria-hidden="true" /> {command.done}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </motion.div>
         </div>
 
-        {/* Full-width product panel */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.3 }}
-          className="relative mt-16 md:mt-20 max-w-4xl mx-auto"
-        >
-          <div className="relative rounded-3xl glass-card p-8 md:p-12 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.06] via-transparent to-transparent pointer-events-none" />
-
-            <div className="relative flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16">
-              <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-                className="relative shrink-0"
-              >
-                <div className="absolute inset-0 rounded-full bg-gradient-neon blur-2xl opacity-40" />
-                <img
-                  src={logo}
-                  alt="AI Assistant"
-                  className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-primary/50 shadow-neon-cyan relative z-10"
-                />
-              </motion.div>
-
-              <div className="flex flex-col gap-4 w-full max-w-xs">
-                <motion.div
-                  animate={{ x: [0, 4, 0] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl glass"
-                >
-                  <span className="p-2 rounded-lg bg-primary/15 text-primary"><Mic size={18} /></span>
-                  <span className="text-sm text-foreground/80">"Open Chrome and search for..."</span>
-                </motion.div>
-                <motion.div
-                  animate={{ x: [0, -4, 0] }}
-                  transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl glass"
-                >
-                  <span className="p-2 rounded-lg bg-primary/15 text-primary"><Cpu size={18} /></span>
-                  <span className="text-sm text-foreground/80">System command executed</span>
-                </motion.div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Sales stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="mt-14"
-        >
+        <div className="mt-14 md:mt-16">
           <SalesSummary />
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </section>
   );
 };

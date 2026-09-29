@@ -139,10 +139,11 @@
     border: 1px solid rgba(255,255,255,0.1);
   }
 
+  /* No backdrop-filter: blurring the full-screen background video behind every card re-ran on each
+     video frame and made scrolling stutter. A dark translucent fill reads the same at a fraction of
+     the GPU cost. */
   .glass-card {
-    background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: linear-gradient(135deg, rgba(30,30,32,0.78) 0%, rgba(16,16,18,0.72) 100%);
     border: 1px solid rgba(255,255,255,0.08);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   }
@@ -181,6 +182,12 @@
   }
 
   /* Animations */
+  /* Hero voice waveform bars — transform-only so it stays on the compositor. */
+  @keyframes voicebar {
+    0%, 100% { transform: scaleY(0.3); }
+    50% { transform: scaleY(1); }
+  }
+
   @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-10px); }

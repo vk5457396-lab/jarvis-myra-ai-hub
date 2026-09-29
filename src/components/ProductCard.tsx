@@ -132,18 +132,15 @@ const ProductCard = ({ name, tagline, price, features, variant, delay = 0, thumb
         onMouseLeave={() => { mouseX.set(0.5); mouseY.set(0.5); }}
         className="relative group rounded-3xl overflow-hidden transition-all duration-500 will-change-transform hover:-translate-y-2"
       >
-        {/* Outer animated ring */}
-        <div className="absolute inset-0 rounded-3xl p-px overflow-hidden">
-          <motion.div
-            className="absolute inset-[-300%]"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-            style={{ background: `conic-gradient(from 0deg, hsla(${hsl}, 0.6), transparent 30%, hsla(${hsl2}, 0.4), transparent 60%, hsla(${hsl}, 0.6))` }}
-          />
-        </div>
+        {/* Outer ring — static gradient. The old version rotated a layer 49x the card's area forever,
+            which was the main cause of scroll jank on the homepage. */}
+        <div
+          className="absolute inset-0 rounded-3xl"
+          style={{ background: `linear-gradient(150deg, hsla(${hsl}, 0.6), transparent 35%, hsla(${hsl2}, 0.35) 65%, hsla(${hsl}, 0.55))` }}
+        />
 
-        {/* Card body */}
-        <div className="relative rounded-[calc(1.5rem-1px)] overflow-hidden m-px backdrop-blur-xl" style={{ background: `linear-gradient(170deg, hsla(${hsl}, 0.08) 0%, hsla(0, 0%, 8%, 0.98) 30%, hsla(0, 0%, 5%, 0.99) 100%)` }}>
+        {/* Card body (opaque, so no backdrop blur — it only cost GPU time) */}
+        <div className="relative rounded-[calc(1.5rem-1px)] overflow-hidden m-px" style={{ background: `linear-gradient(170deg, hsla(${hsl}, 0.08) 0%, hsla(0, 0%, 8%, 0.98) 30%, hsla(0, 0%, 5%, 0.99) 100%)` }}>
 
           {/* Mesh gradient overlay */}
           <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ background: `radial-gradient(ellipse at 20% 0%, hsla(${hsl}, 0.15), transparent 50%), radial-gradient(ellipse at 80% 100%, hsla(${hsl2}, 0.1), transparent 50%)` }} />
@@ -153,7 +150,7 @@ const ProductCard = ({ name, tagline, price, features, variant, delay = 0, thumb
 
           {/* Floating orbs */}
           {[...Array(3)].map((_, i) => (
-            <motion.div
+            <div
               key={i}
               className="absolute rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"
               style={{
@@ -163,8 +160,6 @@ const ProductCard = ({ name, tagline, price, features, variant, delay = 0, thumb
                 left: `${10 + i * 30}%`,
                 top: `${20 + (i % 2) * 40}%`,
               }}
-              animate={{ y: [0, -15, 0], x: [0, 8, 0] }}
-              transition={{ duration: 4 + i, repeat: Infinity, delay: i * 0.5 }}
             />
           ))}
 
@@ -172,8 +167,7 @@ const ProductCard = ({ name, tagline, price, features, variant, delay = 0, thumb
           {s.popularBadge && (
             <div className="absolute -top-px left-1/2 -translate-x-1/2 z-20">
               <motion.div
-                animate={{ boxShadow: [`0 4px 20px hsla(${hsl}, 0.3)`, `0 4px 40px hsla(${hsl}, 0.6)`, `0 4px 20px hsla(${hsl}, 0.3)`] }}
-                transition={{ duration: 2, repeat: Infinity }}
+                style={{ boxShadow: `0 4px 30px hsla(${hsl}, 0.45)` }}
                 className={`bg-gradient-to-r ${s.gradient} px-8 py-2.5 rounded-b-2xl`}
               >
                 <span className="text-[10px] font-display font-black text-white tracking-[0.25em] flex items-center gap-2">
