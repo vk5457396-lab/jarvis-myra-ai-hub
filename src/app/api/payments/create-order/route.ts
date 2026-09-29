@@ -4,32 +4,9 @@ export const maxDuration = 30;
 import { NextResponse } from 'next/server';
 import { withApi, handleOptions } from '../../_lib/middleware/handler';
 import logger from '../../_lib/utils/logger';
+import { PRODUCT_PRICES, INTERNATIONAL_PRICES } from '@/lib/pricing';
 
 export const OPTIONS = handleOptions(['POST']);
-
-const PRODUCT_PRICES: Record<string, { price: number; name: string }> = {
-  jarvis: { price: 899, name: 'Jarvis 2.0' },
-  myra: { price: 899, name: 'MYRA 2.0' },
-  myra_activation: { price: 799, name: 'MYRA 2.0 Activation Key (Lifetime)' },
-  aria: { price: 899, name: 'ARIA 1.0' },
-  bundle_jarvis_myra: { price: 1599, name: 'Jarvis 2.0 + MYRA 2.0 Bundle' },
-  source_jarvis: { price: 3900, name: 'Jarvis 2.0 Source Code' },
-  source_myra: { price: 3900, name: 'MYRA 2.0 Source Code' },
-  source_aria: { price: 3900, name: 'ARIA 1.0 Source Code' },
-  source_bundle: { price: 6999, name: 'Jarvis 2.0 + MYRA 2.0 Source Code Bundle' },
-};
-
-const INTERNATIONAL_PRICES: Record<string, number> = {
-  jarvis: 1299,
-  myra: 1299,
-  myra_activation: 1155,
-  aria: 1299,
-  bundle_jarvis_myra: 2299,
-  source_jarvis: 3499,
-  source_myra: 3499,
-  source_aria: 3499,
-  source_bundle: 4999,
-};
 
 /** Replaces the `create-razorpay-order` Supabase Edge Function — same request/response shape. */
 export const POST = withApi(

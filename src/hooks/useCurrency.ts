@@ -69,6 +69,7 @@ export interface CurrencyState {
   isIndia: boolean;
   loading: boolean;
   formatPrice: (inrPrice: number) => string;
+  formatExact: (inrAmount: number) => string;
   getDisplayPrice: (inrPrice: number) => number;
   getInternationalPrice: (inrPrice: number) => number;
   setSelectedCountry: (code: string) => void;
@@ -146,5 +147,13 @@ export const useCurrency = (): CurrencyState => {
     return `${currency.symbol}${price.toLocaleString()}`;
   };
 
-  return { currency, countryCode, isIndia, loading, formatPrice, getDisplayPrice, getInternationalPrice, setSelectedCountry };
+  /** Converts an exact rupee amount (e.g. what Razorpay will charge) into the selected currency — no markup. */
+  const formatExact = (inrAmount: number): string => {
+    if (isIndia) return `₹${inrAmount.toLocaleString('en-IN')}`;
+    const converted = inrAmount * currency.rate;
+    const rounded = converted < 100 ? Math.round(converted * 100) / 100 : Math.round(converted);
+    return `${currency.symbol}${rounded.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  };
+
+  return { currency, countryCode, isIndia, loading, formatPrice, formatExact, getDisplayPrice, getInternationalPrice, setSelectedCountry };
 };
