@@ -188,6 +188,32 @@
     50% { transform: scaleY(1); }
   }
 
+  /* Hero core CSS fallback + loading screen gyroscope — transform/opacity only. */
+  @keyframes core-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
+  @keyframes core-orbit {
+    from { transform: rotateX(68deg) rotateZ(0deg); }
+    to { transform: rotateX(68deg) rotateZ(360deg); }
+  }
+  @keyframes gyro-a {
+    from { transform: rotateX(70deg) rotateY(0deg) rotateZ(0deg); }
+    to { transform: rotateX(70deg) rotateY(0deg) rotateZ(360deg); }
+  }
+  @keyframes gyro-b {
+    from { transform: rotateY(65deg) rotateX(20deg) rotateZ(0deg); }
+    to { transform: rotateY(65deg) rotateX(20deg) rotateZ(-360deg); }
+  }
+  @keyframes gyro-c {
+    from { transform: rotateX(-35deg) rotateY(-40deg) rotateZ(0deg); }
+    to { transform: rotateX(-35deg) rotateY(-40deg) rotateZ(360deg); }
+  }
+  @keyframes gyro-tilt {
+    0%, 100% { transform: rotateX(8deg) rotateY(-12deg); }
+    50% { transform: rotateX(-6deg) rotateY(12deg); }
+  }
+
   @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-10px); }

@@ -13,7 +13,7 @@ export type CorePhase = "listening" | "speaking";
  * Performance rules (ui-ux-pro-max threejs stack): one renderer, DPR capped (1.25 on small screens,
  * 1.75 otherwise), alpha canvas, setAnimationLoop paused when the tab is hidden or the canvas is
  * offscreen, delta time read once per frame, shared geometry, <3k points, everything disposed on
- * unmount. Reduced motion renders a single still frame.
+ * unmount. Under prefers-reduced-motion it keeps a calm variant: slow drift, no pulses or parallax.
  */
 const NOISE = /* glsl */ `
 vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
@@ -256,7 +256,10 @@ export default function VoiceCore({
       const dt = lastTs ? Math.min((ts - lastTs) / 1000, 0.05) : 0.016;
       lastTs = ts;
       t += dt;
-      const [targetAmp, phase] = envelope(t);
+      // Calm mode (reduced motion): no speech pulses or pointer parallax, slow drift only.
+      const [envAmp, envPhase] = envelope(t);
+      const targetAmp = noMotion ? 0.07 : envAmp;
+      const phase = envPhase;
       amp += (targetAmp - amp) * Math.min(1, dt * 14);
       if (phase !== lastPhase) {
         if (phase === "speaking") cycle++;
@@ -268,31 +271,28 @@ export default function VoiceCore({
       coreMat.uniforms.uAmp.value = amp;
       glowMat.uniforms.uAmp.value = amp;
 
-      core.rotation.y += dt * 0.18;
-      shell.rotation.y -= dt * 0.06;
-      shell.rotation.x += dt * 0.03;
-      points.rotation.y += dt * 0.12;
+      const speed = noMotion ? 0.35 : 1;
+      core.rotation.y += dt * 0.18 * speed;
+      shell.rotation.y -= dt * 0.06 * speed;
+      shell.rotation.x += dt * 0.03 * speed;
+      points.rotation.y += dt * 0.12 * speed;
       const s = 1 + amp * 0.35;
       core.scale.setScalar(s);
 
-      rig.rotation.x += (target.y * 0.35 - rig.rotation.x) * Math.min(1, dt * 3);
-      rig.rotation.z += (-target.x * 0.12 - rig.rotation.z) * Math.min(1, dt * 3);
-      rig.position.x += (target.x * 0.18 - rig.position.x) * Math.min(1, dt * 3);
+      const px = noMotion ? 0 : target.x;
+      const py = noMotion ? 0 : target.y;
+      rig.rotation.x += (py * 0.35 - rig.rotation.x) * Math.min(1, dt * 3);
+      rig.rotation.z += (-px * 0.12 - rig.rotation.z) * Math.min(1, dt * 3);
+      rig.position.x += (px * 0.18 - rig.position.x) * Math.min(1, dt * 3);
 
-      renderer.render(scene, camera);
-    };
-
-    const renderStill = () => {
-      coreMat.uniforms.uTime.value = 2.0;
-      coreMat.uniforms.uAmp.value = 0.12;
-      glowMat.uniforms.uAmp.value = 0.12;
       renderer.render(scene, camera);
     };
 
     let visible = true;
     let running = false;
     const sync = () => {
-      const shouldRun = visible && !document.hidden && !noMotion;
+      // Runs in both modes; reduced motion only switches to the calm variant inside frame().
+      const shouldRun = visible && !document.hidden;
       if (shouldRun && !running) {
         lastTs = 0; // drop the paused interval so time doesn't leap
         renderer.setAnimationLoop(frame);
@@ -301,7 +301,6 @@ export default function VoiceCore({
         renderer.setAnimationLoop(null);
         running = false;
       }
-      if (noMotion) renderStill();
     };
 
     const io = new IntersectionObserver(([entry]) => {

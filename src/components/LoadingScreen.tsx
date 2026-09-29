@@ -1,351 +1,192 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 const logo = "/assets/logo.png";
+const BRAND = "CODENINJAVIK".split("");
+
+/** Shown for at least this long so the intro reads as intentional, never longer than MAX_MS. */
+const MIN_MS = 1100;
+const MAX_MS = 2600;
 
 interface LoadingScreenProps {
   onLoadingComplete: () => void;
 }
 
+/** Fired once the intro has fully exited, so heavy visuals (the hero's WebGL core) start only then. */
+export const INTRO_DONE_EVENT = "cnv:intro-done";
+
+function announceIntroDone() {
+  (window as unknown as { __cnvIntroDone?: boolean }).__cnvIntroDone = true;
+  window.dispatchEvent(new Event(INTRO_DONE_EVENT));
+}
+
+/** True once the intro has finished (or immediately if it already did earlier in this page view). */
+export function isIntroDone(): boolean {
+  return typeof window !== "undefined" && !!(window as unknown as { __cnvIntroDone?: boolean }).__cnvIntroDone;
+}
+
+/**
+ * Site intro: a CSS-3D gyroscope (three rings spinning on different axes around a glowing core) that
+ * flies toward the viewer when the page is ready. Pure CSS transforms, so it paints on the very
+ * first frame — no WebGL chunk to wait for. Progress follows the real page load (window `load`),
+ * clamped between MIN_MS and MAX_MS. Everything is deterministic (no Math.random in render), which
+ * also removes the hydration mismatch the old particle loader caused.
+ */
+const RINGS = [
+  { size: "15rem", anim: "gyro-a 5.5s linear infinite", color: "hsl(0 72% 51% / 0.55)", dot: "hsl(0 90% 65%)" },
+  { size: "12.5rem", anim: "gyro-b 7s linear infinite", color: "hsl(350 65% 50% / 0.5)", dot: "hsl(350 90% 70%)" },
+  { size: "18rem", anim: "gyro-c 9s linear infinite", color: "hsl(0 0% 100% / 0.14)", dot: "hsl(0 0% 100%)" },
+];
+
 const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
+  const reduceMotion = useReducedMotion();
+  const [visible, setVisible] = useState(true);
   const [progress, setProgress] = useState(0);
-  const [isVisible, setIsVisible] = useState(true);
-  const [loadingText, setLoadingText] = useState("Initializing");
-
-  const loadingStages = [
-    "Initializing",
-    "Loading Assets",
-    "Connecting AI",
-    "Almost Ready",
-    "Welcome"
-  ];
+  const doneRef = useRef(false);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          setTimeout(() => {
-            setIsVisible(false);
-            setTimeout(onLoadingComplete, 500);
-          }, 300);
-          return 100;
-        }
-        return prev + Math.random() * 20 + 8;
-      });
-    }, 120);
+    // performance.now() counts from navigation start, so MIN/MAX are measured from when the visitor
+    // opened the page — not from when React finished hydrating (which can take seconds on slow phones).
+    const start = 0;
+    let loaded = document.readyState === "complete";
+    const onLoad = () => {
+      loaded = true;
+    };
+    window.addEventListener("load", onLoad);
 
-    return () => clearInterval(timer);
-  }, [onLoadingComplete]);
+    let raf = 0;
+    let shown = 0;
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const ready = (loaded && elapsed >= MIN_MS) || elapsed >= MAX_MS;
+      // Ease toward 90% while loading, then run to 100% once ready.
+      const target = ready ? 100 : Math.min(90, (elapsed / MAX_MS) * 100 + 15);
+      shown += (target - shown) * (ready ? 0.25 : 0.08);
+      if (ready && shown > 99.5) shown = 100;
+      setProgress(shown);
+      if (shown >= 100 && !doneRef.current) {
+        doneRef.current = true;
+        setTimeout(() => setVisible(false), 150);
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
 
-  useEffect(() => {
-    const stageIndex = Math.min(
-      Math.floor(progress / 25),
-      loadingStages.length - 1
-    );
-    setLoadingText(loadingStages[stageIndex]);
-  }, [progress]);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("load", onLoad);
+    };
+  }, []);
 
   return (
-    <AnimatePresence>
-      {isVisible && (
+    <AnimatePresence
+      onExitComplete={() => {
+        announceIntroDone();
+        onLoadingComplete();
+      }}
+    >
+      {visible && (
         <motion.div
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 1.1 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
+          key="loader"
+          role="status"
+          aria-live="polite"
+          aria-label="Loading CodeNinjaVik"
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
           className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
-          style={{
-            background: "radial-gradient(ellipse at 50% 30%, hsl(0 0% 12%) 0%, hsl(0 0% 5%) 70%, hsl(0 0% 3%) 100%)"
-          }}
+          style={{ background: "radial-gradient(ellipse at 50% 42%, hsl(0 40% 10%) 0%, hsl(0 0% 4%) 60%, hsl(0 0% 2%) 100%)" }}
         >
-          {/* Animated Grid Background */}
-          <div className="absolute inset-0 opacity-20">
-            <div 
-              className="absolute inset-0"
+          {/* Floor grid in perspective for depth */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 [perspective:600px]" aria-hidden="true">
+            <div
+              className="absolute inset-x-[-50%] bottom-[-10%] h-[140%] origin-bottom opacity-40"
               style={{
-                backgroundImage: `
-                  linear-gradient(hsl(0 72% 51% / 0.1) 1px, transparent 1px),
-                  linear-gradient(90deg, hsl(0 72% 51% / 0.1) 1px, transparent 1px)
-                `,
-                backgroundSize: "50px 50px",
+                transform: "rotateX(72deg)",
+                backgroundImage:
+                  "linear-gradient(hsl(0 72% 51% / 0.25) 1px, transparent 1px), linear-gradient(90deg, hsl(0 72% 51% / 0.25) 1px, transparent 1px)",
+                backgroundSize: "56px 56px",
+                maskImage: "linear-gradient(to top, black 10%, transparent 75%)",
+                WebkitMaskImage: "linear-gradient(to top, black 10%, transparent 75%)",
               }}
             />
           </div>
 
-          {/* Animated Gradient Orbs */}
+          {/* Gyroscope */}
           <motion.div
-            animate={{
-              scale: [1, 1.3, 1],
-              opacity: [0.3, 0.5, 0.3],
-              x: [0, 50, 0],
-              y: [0, -30, 0],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl"
-            style={{ background: "radial-gradient(circle, hsl(0 72% 51% / 0.3) 0%, transparent 70%)" }}
-          />
-          <motion.div
-            animate={{
-              scale: [1.2, 1, 1.2],
-              opacity: [0.2, 0.4, 0.2],
-              x: [0, -40, 0],
-              y: [0, 40, 0],
-            }}
-            transition={{
-              duration: 5,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 0.5,
-            }}
-            className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl"
-            style={{ background: "radial-gradient(circle, hsl(350 65% 45% / 0.3) 0%, transparent 70%)" }}
-          />
-
-          {/* Rotating Ring */}
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-            className="absolute w-[500px] h-[500px] rounded-full"
-            style={{
-              border: "1px dashed hsl(0 72% 51% / 0.2)",
-            }}
-          />
-          <motion.div
-            animate={{ rotate: -360 }}
-            transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-            className="absolute w-[400px] h-[400px] rounded-full"
-            style={{
-              border: "1px dashed hsl(350 65% 45% / 0.2)",
-            }}
-          />
-
-          {/* Pulsing Rings */}
-          {[...Array(3)].map((_, i) => (
-            <motion.div
-              key={i}
-              animate={{
-                scale: [1, 2.5],
-                opacity: [0.5, 0],
-              }}
-              transition={{
-                duration: 2.5,
-                repeat: Infinity,
-                delay: i * 0.8,
-                ease: "easeOut",
-              }}
-              className="absolute w-32 h-32 rounded-full border-2"
-              style={{
-                borderColor: i % 2 === 0 ? "hsl(0 72% 51% / 0.4)" : "hsl(350 65% 45% / 0.4)",
-              }}
-            />
-          ))}
-
-          {/* Logo Container with Glow */}
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", type: "spring", stiffness: 100 }}
-            className="relative z-10 mb-8"
+            exit={reduceMotion ? { opacity: 0 } : { scale: 2.6, opacity: 0 }}
+            transition={{ duration: 0.6, ease: [0.7, 0, 0.84, 0] }}
+            className="relative flex h-72 w-72 items-center justify-center [perspective:1000px]"
           >
-            {/* Outer Glow Ring */}
-            <motion.div
-              animate={{
-                boxShadow: [
-                  "0 0 40px hsl(0 72% 51% / 0.4), 0 0 80px hsl(350 65% 45% / 0.2), inset 0 0 30px hsl(0 72% 51% / 0.1)",
-                  "0 0 60px hsl(0 72% 51% / 0.6), 0 0 120px hsl(350 65% 45% / 0.4), inset 0 0 50px hsl(0 72% 51% / 0.2)",
-                  "0 0 40px hsl(0 72% 51% / 0.4), 0 0 80px hsl(350 65% 45% / 0.2), inset 0 0 30px hsl(0 72% 51% / 0.1)",
-                ],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="rounded-full p-1"
+            <div
+              className="relative flex h-full w-full items-center justify-center [transform-style:preserve-3d] motion-reduce:![animation-duration:14s]"
+              style={{ animation: "gyro-tilt 6s ease-in-out infinite" }}
             >
-              {/* Glass Container */}
-              <div 
-                className="relative rounded-full p-8"
+              {RINGS.map((r, i) => (
+                <div
+                  key={i}
+                  className="absolute rounded-full [transform-style:preserve-3d] motion-reduce:![animation-duration:24s]"
+                  style={{
+                    width: r.size,
+                    height: r.size,
+                    border: `2px solid ${r.color}`,
+                    boxShadow: `0 0 24px ${r.color}`,
+                    // Reduced motion slows the rings right down (CSS media query, so SSR and client match).
+                    animation: r.anim,
+                  }}
+                  aria-hidden="true"
+                >
+                  <span
+                    className="absolute left-1/2 top-[-6px] h-3 w-3 -translate-x-1/2 rounded-full"
+                    style={{ background: r.dot, boxShadow: `0 0 14px 3px ${r.dot}` }}
+                  />
+                </div>
+              ))}
+
+              {/* Core */}
+              <div
+                className="relative h-28 w-28 rounded-full p-[3px] motion-reduce:![animation:none]"
                 style={{
-                  background: "linear-gradient(135deg, hsl(0 0% 15% / 0.8) 0%, hsl(0 0% 9% / 0.9) 100%)",
-                  backdropFilter: "blur(20px)",
-                  border: "1px solid hsl(0 72% 51% / 0.3)",
+                  background: "conic-gradient(from 200deg, hsl(0 90% 60%), hsl(350 70% 40%), hsl(0 90% 60%))",
+                  boxShadow: "0 0 60px 10px hsl(0 72% 51% / 0.45), 0 0 140px 30px hsl(0 72% 51% / 0.2)",
+                  animation: "core-breathe 2.4s ease-in-out infinite",
                 }}
               >
-                {/* Inner Rotating Border */}
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 rounded-full"
-                  style={{
-                    background: "conic-gradient(from 0deg, transparent, hsl(0 72% 51% / 0.5), transparent, hsl(350 65% 45% / 0.5), transparent)",
-                    padding: "2px",
-                    mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                    maskComposite: "xor",
-                    WebkitMaskComposite: "xor",
-                  }}
-                />
-                
-                {/* Logo */}
-                <motion.img
-                  src={logo}
-                  alt="Logo"
-                  className="w-24 h-24 md:w-32 md:h-32 object-contain relative z-10"
-                  animate={{
-                    filter: [
-                      "drop-shadow(0 0 15px hsl(0 72% 51% / 0.6))",
-                      "drop-shadow(0 0 30px hsl(0 72% 51% / 0.9))",
-                      "drop-shadow(0 0 15px hsl(0 72% 51% / 0.6))",
-                    ],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logo} alt="" className="h-full w-full rounded-full object-cover" width={112} height={112} />
               </div>
-            </motion.div>
-          </motion.div>
-
-          {/* Brand Name with Gradient */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-            className="z-10 mb-2 text-center"
-          >
-            <h1 
-              className="text-4xl md:text-5xl font-bold tracking-widest"
-              style={{
-                background: "linear-gradient(135deg, hsl(0 80% 60%) 0%, hsl(0 72% 51%) 25%, hsl(350 70% 55%) 75%, hsl(350 65% 40%) 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-                textShadow: "0 0 40px hsl(0 72% 51% / 0.5)",
-              }}
-            >
-              CODENINJAVIK
-            </h1>
-          </motion.div>
-
-          {/* Subtitle */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="text-muted-foreground text-sm md:text-base mb-10 tracking-wider z-10"
-          >
-            AI Solutions Hub
-          </motion.p>
-
-          {/* Loading Status */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.4 }}
-            className="z-10 text-center mb-4"
-          >
-            <motion.div 
-              key={loadingText}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="flex items-center gap-2 justify-center"
-            >
-              <span className="text-primary text-sm font-medium tracking-wide">{loadingText}</span>
-              <motion.span
-                animate={{ opacity: [1, 0.3, 1] }}
-                transition={{ duration: 0.8, repeat: Infinity }}
-                className="text-primary"
-              >
-                •••
-              </motion.span>
-            </motion.div>
-          </motion.div>
-
-          {/* Progress Bar */}
-          <motion.div
-            initial={{ opacity: 0, width: 0 }}
-            animate={{ opacity: 1, width: "280px" }}
-            transition={{ delay: 0.7, duration: 0.5 }}
-            className="z-10 relative"
-          >
-            {/* Background Track */}
-            <div 
-              className="h-2 rounded-full overflow-hidden"
-              style={{
-                background: "hsl(0 0% 15%)",
-                border: "1px solid hsl(0 72% 51% / 0.2)",
-              }}
-            >
-              {/* Progress Fill */}
-              <motion.div
-                className="h-full rounded-full relative overflow-hidden"
-                style={{
-                  width: `${Math.min(progress, 100)}%`,
-                  background: "linear-gradient(90deg, hsl(0 72% 51%) 0%, hsl(350 65% 45%) 100%)",
-                  boxShadow: "0 0 20px hsl(0 72% 51% / 0.5)",
-                }}
-              >
-                {/* Shimmer Effect */}
-                <motion.div
-                  animate={{ x: ["-100%", "200%"] }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute inset-0"
-                  style={{
-                    background: "linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.4), transparent)",
-                  }}
-                />
-              </motion.div>
             </div>
-            
-            {/* Percentage */}
-            <motion.p
-              className="text-center text-primary text-sm mt-3 font-mono font-semibold"
-            >
-              {Math.min(Math.round(progress), 100)}%
-            </motion.p>
           </motion.div>
 
-          {/* Floating Particles */}
-          {[...Array(8)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute rounded-full"
-              style={{
-                width: 4 + Math.random() * 4,
-                height: 4 + Math.random() * 4,
-                background: i % 2 === 0 ? "hsl(0 72% 51%)" : "hsl(350 65% 45%)",
-                left: `${10 + Math.random() * 80}%`,
-                top: `${20 + Math.random() * 60}%`,
-              }}
-              animate={{
-                y: [0, -100 - Math.random() * 100],
-                x: [0, (Math.random() - 0.5) * 50],
-                opacity: [0, 1, 0],
-                scale: [0, 1, 0.5],
-              }}
-              transition={{
-                duration: 3 + Math.random() * 2,
-                repeat: Infinity,
-                delay: i * 0.3,
-                ease: "easeOut",
-              }}
-            />
-          ))}
+          {/* Brand, letters flip up in 3D */}
+          <h1 className="mt-10 flex font-display text-3xl font-extrabold tracking-[0.2em] text-foreground sm:text-4xl [perspective:600px]" aria-hidden="true">
+            {BRAND.map((ch, i) => (
+              <motion.span
+                key={i}
+                className="inline-block origin-bottom"
+                initial={{ opacity: 0, rotateX: -90, y: 12 }}
+                animate={{ opacity: 1, rotateX: 0, y: 0 }}
+                transition={reduceMotion ? { duration: 0 } : { duration: 0.55, delay: 0.15 + i * 0.045, ease: [0.16, 1, 0.3, 1] }}
+                style={{ color: i < 4 ? "hsl(0 80% 60%)" : undefined }}
+              >
+                {ch}
+              </motion.span>
+            ))}
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">AI voice assistants for your PC and phone</p>
 
-          {/* Corner Accents */}
-          <div className="absolute top-0 left-0 w-32 h-32 border-l-2 border-t-2 border-primary/20 rounded-tl-3xl" />
-          <div className="absolute top-0 right-0 w-32 h-32 border-r-2 border-t-2 border-secondary/20 rounded-tr-3xl" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 border-l-2 border-b-2 border-secondary/20 rounded-bl-3xl" />
-          <div className="absolute bottom-0 right-0 w-32 h-32 border-r-2 border-b-2 border-primary/20 rounded-br-3xl" />
+          {/* Real progress */}
+          <div className="mt-8 w-56" aria-hidden="true">
+            <div className="h-[3px] overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full origin-left rounded-full bg-gradient-to-r from-primary to-rose-400"
+                style={{ transform: `scaleX(${progress / 100})`, boxShadow: "0 0 12px hsl(0 72% 51% / 0.8)" }}
+              />
+            </div>
+            <p className="mt-2 text-center text-xs tabular-nums text-muted-foreground">{Math.round(progress)}%</p>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

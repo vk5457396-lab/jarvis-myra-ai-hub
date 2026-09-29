@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, type Transition } from "framer-motion";
 import { Check, ChevronRight, Mic, ShieldCheck, Infinity as InfinityIcon, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SalesSummary from "@/components/SalesSummary";
 import type { CorePhase } from "@/components/home/VoiceCore";
+import { INTRO_DONE_EVENT, isIntroDone } from "@/components/LoadingScreen";
 
 // WebGL is client-only and not needed for first paint — load it after the text is on screen.
 const VoiceCore = dynamic(() => import("@/components/home/VoiceCore"), { ssr: false, loading: () => null });
@@ -31,8 +32,10 @@ const HEADLINE = ["Your PC,", "run entirely", "by voice."];
 /** Soft CSS stand-in shown before WebGL loads, and permanently if WebGL is unavailable. */
 function CoreFallback() {
   return (
-    <div className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
-      <div className="h-[46%] w-[46%] rounded-full bg-[radial-gradient(circle_at_40%_35%,#ff6b6b,#7f1d1d_55%,#1a0304_80%)] shadow-[0_0_120px_20px_rgba(220,38,38,0.35)]" />
+    <div className="absolute inset-0 flex items-center justify-center [perspective:900px]" aria-hidden="true">
+      {/* Transform-only CSS motion so the core still breathes when WebGL is unavailable. */}
+      <div className="absolute h-[70%] w-[70%] rounded-full border border-primary/25 animate-[core-orbit_14s_linear_infinite] [transform-style:preserve-3d]" />
+      <div className="h-[46%] w-[46%] rounded-full bg-[radial-gradient(circle_at_40%_35%,#ff6b6b,#7f1d1d_55%,#1a0304_80%)] shadow-[0_0_120px_20px_rgba(220,38,38,0.35)] animate-[core-breathe_4.5s_ease-in-out_infinite]" />
     </div>
   );
 }
@@ -56,6 +59,25 @@ const HeroSection = () => {
   const [phase, setPhase] = useState<CorePhase>("listening");
   const [cycle, setCycle] = useState(0);
   const [webglFailed, setWebglFailed] = useState(false);
+  // Hold the WebGL core until the intro loader is gone: it would otherwise render hidden behind the
+  // loader and compete with it for the GPU/CPU, making the intro stutter and last longer.
+  const [introDone, setIntroDone] = useState(false);
+  /** Entrance transition; instant under reduced motion (the start state must match SSR either way). */
+  const enter = (t: Transition): Transition => (reduceMotion ? { duration: 0 } : t);
+  useEffect(() => {
+    if (isIntroDone()) {
+      setIntroDone(true);
+      return;
+    }
+    const on = () => setIntroDone(true);
+    window.addEventListener(INTRO_DONE_EVENT, on);
+    // Safety net: never leave the hero empty if the event is somehow missed.
+    const fallback = setTimeout(on, 6000);
+    return () => {
+      window.removeEventListener(INTRO_DONE_EVENT, on);
+      clearTimeout(fallback);
+    };
+  }, []);
 
   const command = COMMANDS[(Math.max(cycle, 1) - 1) % COMMANDS.length];
   const showCommand = cycle > 0;
@@ -71,9 +93,9 @@ const HeroSection = () => {
                 <motion.span
                   key={line}
                   className="block origin-bottom"
-                  initial={reduceMotion ? false : { opacity: 0, y: 28, rotateX: -55 }}
-                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                  transition={{ duration: 0.8, delay: 0.1 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                  initial={{ opacity: 0, y: 28, rotateX: -55 }}
+                  animate={introDone ? { opacity: 1, y: 0, rotateX: 0 } : undefined}
+                  transition={enter({ duration: 0.8, delay: 0.1 + i * 0.1, ease: [0.16, 1, 0.3, 1] })}
                 >
                   {line}
                 </motion.span>
@@ -81,18 +103,18 @@ const HeroSection = () => {
             </h1>
 
             <motion.p
-              initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.45 }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={introDone ? { opacity: 1, y: 0 } : undefined}
+              transition={enter({ duration: 0.6, delay: 0.45 })}
               className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground lg:mx-0"
             >
               Jarvis and MYRA open apps, send WhatsApp messages, control volume and power, and run your daily tasks when you ask out loud.
             </motion.p>
 
             <motion.div
-              initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.55 }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={introDone ? { opacity: 1, y: 0 } : undefined}
+              transition={enter({ duration: 0.6, delay: 0.55 })}
               className="mt-9 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start"
             >
               <Link href="/pricing">
@@ -110,9 +132,9 @@ const HeroSection = () => {
             </motion.div>
 
             <motion.ul
-              initial={reduceMotion ? false : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.7 }}
+              initial={{ opacity: 0 }}
+              animate={introDone ? { opacity: 1 } : undefined}
+              transition={enter({ duration: 0.6, delay: 0.7 })}
               className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground lg:justify-start"
             >
               {TRUST.map(({ icon: Icon, label }) => (
@@ -125,13 +147,13 @@ const HeroSection = () => {
 
           {/* 3D voice core with live command bubbles */}
           <motion.div
-            initial={reduceMotion ? false : { opacity: 0, scale: 0.86 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, scale: 0.86 }}
+            animate={introDone ? { opacity: 1, scale: 1 } : undefined}
+            transition={enter({ duration: 1.1, delay: 0.2, ease: [0.16, 1, 0.3, 1] })}
             className="relative mx-auto aspect-square w-full max-w-[520px]"
           >
             <CoreFallback />
-            {!webglFailed && (
+            {introDone && !webglFailed && (
               <VoiceCore
                 className="absolute inset-0"
                 onUnsupported={() => setWebglFailed(true)}
