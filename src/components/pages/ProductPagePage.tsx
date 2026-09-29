@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import ContactFormModal from "@/components/ContactFormModal";
 import { openDownload } from "@/lib/appDownload";
 import { getStoredReferralCode } from "@/lib/referral";
+import MyraAndroidDownload from "@/components/MyraAndroidDownload";
 import VideoThumbnail from "@/components/VideoThumbnail";
 
 interface MarketProduct {
@@ -309,6 +310,12 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
                     <p className="text-muted-foreground mt-2">{product.short_description}</p>
                   )}
 
+                  {product.slug === MYRA_SLUG ? (
+                    // The MYRA APK is sold as the ₹999 lifetime plan (access key + download), never as a
+                    // free marketplace file - reuse the one purchase card so the paywall matches /pricing.
+                    <MyraAndroidDownload variant="card" showFeatures={false} showReleaseNotes={false} className="mt-5" />
+                  ) : (
+                  <>
                   <div className="flex items-baseline gap-2 mt-5">
                     {product.price === 0 ? (
                       <span className="font-display text-4xl font-black text-emerald-400">FREE</span>
@@ -357,6 +364,8 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
                       Secure payment · Instant download · Verified file
                     </div>
                   </div>
+                  </>
+                  )}
 
                   <div className="grid grid-cols-2 gap-3 mt-6 text-xs">
                     <div className="rounded-lg bg-white/5 border border-white/10 p-3">

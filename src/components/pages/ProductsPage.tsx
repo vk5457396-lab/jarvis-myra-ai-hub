@@ -24,6 +24,7 @@ interface MarketProduct {
 // See ProductPagePage.tsx for why this one product's image is hardcoded
 // instead of read from thumbnail_url (Blob-backed, unreliable).
 const MYRA_THUMB = "/assets/myra-app/promo-thumb.png";
+const MYRA_PRICE = 999;
 
 const Products = () => {
   const [products, setProducts] = useState<MarketProduct[]>([]);
@@ -38,7 +39,12 @@ const Products = () => {
     (async () => {
       const res = await fetch("/api/marketplace/products");
       const json = await res.json();
-      if (json.success) setProducts(json.data.products as MarketProduct[]);
+      // The MYRA APK is sold as the ₹999 lifetime plan (see ProductPagePage), not a free file.
+      if (json.success) {
+        setProducts(
+          (json.data.products as MarketProduct[]).map((p) => (p.slug === "myra-android-apk" ? { ...p, price: MYRA_PRICE } : p))
+        );
+      }
       setLoading(false);
     })();
   }, []);

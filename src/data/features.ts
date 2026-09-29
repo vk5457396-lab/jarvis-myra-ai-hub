@@ -87,7 +87,7 @@ export const myraAndroidFeatures = [
   "Screen reading & app control",
   "Remembers your preferences",
   "Same account as codeninjavik.in",
-  "Free to install, plans inside the app",
+  "One-time ₹999, lifetime access",
 ];
 
 export const myraPcControllerFeatures = [

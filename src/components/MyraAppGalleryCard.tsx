@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { DownloadCloud, ExternalLink, Loader2, LogIn, Play, X } from "lucide-react";
+import { DownloadCloud, ExternalLink, IndianRupee, Loader2, LogIn, Play, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppRelease } from "@/hooks/useAppRelease";
 import { startAppDownload, openDownload } from "@/lib/appDownload";
@@ -28,6 +28,24 @@ const MyraAppGalleryCard = () => {
   const [expanded, setExpanded] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
+  // Same paywall check as MyraAndroidDownload: only buyers get the APK button here.
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!session?.user) return;
+    let cancelled = false;
+    fetch("/api/myra/download-access")
+      .then((r) => r.json())
+      .then((json) => { if (!cancelled) setHasAccess(json.success ? !!json.data.has_access : false); })
+      .catch(() => { if (!cancelled) setHasAccess(false); });
+    return () => { cancelled = true; };
+  }, [session?.user]);
+
+  const goToBuy = () => {
+    const target = document.getElementById("myra-buy");
+    if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    else router.push("/pricing#myra-buy");
+  };
 
   const handleDownload = async () => {
     if (!session?.user) {
@@ -89,10 +107,17 @@ const MyraAppGalleryCard = () => {
             </div>
 
             <div className="px-4 pb-4">
-              {status === "loading" ? (
+              {status === "loading" || (session?.user && hasAccess === null) ? (
                 <div className="flex items-center justify-center py-3">
                   <Loader2 size={18} className="animate-spin text-muted-foreground" />
                 </div>
+              ) : session?.user && !hasAccess ? (
+                <Button
+                  onClick={goToBuy}
+                  className="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-display font-bold gap-2 h-12"
+                >
+                  <IndianRupee size={18} /> Buy MYRA for ₹999
+                </Button>
               ) : session?.user ? (
                 <>
                   <Button

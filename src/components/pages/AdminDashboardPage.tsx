@@ -7,12 +7,13 @@ import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
-  Shield, LogOut, Users, Wallet, TrendingUp, CheckCircle2, XCircle, Clock, ArrowDownToLine, Package, Bell
+  Shield, LogOut, Users, Wallet, TrendingUp, CheckCircle2, XCircle, Clock, ArrowDownToLine, Package, Bell, Megaphone
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from "recharts";
 import AdminProductsTab from "@/components/admin/AdminProductsTab";
+import SiteBannerManager from "@/components/admin/SiteBannerManager";
 import NotificationCenter from "@/components/admin/NotificationCenter";
 import CreditMissedReferral from "@/components/admin/CreditMissedReferral";
 
@@ -74,7 +75,7 @@ const AdminDashboard = () => {
   const [withdrawals, setWithdrawals] = useState<WithdrawalRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"users" | "withdrawals" | "products" | "notifications">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "withdrawals" | "products" | "notifications" | "offers">("users");
   const router = useRouter();
 
   const loadOverview = async () => {
@@ -263,7 +264,7 @@ const AdminDashboard = () => {
           <CreditMissedReferral onCredited={loadOverview} />
 
           {/* Tabs */}
-          <div className="flex gap-3 mb-6">
+          <div className="flex flex-wrap gap-3 mb-6">
             <button
               onClick={() => setActiveTab("users")}
               className={`px-5 py-2.5 rounded-xl font-display font-bold text-sm transition-all ${
@@ -296,11 +297,20 @@ const AdminDashboard = () => {
             >
               <Bell size={14} className="inline mr-2" /> Notifications
             </button>
+            <button
+              onClick={() => setActiveTab("offers")}
+              className={`px-5 py-2.5 rounded-xl font-display font-bold text-sm transition-all ${
+                activeTab === "offers" ? "bg-gradient-to-r from-primary to-rose-500 text-white" : "bg-white/5 border border-white/10 text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Megaphone size={14} className="inline mr-2" /> Offer Popup
+            </button>
           </div>
 
 
           {activeTab === "products" && <AdminProductsTab />}
           {activeTab === "notifications" && <NotificationCenter />}
+          {activeTab === "offers" && <SiteBannerManager />}
 
           {/* Users Table */}
           {activeTab === "users" && (

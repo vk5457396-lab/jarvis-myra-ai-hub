@@ -1,273 +1,343 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
+import { ShieldCheck, Infinity as InfinityIcon, RefreshCw, Send, Smartphone, Monitor, Code2, Layers } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FlashSaleBanner from "@/components/FlashSaleBanner";
 import BinancePaymentModal from "@/components/BinancePaymentModal";
+import ContactFormModal from "@/components/ContactFormModal";
+import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 import MyraAndroidDownload from "@/components/MyraAndroidDownload";
-import MyraPcControllerDownload from "@/components/MyraPcControllerDownload";
-
-import { Check, Shield, CreditCard, Zap, Code, Wallet, Monitor, FileCode, ArrowRight, Package } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useCurrency } from "@/hooks/useCurrency";
 
-const thumbJarvis = "/assets/thumb-jarvis.png";
-const thumbMyra = "/assets/thumb-myra.png";
-const thumbAria = "/assets/thumb-aria.png";
+/** Prices must match PRODUCT_PRICES in /api/payments/create-order — the server charges its own copy. */
+type Offer = {
+  productId: string;
+  name: string;
+  detail: string;
+  price: number;
+  icon: typeof Smartphone;
+  hsl: string;
+  note?: string;
+};
+
+const MYRA_PRICE = 999;
+
+const APPS: Offer[] = [
+  {
+    productId: "aria",
+    name: "ARIA 1.0 for Windows",
+    detail: "AI music creator. Ready-to-run .exe, no setup beyond install.",
+    price: 899,
+    icon: Monitor,
+    hsl: "160 70% 50%",
+  },
+];
+
+const SOURCE: Offer[] = [
+  {
+    productId: "source_jarvis",
+    name: "Jarvis 2.0 source code",
+    detail: "Full project source. Modify it, rebrand it, ship your own build.",
+    price: 3900,
+    icon: Code2,
+    hsl: "0 72% 51%",
+  },
+  {
+    productId: "source_myra",
+    name: "MYRA 2.0 source code",
+    detail: "Full project source for the MYRA desktop assistant.",
+    price: 3900,
+    icon: Code2,
+    hsl: "350 65% 45%",
+  },
+  {
+    productId: "source_bundle",
+    name: "Jarvis 2.0 + MYRA 2.0 source code",
+    detail: "Both projects together.",
+    price: 6999,
+    icon: Layers,
+    hsl: "40 95% 55%",
+    note: "bundle",
+  },
+];
+
+const BUNDLE_SAVING = SOURCE[0].price + SOURCE[1].price - SOURCE[2].price;
+
+const INCLUDED = [
+  { icon: InfinityIcon, title: "One payment", desc: "No subscription. You pay once and keep it." },
+  { icon: RefreshCw, title: "Future updates", desc: "New versions of what you bought are included." },
+  { icon: Send, title: "Fast delivery", desc: "MYRA unlocks instantly. Other products are sent on Telegram after payment." },
+  { icon: ShieldCheck, title: "Secure checkout", desc: "Razorpay for UPI, cards and netbanking, or USDT via Binance." },
+];
+
+const FAQS = [
+  {
+    q: "Is this really a one-time payment?",
+    a: "Yes. Every product on this page is a single payment with lifetime access. There are no renewals.",
+  },
+  {
+    q: "How do I get my product after paying?",
+    a: "MYRA for Android gives you an access key and the APK download right away, and the key stays on your dashboard. For ARIA and source code, you'll land on a confirmation page with a Telegram link to verify the payment and receive your files.",
+  },
+  {
+    q: "What's the difference between the app and the source code?",
+    a: "The app is ready to install and use. Source code is the full project for developers who want to change features, rebrand it, or build their own version.",
+  },
+  {
+    q: "Can I pay from outside India?",
+    a: "Yes. Prices are shown in your local currency, and you can pay by card through Razorpay or with USDT through Binance.",
+  },
+  {
+    q: "Can I get a refund?",
+    a: "Refunds are handled case by case under our refund policy, since digital products are delivered instantly.",
+    link: { href: "/refund-policy", label: "Read the refund policy" },
+  },
+];
+
+const PriceRow = ({
+  offer,
+  formatPrice,
+  onBuy,
+  onCrypto,
+}: {
+  offer: Offer;
+  formatPrice: (n: number) => string;
+  onBuy: () => void;
+  onCrypto: () => void;
+}) => {
+  const Icon = offer.icon;
+  const isBundle = offer.note === "bundle";
+  return (
+    <li
+      className={`group relative grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3 py-5 sm:grid-cols-[auto_1fr_auto_auto] sm:gap-x-6 ${
+        isBundle ? "rounded-2xl border border-amber-400/30 bg-amber-400/[0.04] px-4 sm:px-5 my-2" : "border-b border-white/[0.07] px-1"
+      }`}
+    >
+      <span
+        className="flex h-11 w-11 items-center justify-center rounded-xl"
+        style={{ background: `hsla(${offer.hsl}, 0.12)`, color: `hsl(${offer.hsl})` }}
+        aria-hidden="true"
+      >
+        <Icon size={20} />
+      </span>
+      <div className="min-w-0">
+        <h3 className="font-display text-base sm:text-lg font-bold text-foreground">{offer.name}</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">{offer.detail}</p>
+        {isBundle && (
+          <p className="text-sm font-semibold text-amber-300 mt-1">{formatPrice(BUNDLE_SAVING)} less than buying both separately</p>
+        )}
+      </div>
+      <p className="col-start-2 sm:col-start-auto font-display text-2xl font-extrabold tabular-nums text-foreground sm:text-right">
+        {formatPrice(offer.price)}
+      </p>
+      <div className="col-span-2 flex gap-2 sm:col-span-1">
+        <button
+          type="button"
+          onClick={onBuy}
+          className="flex-1 sm:flex-none min-h-11 rounded-xl bg-primary px-5 font-display text-sm font-bold text-white hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
+          Buy now
+        </button>
+        <button
+          type="button"
+          onClick={onCrypto}
+          aria-label={`Pay for ${offer.name} with USDT`}
+          className="min-h-11 rounded-xl border border-white/10 px-4 text-sm text-muted-foreground hover:text-foreground hover:border-white/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          USDT
+        </button>
+      </div>
+    </li>
+  );
+};
 
 const Pricing = () => {
-  const router = useRouter();
-  const [showBinanceModal, setShowBinanceModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState({ name: "", amount: 0 });
   const { formatPrice } = useCurrency();
+  const reduceMotion = useReducedMotion();
 
-  const openBinancePayment = (productName: string, amount: number) => {
-    setSelectedProduct({ name: productName, amount });
-    setShowBinanceModal(true);
+  const [selected, setSelected] = useState<Offer | null>(null);
+  const [showContact, setShowContact] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [customer, setCustomer] = useState({ name: "", email: "", phone: "" });
+  const [crypto, setCrypto] = useState<{ name: string; amount: number } | null>(null);
+
+  const buy = (offer: Offer) => {
+    setSelected(offer);
+    setShowContact(true);
   };
 
-  const sourceAis = [
-    { thumb: thumbJarvis, name: "Jarvis 2.0", hsl: "0 72% 51%" },
-    { thumb: thumbMyra, name: "MYRA 2.0", hsl: "350 65% 45%" },
-  ];
+  const rise = (delay: number) =>
+    reduceMotion
+      ? {}
+      : { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { delay, duration: 0.6, ease: [0.16, 1, 0.3, 1] as const } };
 
-  const exeAis = [
-    { thumb: thumbAria, name: "ARIA 1.0", hsl: "160 70% 50%" },
-  ];
-
-  const mainCategories = [
-    {
-      id: "source",
-      title: "Source Code",
-      tagline: "For developers — modify, extend & own it",
-      icon: FileCode,
-      hsl: "45 95% 55%",
-      gradient: "from-yellow-400 via-amber-500 to-orange-500",
-      badge: "💻 DEVELOPER",
-      countLabel: "2 AIs + Bundle",
-      thumbs: sourceAis,
-      priceLabel: `Starts at ${formatPrice(3900)}`,
-    },
-    {
-      id: "exe",
-      title: ".exe File",
-      tagline: "Ready to use — download, install & run",
-      icon: Monitor,
-      hsl: "160 70% 50%",
-      gradient: "from-emerald-400 via-teal-500 to-cyan-600",
-      badge: "⚡ READY TO USE",
-      countLabel: `${exeAis.length} AI Available`,
-      thumbs: exeAis,
-      priceLabel: `Starts at ${formatPrice(899)}`,
-    },
-  ];
+  const section = (title: string, desc: string, offers: Offer[]) => (
+    <section className="py-10 md:py-14" aria-labelledby={`h-${title}`}>
+      <div className="max-w-2xl">
+        <h2 id={`h-${title}`} className="font-display text-2xl md:text-3xl font-extrabold text-foreground">{title}</h2>
+        <p className="mt-2 text-muted-foreground">{desc}</p>
+      </div>
+      <ul className="mt-6">
+        {offers.map((o) => (
+          <PriceRow
+            key={o.productId}
+            offer={o}
+            formatPrice={formatPrice}
+            onBuy={() => buy(o)}
+            onCrypto={() => setCrypto({ name: o.name, amount: o.price })}
+          />
+        ))}
+      </ul>
+    </section>
+  );
 
   return (
     <div className="min-h-screen">
       <Navbar />
 
-      {/* Hero */}
-      <section className="pt-32 pb-12 md:pt-40 md:pb-16 relative overflow-hidden">
-        <div className="absolute inset-0 circuit-pattern opacity-20" />
-        <div className="absolute top-1/3 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-secondary/10 rounded-full blur-3xl" />
+      <main className="container mx-auto px-4 max-w-6xl">
+        {/* Hero: the flagship price is the headline */}
+        <section className="pt-28 md:pt-36 pb-12 md:pb-16 grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-center">
+          <div>
+            <motion.h1
+              {...rise(0)}
+              className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.05] tracking-tight text-foreground text-balance"
+            >
+              Pay once. Keep it forever.
+            </motion.h1>
+            <motion.p {...rise(0.08)} className="mt-5 max-w-xl text-lg text-muted-foreground leading-relaxed">
+              Every CodeNinjaVik product is a single payment with lifetime access and free updates. No subscriptions, no renewals.
+            </motion.p>
 
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-center max-w-3xl mx-auto">
-            <span className="inline-block px-4 py-2 rounded-full glass text-secondary font-display text-sm tracking-wider mb-6">
-              CHOOSE YOUR CATEGORY
-            </span>
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              Pick a <span className="text-aurora">Category</span> to Begin
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Two simple categories. Click one to see all available AIs inside.
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Marquee strip */}
-      <section className="py-3 border-y border-white/5 bg-background/30 backdrop-blur-md overflow-hidden">
-        <div className="flex w-max animate-marquee gap-12 whitespace-nowrap text-sm font-display">
-          {[...Array(2)].flatMap((_, k) =>
-            [
-              "⚡ Lifetime License",
-              "🔒 Secure Razorpay & Crypto Checkout",
-              "♾️ Free Future Updates",
-              "🎁 Source Code from ₹3900",
-              "🚀 Instant Delivery via Telegram",
-              "💎 Premium Developer Support",
-              "🌍 40+ Currencies Supported",
-            ].map((t, i) => (
-              <span key={`${k}-${i}`} className="text-foreground/70 hover:text-foreground transition-colors">{t}</span>
-            ))
-          )}
-        </div>
-      </section>
-
-      {/* Two main category cards */}
-      <section className="py-12 md:py-20">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {mainCategories.map((cat, idx) => {
-              const Icon = cat.icon;
-              return (
-                <motion.div
-                  key={cat.id}
-                  initial={{ opacity: 0, y: 40 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.15, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                  whileHover={{ scale: 1.02, y: -6 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => router.push(`/pricing/${cat.id}`)}
-                  className="relative group cursor-pointer rounded-3xl overflow-hidden"
-                >
-                  {/* Animated rotating border */}
-                  <div className="absolute inset-0 rounded-3xl p-px overflow-hidden">
-                    <motion.div
-                      className="absolute inset-[-200%]"
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-                      style={{ background: `conic-gradient(from 0deg, hsla(${cat.hsl}, 0.6), transparent 30%, hsla(${cat.hsl}, 0.4), transparent 70%, hsla(${cat.hsl}, 0.6))` }}
-                    />
-                  </div>
-
-                  <div
-                    className="relative rounded-[calc(1.5rem-1px)] overflow-hidden m-px p-8 md:p-10 backdrop-blur-xl transition-all duration-500"
-                    style={{ background: `linear-gradient(170deg, hsla(${cat.hsl}, 0.1) 0%, hsla(0, 0%, 9%, 0.96) 40%, hsla(0, 0%, 5%, 0.99) 100%)` }}
-                  >
-                    {/* Glow */}
-                    <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[80px] opacity-20 group-hover:opacity-50 transition-all duration-700" style={{ background: `hsla(${cat.hsl}, 0.6)` }} />
-
-                    <div className="flex items-start justify-between mb-6 relative z-10">
-                      <span className="inline-block text-[10px] font-display font-bold tracking-[0.18em] px-3 py-1.5 rounded-full border" style={{ background: `hsla(${cat.hsl}, 0.1)`, borderColor: `hsla(${cat.hsl}, 0.25)`, color: `hsla(${cat.hsl}, 1)` }}>
-                        {cat.badge}
-                      </span>
-                      <span className="text-xs text-muted-foreground font-display">{cat.countLabel}</span>
-                    </div>
-
-                    {/* Icon */}
-                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${cat.gradient} flex items-center justify-center mb-6 shadow-lg relative z-10`} style={{ boxShadow: `0 0 35px hsla(${cat.hsl}, 0.35)` }}>
-                      <Icon className="w-8 h-8 text-white" />
-                    </div>
-
-                    <h2 className={`font-display text-3xl md:text-4xl font-black mb-2 bg-gradient-to-r ${cat.gradient} bg-clip-text text-transparent`}>
-                      {cat.title}
-                    </h2>
-                    <p className="text-muted-foreground text-sm md:text-base mb-6 leading-relaxed">{cat.tagline}</p>
-
-                    {/* AI thumbnails */}
-                    <div className="flex items-center gap-2 mb-6 relative z-10">
-                      {cat.thumbs.map((ai) => (
-                        <div
-                          key={ai.name}
-                          className="relative w-12 h-12 rounded-xl overflow-hidden border bg-background/50 backdrop-blur-sm"
-                          style={{ borderColor: `hsla(${ai.hsl}, 0.4)`, boxShadow: `0 0 12px hsla(${ai.hsl}, 0.25)` }}
-                          title={ai.name}
-                        >
-                          <img src={ai.thumb} alt={ai.name} loading="lazy" width={48} height={48} className="w-full h-full object-cover" />
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                      <span className="text-sm font-display font-bold" style={{ color: `hsla(${cat.hsl}, 1)` }}>{cat.priceLabel}</span>
-                      <div className="flex items-center gap-2 text-sm font-display font-bold" style={{ color: `hsla(${cat.hsl}, 1)` }}>
-                        <span>Explore</span>
-                        <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform duration-300" />
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* MYRA Android APK download — free, sits alongside the paid categories */}
-      <MyraAndroidDownload className="py-8 md:py-12" />
-
-      {/* MYRA PC Controller (.exe) download — free companion for the Android app */}
-      <MyraPcControllerDownload className="py-8 md:py-12" />
-
-      {/* Crypto Section */}
-      <section className="py-6">
-        <div className="container mx-auto px-4">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-5xl mx-auto">
-            <div className="glass-card rounded-xl p-4 md:p-6 border border-amber-500/30 bg-gradient-to-r from-amber-500/5 to-orange-500/5">
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                    <Wallet className="w-6 h-6 text-amber-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-base md:text-lg font-display font-semibold text-foreground mb-1">
-                      Crypto Payment via <span className="text-amber-400">Binance</span>
-                    </h3>
-                    <p className="text-sm text-muted-foreground">Pay with USDT • International & Indian Users • Same prices as Razorpay</p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1"><Code size={12} /> Source Code</p>
-                  <div className="flex flex-wrap gap-2">
-                    <button onClick={() => openBinancePayment("Source Code Bundle (Jarvis 2.0 + MYRA 2.0)", 6999)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-yellow-500/30">2-Bundle {formatPrice(6999)}</button>
-                    <button onClick={() => openBinancePayment("Jarvis 2.0 Source Code", 3900)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-primary/30">Jarvis 2.0 {formatPrice(3900)}</button>
-                    <button onClick={() => openBinancePayment("MYRA 2.0 Source Code", 3900)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary/10 hover:bg-secondary/20 text-secondary font-display font-semibold text-sm transition-colors whitespace-nowrap border border-secondary/30">MYRA 2.0 {formatPrice(3900)}</button>
-                  </div>
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1 mt-3"><Package size={12} /> Products (.exe)</p>
-                  <div className="flex flex-wrap gap-2">
-                    <button onClick={() => openBinancePayment("ARIA 1.0 AI", 899)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-display font-semibold text-sm transition-colors whitespace-nowrap border border-emerald-500/30">ARIA 1.0 {formatPrice(899)}</button>
-                  </div>
-                </div>
+            <motion.div {...rise(0.16)} className="mt-10 flex items-end gap-4">
+              <p className="font-display font-extrabold leading-none tracking-tighter text-[4.5rem] sm:text-[6.5rem] lg:text-[7.5rem] tabular-nums bg-gradient-to-b from-white to-white/55 bg-clip-text text-transparent">
+                {formatPrice(MYRA_PRICE)}
+              </p>
+              <div className="pb-3 sm:pb-5">
+                <p className="flex items-center gap-2 font-display text-lg font-bold text-emerald-400">
+                  <Smartphone size={18} aria-hidden="true" /> MYRA for Android
+                </p>
+                <p className="text-sm text-muted-foreground">Lifetime access, paid once</p>
               </div>
+            </motion.div>
+
+            <div className="mt-8 max-w-md">
+              <FlashSaleBanner />
             </div>
-          </motion.div>
-        </div>
-      </section>
-
-      <BinancePaymentModal isOpen={showBinanceModal} onClose={() => setShowBinanceModal(false)} productName={selectedProduct.name} amount={selectedProduct.amount} />
-
-      {/* Flash Sale */}
-      <section className="py-4">
-        <div className="container mx-auto px-4">
-          <div className="max-w-xl mx-auto"><FlashSaleBanner /></div>
-        </div>
-      </section>
-
-
-      {/* What's Included */}
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">What's <span className="gradient-text">Included</span></h2>
-            <p className="text-muted-foreground">Everything you need to get started</p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
-            {[
-              { icon: Check, title: "Lifetime License", desc: "One-time payment, forever access" },
-              { icon: Zap, title: "Instant Download", desc: "Get started within minutes" },
-              { icon: Shield, title: "Free Updates", desc: "All future updates included" },
-              { icon: CreditCard, title: "Secure Payment", desc: "100% safe checkout" },
-            ].map((item, index) => (
-              <motion.div key={index} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.1 }} className="glass-card rounded-xl p-6 text-center">
-                <div className="w-12 h-12 rounded-lg bg-gradient-neon flex items-center justify-center mx-auto mb-4">
-                  <item.icon className="w-6 h-6 text-background" />
-                </div>
-                <h3 className="font-display text-lg mb-2">{item.title}</h3>
-                <p className="text-muted-foreground text-sm">{item.desc}</p>
-              </motion.div>
-            ))}
           </div>
+
+          <motion.div {...rise(0.24)}>
+            <MyraAndroidDownload variant="card" showReleaseNotes={false} />
+          </motion.div>
+        </section>
+
+        {section("Apps you install", "Ready to use. Download, install and run.", APPS)}
+
+        {/* Free companion — not a purchase, so it links out instead of using a price row */}
+        <div className="-mt-6 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/[0.07] px-4 py-4 sm:px-5">
+          <div className="flex items-center gap-4">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400" aria-hidden="true">
+              <Monitor size={20} />
+            </span>
+            <div>
+              <p className="font-display font-bold text-foreground">MYRA PC Controller</p>
+              <p className="text-sm text-muted-foreground">Free Windows companion that lets MYRA control your PC.</p>
+            </div>
+          </div>
+          <Link
+            href="/download"
+            className="inline-flex min-h-11 items-center rounded-xl border border-emerald-500/30 px-5 text-sm font-bold text-emerald-300 hover:bg-emerald-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+          >
+            Download free
+          </Link>
         </div>
-      </section>
+
+        {section("Source code you own", "For developers. Change it, rebrand it, build your own version.", SOURCE)}
+
+        {/* What every purchase includes */}
+        <section className="py-12 md:py-16 border-t border-white/[0.07]" aria-labelledby="h-included">
+          <h2 id="h-included" className="font-display text-2xl md:text-3xl font-extrabold text-foreground">Every purchase includes</h2>
+          <dl className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {INCLUDED.map(({ icon: Icon, title, desc }) => (
+              <div key={title}>
+                <dt className="flex items-center gap-2.5 font-display font-bold text-foreground">
+                  <Icon size={18} className="text-primary" aria-hidden="true" /> {title}
+                </dt>
+                <dd className="mt-2 text-sm text-muted-foreground leading-relaxed">{desc}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+
+        {/* FAQ */}
+        <section className="py-12 md:py-16 border-t border-white/[0.07] grid gap-8 lg:grid-cols-[1fr_2fr]" aria-labelledby="h-faq">
+          <div>
+            <h2 id="h-faq" className="font-display text-2xl md:text-3xl font-extrabold text-foreground">Questions before you buy</h2>
+            <p className="mt-3 text-muted-foreground">
+              Something else?{" "}
+              <Link href="/contact" className="text-foreground underline underline-offset-4 hover:text-primary">
+                Contact us
+              </Link>
+              .
+            </p>
+          </div>
+          <Accordion type="single" collapsible className="w-full">
+            {FAQS.map((f, i) => (
+              <AccordionItem key={f.q} value={`faq-${i}`} className="border-white/[0.07]">
+                <AccordionTrigger className="text-left font-display text-base font-semibold hover:no-underline min-h-11">
+                  {f.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground leading-relaxed text-[0.95rem]">
+                  {f.a}
+                  {f.link && (
+                    <>
+                      {" "}
+                      <Link href={f.link.href} className="text-foreground underline underline-offset-4 hover:text-primary">
+                        {f.link.label}
+                      </Link>
+                    </>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </section>
+      </main>
 
       <Footer />
+
+      <ContactFormModal
+        isOpen={showContact}
+        onClose={() => setShowContact(false)}
+        onSubmit={(data) => {
+          setCustomer(data);
+          setShowContact(false);
+          setShowPayment(true);
+        }}
+        productName={selected?.name || ""}
+        accentHsl={selected?.hsl.replace(/ /g, ", ") || "0, 72%, 51%"}
+      />
+      {selected && (
+        <PaymentGatewaySelector
+          isOpen={showPayment}
+          onClose={() => setShowPayment(false)}
+          productId={selected.productId}
+          customerName={customer.name}
+          customerEmail={customer.email}
+          customerPhone={customer.phone}
+        />
+      )}
+      <BinancePaymentModal
+        isOpen={!!crypto}
+        onClose={() => setCrypto(null)}
+        productName={crypto?.name || ""}
+        amount={crypto?.amount || 0}
+      />
     </div>
   );
 };

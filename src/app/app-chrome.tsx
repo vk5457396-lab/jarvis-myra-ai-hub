@@ -6,6 +6,7 @@ import LoadingScreen from "@/components/LoadingScreen";
 import CursorGlow from "@/components/CursorGlow";
 import ReferralBanner from "@/components/ReferralBanner";
 import ScrollProgressBar from "@/components/ScrollProgressBar";
+import SiteOfferPopup from "@/components/SiteOfferPopup";
 
 export default function AppChrome({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -19,6 +20,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
       <Suspense fallback={null}>
         <ReferralBanner />
       </Suspense>
+      <SiteOfferPopup ready={!isLoading} />
       {children}
     </>
   );
