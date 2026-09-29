@@ -221,6 +221,12 @@ export async function listFirebaseAccessKeysForEmail(email: string) {
  * "has this payment already issued a key" lock. Returns false (caller should treat this as
  * "already handled, don't issue a second key") if the lock already existed.
  */
+/** Number of MYRA website purchases ever verified — one payment lock per paid Razorpay order. */
+export async function countWebsitePurchases(): Promise<number> {
+  const snap = await db().collection('myra_payment_locks').count().get();
+  return snap.data().count;
+}
+
 export async function claimPaymentOnce(paymentId: string): Promise<boolean> {
   try {
     await db()

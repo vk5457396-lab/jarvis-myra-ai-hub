@@ -72,13 +72,13 @@ const HeroSection = () => {
           >
             <Link href="/pricing">
               <Button variant="hero" size="xl" className="group w-full sm:w-auto">
-                <span>Buy Jarvis — ₹799</span>
+                <span>Buy Jarvis — ₹899</span>
                 <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
-            <Link href="/pricing">
+            <Link href="/pricing#myra-buy">
               <Button variant="glass" size="xl" className="group w-full sm:w-auto">
-                <span>Buy MYRA — ₹799</span>
+                <span>Buy MYRA — ₹999</span>
                 <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>

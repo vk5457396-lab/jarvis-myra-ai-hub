@@ -33,3 +33,4 @@ export { PcRelease, PC_RELEASE_ID, type PcReleaseDoc } from './PcRelease';
 export { UserConnection, OAuthState } from './Connector';
 export { RateLimitBucket } from './RateLimit';
 export { SiteBanner, toPublicSiteBanner, type SiteBannerDoc } from './SiteBanner';
+export { SiteSettings, SITE_SETTINGS_ID } from './SiteSettings';

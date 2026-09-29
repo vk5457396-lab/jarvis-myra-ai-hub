@@ -4,7 +4,7 @@ export const maxDuration = 30;
 import { withApi, handleOptions } from '../../_lib/middleware/handler';
 import { success } from '../../_lib/utils/response';
 import { connectMongo } from '@/lib/db/mongoose';
-import { Purchase } from '@/lib/db/models';
+import { computeSalesRows } from '../../_lib/services/salesStatsService';
 
 export const OPTIONS = handleOptions(['GET']);
 
@@ -19,12 +19,12 @@ export const OPTIONS = handleOptions(['GET']);
  */
 export const GET = withApi(async () => {
   await connectMongo();
-  const rows = await Purchase.aggregate([
-    { $group: { _id: '$productType', count: { $sum: 1 }, revenue: { $sum: '$amount' } } },
-  ]);
+  // All sale sources (website checkouts, MYRA Android website purchases, marketplace, admin-entered
+  // offline sales) - see salesStatsService.ts. Same response shape as before.
+  const rows = await computeSalesRows();
 
   const res = success({
-    counts: rows.map((r) => ({ product_type: r._id, count: r.count, revenue: r.revenue })),
+    counts: rows.map((r) => ({ product_type: r.product_type, count: r.count, revenue: r.revenue })),
   });
   // Edge cache for 2min, serve stale for up to 10min while revalidating in the background -
   // purchase counts don't need to be second-accurate, and this collapses every concurrent

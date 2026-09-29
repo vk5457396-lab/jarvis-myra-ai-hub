@@ -16,6 +16,7 @@ import AdminProductsTab from "@/components/admin/AdminProductsTab";
 import SiteBannerManager from "@/components/admin/SiteBannerManager";
 import NotificationCenter from "@/components/admin/NotificationCenter";
 import CreditMissedReferral from "@/components/admin/CreditMissedReferral";
+import SalesCounterSettings from "@/components/admin/SalesCounterSettings";
 
 interface UserProfile {
   id: string;
@@ -261,6 +262,7 @@ const AdminDashboard = () => {
             )}
           </div>
 
+          <SalesCounterSettings />
           <CreditMissedReferral onCredited={loadOverview} />
 
           {/* Tabs */}

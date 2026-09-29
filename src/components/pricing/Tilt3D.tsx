@@ -42,13 +42,28 @@ export function Tilt3D({
   const glareY = useTransform(sy, [0, 1], ["0%", "100%"]);
   const glareBg = useMotionTemplate`radial-gradient(circle at ${glareX} ${glareY}, rgba(255,255,255,0.16), transparent 55%)`;
 
+  // While a button is pressed the card must hold perfectly still: if it tilts between pointerdown and
+  // pointerup, the release lands on a different element and the browser never fires `click`.
+  const pressed = useRef(false);
+
   const onMove = (e: React.PointerEvent) => {
-    if (!enabled || !ref.current) return;
+    if (!enabled || pressed.current || !ref.current) return;
     const r = ref.current.getBoundingClientRect();
     px.set((e.clientX - r.left) / r.width);
     py.set((e.clientY - r.top) / r.height);
   };
+  const freeze = () => {
+    pressed.current = true;
+    px.set(sx.get());
+    py.set(sy.get());
+    sx.jump(sx.get());
+    sy.jump(sy.get());
+  };
+  const release = () => {
+    pressed.current = false;
+  };
   const reset = () => {
+    pressed.current = false;
     px.set(0.5);
     py.set(0.5);
   };
@@ -58,6 +73,9 @@ export function Tilt3D({
       <motion.div
         ref={ref}
         onPointerMove={onMove}
+        onPointerDownCapture={freeze}
+        onPointerUpCapture={release}
+        onPointerCancel={release}
         onPointerLeave={reset}
         style={enabled ? { rotateX, rotateY, transformStyle: "preserve-3d" } : undefined}
         className="relative h-full will-change-transform"

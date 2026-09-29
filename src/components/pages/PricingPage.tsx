@@ -114,20 +114,33 @@ const FAQS: { q: string; a: string; link?: { href: string; label: string } }[] =
 const ease = [0.34, 1.4, 0.64, 1] as const; // back-out: a small settle at the end of the entrance
 
 /** Accessible native select, styled — lists every supported currency. */
-function CountryPicker({ value, onChange }: { value: string; onChange: (code: string) => void }) {
+function CountryPicker({
+  value,
+  onChange,
+  id = "price-country",
+  compact = false,
+}: {
+  value: string;
+  onChange: (code: string) => void;
+  id?: string;
+  /** Smaller, full-width variant used inside each product card. */
+  compact?: boolean;
+}) {
   const current = CURRENCIES[value];
   return (
-    <div className="inline-flex flex-col gap-1.5">
-      <label htmlFor="price-country" className="text-sm text-muted-foreground">
-        Show prices for
+    <div className={compact ? "flex w-full flex-col gap-1" : "inline-flex flex-col gap-1.5"}>
+      <label htmlFor={id} className={compact ? "text-xs text-muted-foreground" : "text-sm text-muted-foreground"}>
+        {compact ? "Price for your country" : "Show prices for"}
       </label>
-      <div className="relative inline-flex items-center">
-        <Globe size={16} className="pointer-events-none absolute left-3.5 text-primary" aria-hidden="true" />
+      <div className="relative flex items-center">
+        <Globe size={compact ? 14 : 16} className="pointer-events-none absolute left-3.5 text-primary" aria-hidden="true" />
         <select
-          id="price-country"
+          id={id}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="min-h-11 cursor-pointer appearance-none rounded-xl border border-white/15 bg-white/[0.04] pl-10 pr-10 font-display text-sm font-semibold text-foreground backdrop-blur hover:border-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className={`w-full cursor-pointer appearance-none rounded-xl border border-white/15 bg-white/[0.04] pr-10 font-display font-semibold text-foreground backdrop-blur hover:border-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+            compact ? "min-h-11 pl-9 text-[13px]" : "min-h-11 pl-10 text-sm"
+          }`}
         >
           {Object.entries(CURRENCIES).map(([code, c]) => (
             <option key={code} value={code} className="bg-background">
@@ -163,12 +176,15 @@ function ProductCard3D({
   priceNote,
   children,
   animateEdge,
+  country,
 }: {
   product: Product;
   price: string;
   priceNote?: ReactNode;
   children: ReactNode;
   animateEdge: boolean;
+  /** Shared country state — every card's picker changes all prices on the page. */
+  country: { value: string; onChange: (code: string) => void };
 }) {
   const Icon = product.icon;
   const { hsl, featured } = product;
@@ -248,7 +264,11 @@ function ProductCard3D({
             <div className="mt-1 min-h-5 text-sm text-muted-foreground">{priceNote ?? "One-time payment"}</div>
           </Layer>
 
-          <Layer depth={45} className="mt-5">
+          <Layer depth={35} className="mt-4">
+            <CountryPicker compact id={`country-${product.productId}`} value={country.value} onChange={country.onChange} />
+          </Layer>
+
+          <Layer depth={45} className="mt-4">
             {children}
           </Layer>
         </div>
@@ -258,7 +278,7 @@ function ProductCard3D({
 }
 
 const buyBtn =
-  "flex-1 min-h-12 cursor-pointer rounded-xl bg-primary px-5 font-display text-sm font-bold text-white shadow-[0_12px_24px_-10px_hsl(var(--primary)/0.8)] transition-[background-color,transform] hover:bg-primary/90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+  "flex-1 min-h-12 cursor-pointer rounded-xl bg-primary px-5 font-display text-sm font-bold text-white shadow-[0_12px_24px_-10px_hsl(var(--primary)/0.8)] transition-colors hover:bg-primary/90 active:bg-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 const cryptoBtn =
   "min-h-12 cursor-pointer rounded-xl border border-white/15 px-4 text-sm font-semibold text-muted-foreground transition-colors hover:border-white/30 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
@@ -273,6 +293,7 @@ const Pricing = () => {
   const [crypto, setCrypto] = useState<{ name: string; amount: number } | null>(null);
 
   const intl = !isIndia;
+  const country = { value: countryCode, onChange: setSelectedCountry };
   const inrFor = (id: string) => chargedInr(id, intl);
   const priceFor = (id: string) => formatExact(inrFor(id));
   const approx = (id: string) => (intl ? `≈ estimate · charged as ₹${inrFor(id).toLocaleString("en-IN")}` : undefined);
@@ -380,7 +401,7 @@ const Pricing = () => {
             className="mt-8 grid gap-6 md:grid-cols-2 [perspective:1400px]"
           >
             <motion.div variants={item}>
-              <ProductCard3D product={JARVIS_EXE} price={priceFor("jarvis")} priceNote={approx("jarvis")} animateEdge={false}>
+              <ProductCard3D product={JARVIS_EXE} price={priceFor("jarvis")} priceNote={approx("jarvis")} animateEdge={false} country={country}>
                 {actions(JARVIS_EXE)}
               </ProductCard3D>
             </motion.div>
@@ -425,6 +446,7 @@ const Pricing = () => {
                   product={p}
                   price={priceFor(p.productId)}
                   animateEdge={!reduceMotion}
+                  country={country}
                   priceNote={
                     p.featured && bundleSaving > 0 ? (
                       <span className="font-semibold text-amber-300">{formatExact(bundleSaving)} less than buying both</span>
