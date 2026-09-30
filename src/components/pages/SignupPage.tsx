@@ -5,15 +5,24 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Eye, EyeOff, UserPlus, Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getStoredReferralCode } from "@/lib/referral";
+import AuthSplitCard, {
+  PANEL_BG,
+  pillInput,
+  fieldLabel,
+  primaryButton,
+  eyeButton,
+  googleButton,
+  GoogleIcon,
+  useRise,
+} from "@/components/auth/AuthSplitCard";
 
 const Signup = () => {
+  const rise = useRise();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -80,138 +89,114 @@ const Signup = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <section className="pt-32 pb-16 md:pt-40 md:pb-24 relative overflow-hidden">
-        <div className="absolute inset-0 circuit-pattern opacity-20" />
-        <div className="absolute top-1/3 left-1/4 w-72 h-72 bg-secondary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
+      <AuthSplitCard
+        mirrored
+        panelTitle="Hello, Friend!"
+        panelText="Already have an account? Sign in to pick up where you left off"
+        panelCta={{ href: loginUrl, label: "SIGN IN" }}
+      >
+        <motion.h1
+          {...rise(0.15)}
+          className="text-center font-display text-3xl font-bold lowercase text-[hsl(0_72%_46%)] md:text-4xl"
+        >
+          create account
+        </motion.h1>
+        <motion.p {...rise(0.2)} className="mt-1 text-center text-sm text-neutral-600">
+          Join and start earning with referrals
+        </motion.p>
+        {referralCode && (
+          <motion.p {...rise(0.22)} className="mt-3 text-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs text-emerald-800 ring-1 ring-emerald-200">
+              Referred with code <span className="font-bold">{referralCode}</span>
+            </span>
+          </motion.p>
+        )}
 
-        <div className="container mx-auto px-4 relative z-10 flex justify-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="w-full max-w-md"
-          >
-            <div className="relative rounded-[2rem] overflow-hidden">
-              <div className="absolute inset-0 rounded-[2rem] p-px overflow-hidden">
-                <motion.div
-                  className="absolute inset-[-200%]"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                  style={{ background: "conic-gradient(from 0deg, hsla(350,65%,45%,0.4), transparent 40%, hsla(0,72%,51%,0.4), transparent 80%)" }}
-                />
-              </div>
+        <motion.form {...rise(0.26)} onSubmit={handleSignup} className="mt-6 space-y-4" noValidate>
+          <div>
+            <label htmlFor="signup-name" className={fieldLabel}>
+              Full name
+            </label>
+            <input
+              id="signup-name"
+              type="text"
+              autoComplete="name"
+              placeholder="Your name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className={pillInput}
+            />
+          </div>
 
-              <div className="relative rounded-[calc(2rem-1px)] overflow-hidden m-px" style={{ background: "linear-gradient(165deg, hsla(350,65%,45%,0.06) 0%, hsla(0,0%,7%,0.97) 40%, hsla(0,0%,4%,0.99) 100%)" }}>
-                <div className="absolute -top-20 -right-20 w-44 h-44 rounded-full blur-[80px] opacity-20" style={{ background: "hsla(350,65%,45%,0.5)" }} />
-                <div className="absolute -bottom-20 -left-20 w-44 h-44 rounded-full blur-[80px] opacity-15" style={{ background: "hsla(0,72%,51%,0.4)" }} />
+          <div>
+            <label htmlFor="signup-email" className={fieldLabel}>
+              Email
+            </label>
+            <input
+              id="signup-email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={pillInput}
+            />
+          </div>
 
-                <div className="relative z-10 p-8 md:p-10">
-                  <div className="text-center mb-8">
-                    <motion.div
-                      className="w-16 h-16 rounded-2xl bg-gradient-to-br from-secondary to-primary flex items-center justify-center mx-auto mb-4"
-                      style={{ boxShadow: "0 0 30px hsla(350,65%,45%,0.3)" }}
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                    >
-                      <UserPlus className="w-8 h-8 text-white" />
-                    </motion.div>
-                    <h1 className="font-display text-3xl font-black bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent">Create Account</h1>
-                    <p className="text-muted-foreground text-sm mt-2">Join and start earning with referrals</p>
-                    {referralCode && (
-                      <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        🎉 Referred with code: <span className="font-bold">{referralCode}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <form onSubmit={handleSignup} className="space-y-5">
-                    <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        type="text"
-                        placeholder="Full name"
-                        aria-label="Full name"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className="pl-11 h-12 rounded-xl bg-white/5 border-white/10 focus:border-secondary/50 text-foreground"
-                      />
-                    </div>
-
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        type="email"
-                        placeholder="Email address"
-                        aria-label="Email address"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-11 h-12 rounded-xl bg-white/5 border-white/10 focus:border-secondary/50 text-foreground"
-                      />
-                    </div>
-
-                    <div className="relative">
-                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Password (min 8 characters)"
-                        aria-label="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="pl-11 pr-11 h-12 rounded-xl bg-white/5 border-white/10 focus:border-secondary/50 text-foreground"
-                      />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "Hide password" : "Show password"} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-
-                    </div>
-
-                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                      <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl bg-gradient-to-r from-secondary to-primary font-display font-black text-white relative overflow-hidden group">
-                        <motion.div className="absolute inset-0 opacity-0 group-hover:opacity-100" animate={{ x: ["-100%", "200%"] }} transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }} style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)", width: "50%" }} />
-                        <span className="relative z-10">{loading ? "Creating account..." : "Sign Up"}</span>
-                        <ArrowRight size={16} className="ml-2 relative z-10 group-hover:translate-x-1 transition-transform" />
-                      </Button>
-                    </motion.div>
-                  </form>
-
-                  <div className="relative my-6">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-white/10" />
-                    </div>
-                    <div className="relative flex justify-center text-xs">
-                      <span className="bg-background px-3 text-muted-foreground">or continue with</span>
-                    </div>
-                  </div>
-
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full h-12 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 gap-3 font-display"
-                      onClick={() => signIn("google", { callbackUrl: successUrl })}
-                    >
-                      <svg className="w-5 h-5" viewBox="0 0 24 24">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                      </svg>
-                      Sign up with Google
-                    </Button>
-                  </motion.div>
-
-                  <div className="mt-6 text-center">
-                    <p className="text-muted-foreground text-sm">
-                      Already have an account?{" "}
-                      <Link href={loginUrl} className="text-secondary font-semibold hover:underline">Sign In</Link>
-                    </p>
-                  </div>
-                </div>
-              </div>
+          <div>
+            <label htmlFor="signup-password" className={fieldLabel}>
+              Password
+            </label>
+            <div className="relative">
+              <input
+                id="signup-password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                placeholder="At least 8 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={`${pillInput} pr-12`}
+                aria-describedby="signup-password-hint"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className={eyeButton}
+              >
+                {showPassword ? <EyeOff size={17} aria-hidden="true" /> : <Eye size={17} aria-hidden="true" />}
+              </button>
             </div>
-          </motion.div>
-        </div>
-      </section>
+            <p id="signup-password-hint" className="mt-1.5 pl-4 text-xs text-neutral-500">
+              Use 8 or more characters.
+            </p>
+          </div>
+
+          <div className="flex justify-center pt-1">
+            <button type="submit" disabled={loading} className={primaryButton} style={{ background: PANEL_BG }}>
+              {loading && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
+              {loading ? "CREATING ACCOUNT" : "SIGN UP"}
+            </button>
+          </div>
+        </motion.form>
+
+        <motion.div {...rise(0.32)}>
+          <div className="my-5 flex items-center gap-3 text-xs text-neutral-400">
+            <span className="h-px flex-1 bg-neutral-200" /> or <span className="h-px flex-1 bg-neutral-200" />
+          </div>
+          <button type="button" onClick={() => signIn("google", { callbackUrl: successUrl })} className={googleButton}>
+            <GoogleIcon /> Sign up with Google
+          </button>
+
+          <p className="mt-6 text-center text-sm text-neutral-600">
+            Already have an account?{" "}
+            <Link href={loginUrl} className="font-semibold text-[hsl(0_72%_46%)] hover:underline">
+              sign in
+            </Link>
+          </p>
+        </motion.div>
+      </AuthSplitCard>
       <Footer />
     </div>
   );
