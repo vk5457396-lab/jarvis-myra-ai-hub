@@ -41,7 +41,7 @@ async function summaryFor(app: string) {
 }
 
 /**
- * GET ?app=… → public rating summary + newest reviews (paged), CDN-cached for a minute so page views
+ * GET ?app=… → public rating summary + newest reviews (paged), CDN-cached for 5 minutes so page views
  * don't each run a function. GET ?app=…&mine=1 → the signed-in caller's own review (private, uncached).
  */
 export const GET = withApi(async (req) => {
@@ -68,7 +68,7 @@ export const GET = withApi(async (req) => {
     reviews: reviews.slice(0, PAGE).map(toPublicReview),
     has_more: reviews.length > PAGE,
   });
-  res.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
+  res.headers.set('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600');
   return res;
 });
 

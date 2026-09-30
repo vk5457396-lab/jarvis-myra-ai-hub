@@ -33,6 +33,6 @@ export const GET = withApi(async (req) => {
     download_count: p.downloadCount,
   });
   // Public, non-personalized — edge-cached like the catalog route instead of a function per view.
-  res.headers.set('Cache-Control', 'public, max-age=0, s-maxage=120, stale-while-revalidate=600');
+  res.headers.set('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600');
   return res;
 });

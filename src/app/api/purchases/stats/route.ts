@@ -26,9 +26,9 @@ export const GET = withApi(async () => {
   const res = success({
     counts: rows.map((r) => ({ product_type: r.product_type, count: r.count, revenue: r.revenue })),
   });
-  // Edge cache for 2min, serve stale for up to 10min while revalidating in the background -
+  // Edge cache for 5min, serve stale for up to 1h while revalidating in the background -
   // purchase counts don't need to be second-accurate, and this collapses every concurrent
   // visitor's request into at most one origin hit per window instead of one each.
-  res.headers.set('Cache-Control', 'public, max-age=0, s-maxage=120, stale-while-revalidate=600');
+  res.headers.set('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600');
   return res;
 });

@@ -8,7 +8,7 @@ import { SiteBanner, toPublicSiteBanner } from '@/lib/db/models';
 
 export const OPTIONS = handleOptions(['GET']);
 
-/** Public: the one live event/offer popup for the website, or null. CDN-cached for a minute. */
+/** Public: the one live event/offer popup for the website, or null. CDN-cached for 5 minutes (a new popup can take that long to appear). */
 export const GET = withApi(async () => {
   await connectMongo();
   const now = new Date();
@@ -23,6 +23,6 @@ export const GET = withApi(async () => {
     .lean();
 
   const res = success({ banner: banner ? toPublicSiteBanner(banner) : null });
-  res.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+  res.headers.set('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600');
   return res;
 });

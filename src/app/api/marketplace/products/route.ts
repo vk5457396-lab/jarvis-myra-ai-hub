@@ -29,6 +29,6 @@ export const GET = withApi(async () => {
   const res = success({ products: docs.map(toPublic) });
   // Public, non-personalized catalog - same edge-cache pattern as purchases/stats/route.ts.
   // Shorter window than app/release since new products should surface reasonably promptly.
-  res.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
+  res.headers.set('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600');
   return res;
 });
