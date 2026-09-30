@@ -4,7 +4,7 @@ export const maxDuration = 30;
 import { withApi, handleOptions } from '../../_lib/middleware/handler';
 import { success, ApiError } from '../../_lib/utils/response';
 import { connectMongo } from '@/lib/db/mongoose';
-import { AppRelease, APP_RELEASE_ID } from '@/lib/db/models';
+import { AppRelease, APP_RELEASE_ID, AppReleaseDownload } from '@/lib/db/models';
 
 export const OPTIONS = handleOptions(['GET']);
 
@@ -23,6 +23,15 @@ export const GET = withApi(async () => {
 
   if (!doc) throw ApiError.notFound('No release configured yet.', 'RELEASE_NOT_CONFIGURED');
 
+  // Real installs for the store-style listing: distinct signed-in users who downloaded the APK.
+  let downloadCount: number | null = null;
+  try {
+    const [row] = await AppReleaseDownload.aggregate([{ $group: { _id: '$userId' } }, { $count: 'n' }]);
+    downloadCount = row?.n ?? 0;
+  } catch {
+    downloadCount = null;
+  }
+
   const res = success({
     version_name: doc.publicVersionName ?? doc.versionName,
     version_code: doc.versionCode,
@@ -33,6 +42,7 @@ export const GET = withApi(async () => {
     // /api/app/release/download), so it must always follow that field, never the public one.
     sha256: doc.sha256 ?? null,
     updated_at: doc.updatedAt,
+    download_count: downloadCount,
   });
   // Public, non-personalized, and only changes when an admin publishes a release - same
   // edge-cache pattern as purchases/stats/route.ts. Every download-page visitor and every

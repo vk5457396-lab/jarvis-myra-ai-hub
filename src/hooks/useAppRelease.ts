@@ -8,6 +8,8 @@ export interface ReleaseInfo {
   release_notes: string | null;
   file_size_mb: number | null;
   updated_at: string;
+  /** Distinct users who downloaded the APK (null if unavailable). */
+  download_count?: number | null;
 }
 
 /** Shared loader for the published Android release, used by every download surface. */

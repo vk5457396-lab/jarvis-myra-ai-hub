@@ -197,21 +197,30 @@
     from { transform: rotateX(68deg) rotateZ(0deg); }
     to { transform: rotateX(68deg) rotateZ(360deg); }
   }
-  @keyframes gyro-a {
-    from { transform: rotateX(70deg) rotateY(0deg) rotateZ(0deg); }
-    to { transform: rotateX(70deg) rotateY(0deg) rotateZ(360deg); }
+  /* Loader gimbal: nested rings flipping on different axes (compound like a real gyroscope). */
+  @keyframes gimbal-y {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(360deg); }
   }
-  @keyframes gyro-b {
-    from { transform: rotateY(65deg) rotateX(20deg) rotateZ(0deg); }
-    to { transform: rotateY(65deg) rotateX(20deg) rotateZ(-360deg); }
+  @keyframes gimbal-x {
+    from { transform: rotateX(0deg); }
+    to { transform: rotateX(360deg); }
   }
-  @keyframes gyro-c {
-    from { transform: rotateX(-35deg) rotateY(-40deg) rotateZ(0deg); }
-    to { transform: rotateX(-35deg) rotateY(-40deg) rotateZ(360deg); }
+  @keyframes gimbal-y-rev {
+    from { transform: rotateY(0deg) rotateZ(35deg); }
+    to { transform: rotateY(-360deg) rotateZ(35deg); }
+  }
+  @keyframes letter-flip {
+    from { opacity: 0; transform: translateY(12px) rotateX(-90deg); }
+    to { opacity: 1; transform: translateY(0) rotateX(0deg); }
+  }
+  @keyframes loader-prefill {
+    from { transform: scaleX(0.05); }
+    to { transform: scaleX(0.85); }
   }
   @keyframes gyro-tilt {
-    0%, 100% { transform: rotateX(8deg) rotateY(-12deg); }
-    50% { transform: rotateX(-6deg) rotateY(12deg); }
+    0%, 100% { transform: rotateX(-16deg) rotateZ(10deg); }
+    50% { transform: rotateX(-4deg) rotateZ(-6deg); }
   }
 
   @keyframes float {
