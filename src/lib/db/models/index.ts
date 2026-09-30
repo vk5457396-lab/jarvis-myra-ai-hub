@@ -34,4 +34,4 @@ export { UserConnection, OAuthState } from './Connector';
 export { RateLimitBucket } from './RateLimit';
 export { SiteBanner, toPublicSiteBanner, type SiteBannerDoc } from './SiteBanner';
 export { SiteSettings, SITE_SETTINGS_ID } from './SiteSettings';
-export { AppReview, REVIEW_APPS, toPublicReview, type ReviewApp } from './AppReview';
+export { AppReview, AppReviewSetting, REVIEW_APPS, toPublicReview, type ReviewApp } from './AppReview';

@@ -24,6 +24,17 @@ appReviewSchema.index({ app: 1, createdAt: -1 });
 
 export const AppReview: Model<any> = models.AppReview || model('AppReview', appReviewSchema);
 
+const appReviewSettingSchema = new Schema(
+  {
+    app: { type: String, enum: REVIEW_APPS, required: true, unique: true },
+    countOverride: { type: Number, default: null },
+    averageOverride: { type: Number, default: null },
+  },
+  { timestamps: true, collection: 'app_review_settings' }
+);
+
+export const AppReviewSetting: Model<any> = models.AppReviewSetting || model('AppReviewSetting', appReviewSettingSchema);
+
 export function toPublicReview(r: any) {
   return {
     id: r._id.toString(),

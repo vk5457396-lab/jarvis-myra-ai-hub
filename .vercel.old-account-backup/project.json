@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_NxMkKKVwMra5uX0aNV2jZvAFKkdD",
+  "orgId": "team_EmlGGEbw24PBGn47AecFV9QT",
+  "projectName": "jarvis-myra-ai-hub",
+  "settings": {
+    "createdAt": 1770380393593,
+    "framework": "vite",
+    "devCommand": "vite --port $PORT",
+    "installCommand": "npm install",
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist",
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "22.x"
+  }
+}

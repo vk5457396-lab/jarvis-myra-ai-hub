@@ -8,7 +8,7 @@ import { success, ApiError } from '../_lib/utils/response';
 import { validateEnum } from '../_lib/utils/validation';
 import { connectMongo } from '@/lib/db/mongoose';
 import { auth } from '@/lib/auth/config';
-import { AppReview, Profile, REVIEW_APPS, toPublicReview } from '@/lib/db/models';
+import { AppReview, AppReviewSetting, Profile, REVIEW_APPS, toPublicReview } from '@/lib/db/models';
 import { getMyraDownloadAccess } from '../_lib/services/myraDownloadAccess';
 
 export const OPTIONS = handleOptions(['GET', 'POST', 'DELETE']);
@@ -37,7 +37,18 @@ async function summaryFor(app: string) {
     count += r.n;
     total += r._id * r.n;
   }
-  return { count, average: count ? Math.round((total / count) * 10) / 10 : 0, distribution };
+
+  const base = { count, average: count ? Math.round((total / count) * 10) / 10 : 0, distribution };
+  const override = await AppReviewSetting.findOne({ app }).lean();
+
+  if (override?.countOverride != null) {
+    base.count = Math.max(0, Number(override.countOverride));
+  }
+  if (override?.averageOverride != null) {
+    base.average = Math.min(5, Math.max(1, Number(override.averageOverride)));
+  }
+
+  return base;
 }
 
 /**

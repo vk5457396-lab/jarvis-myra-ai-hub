@@ -23,6 +23,10 @@ interface Summary {
   count: number;
   average: number;
   distribution: Record<string, number>;
+  override?: {
+    count: number | null;
+    average: number | null;
+  } | null;
 }
 
 const APPS: { id: App; label: string }[] = [
@@ -54,6 +58,9 @@ const ReviewsAdminPage = () => {
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [overrideCount, setOverrideCount] = useState<number>(0);
+  const [overrideAverage, setOverrideAverage] = useState<number>(0);
+  const [savingOverride, setSavingOverride] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,6 +68,8 @@ const ReviewsAdminPage = () => {
       const data = await api(`/api/admin/reviews?app=${app}`);
       setSummary(data.summary);
       setReviews(data.reviews);
+      setOverrideCount(data.summary?.override?.count ?? data.summary?.count ?? 0);
+      setOverrideAverage(data.summary?.override?.average ?? data.summary?.average ?? 0);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to load reviews");
     } finally {
@@ -100,6 +109,40 @@ const ReviewsAdminPage = () => {
     }
   };
 
+  const saveOverride = async () => {
+    try {
+      setSavingOverride(true);
+      const count = Number(overrideCount);
+      const average = Number(overrideAverage);
+      if (!Number.isFinite(count) || count < 0) throw new Error("Visible rating count must be 0 or more.");
+      if (!Number.isFinite(average) || average < 1 || average > 5) throw new Error("Visible average must be between 1 and 5.");
+
+      await api(`/api/admin/reviews`, {
+        method: "PATCH",
+        body: JSON.stringify({ app, count, average: Number(average.toFixed(1)) }),
+      });
+      toast.success("Public rating summary updated");
+      await load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update rating summary");
+    } finally {
+      setSavingOverride(false);
+    }
+  };
+
+  const resetOverride = async () => {
+    try {
+      setSavingOverride(true);
+      await api(`/api/admin/reviews`, { method: "PATCH", body: JSON.stringify({ app, reset: true }) });
+      toast.success("Rating override reset");
+      await load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to reset rating override");
+    } finally {
+      setSavingOverride(false);
+    }
+  };
+
   return (
     <div className="license-admin min-h-screen">
       <div className="mx-auto max-w-4xl px-4 py-10">
@@ -119,29 +162,78 @@ const ReviewsAdminPage = () => {
         </div>
 
         {summary && (
-          <div className="license-glass mb-6 flex flex-wrap items-center gap-6 p-5">
-            <div>
-              <p className="text-4xl font-semibold">{summary.count ? summary.average.toFixed(1) : "–"}</p>
-              <Stars n={Math.round(summary.average)} />
-              <p className="mt-1 text-xs text-muted-foreground">
-                {summary.count} public {summary.count === 1 ? "review" : "reviews"}
-              </p>
-            </div>
-            <div className="min-w-[200px] flex-1 space-y-1">
-              {[5, 4, 3, 2, 1].map((n) => {
-                const c = summary.distribution[String(n)] ?? 0;
-                return (
-                  <div key={n} className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="w-3">{n}</span>
-                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
-                      <div className="h-full rounded-full bg-amber-400" style={{ width: `${summary.count ? (c / summary.count) * 100 : 0}%` }} />
+          <>
+            <div className="license-glass mb-6 flex flex-wrap items-center gap-6 p-5">
+              <div>
+                <p className="text-4xl font-semibold">{summary.count ? summary.average.toFixed(1) : "–"}</p>
+                <Stars n={Math.round(summary.average)} />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {summary.count} public {summary.count === 1 ? "review" : "reviews"}
+                </p>
+              </div>
+              <div className="min-w-[200px] flex-1 space-y-1">
+                {[5, 4, 3, 2, 1].map((n) => {
+                  const c = summary.distribution[String(n)] ?? 0;
+                  return (
+                    <div key={n} className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span className="w-3">{n}</span>
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
+                        <div className="h-full rounded-full bg-amber-400" style={{ width: `${summary.count ? (c / summary.count) * 100 : 0}%` }} />
+                      </div>
+                      <span className="w-6 text-right">{c}</span>
                     </div>
-                    <span className="w-6 text-right">{c}</span>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
+
+            <div className="license-glass mb-6 p-5">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h2 className="text-lg font-medium">Adjust public rating summary</h2>
+                {summary.override && (summary.override.count !== null || summary.override.average !== null) ? (
+                  <span className="rounded-full border border-amber-400/40 bg-amber-500/10 px-2 py-1 text-[10px] uppercase tracking-[0.12em] text-amber-300">
+                    Override active
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="space-y-2 text-sm text-muted-foreground">
+                  <span>Visible review count</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={overrideCount}
+                    onChange={(e) => setOverrideCount(Math.max(0, Number(e.target.value) || 0))}
+                    className="w-full rounded-md border border-white/10 bg-background px-3 py-2 text-foreground outline-none ring-0 focus:border-amber-400"
+                  />
+                </label>
+
+                <label className="space-y-2 text-sm text-muted-foreground">
+                  <span>Visible average rating</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={5}
+                    step={0.1}
+                    value={overrideAverage}
+                    onChange={(e) => setOverrideAverage(Math.min(5, Math.max(1, Number(e.target.value) || 1)))}
+                    className="w-full rounded-md border border-white/10 bg-background px-3 py-2 text-foreground outline-none ring-0 focus:border-amber-400"
+                  />
+                </label>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button onClick={saveOverride} disabled={savingOverride}>
+                  {savingOverride ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Save override
+                </Button>
+                <Button variant="outline" onClick={resetOverride} disabled={savingOverride}>
+                  Reset
+                </Button>
+              </div>
+            </div>
+          </>
         )}
 
         {loading ? (
