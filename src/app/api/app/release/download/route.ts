@@ -10,6 +10,7 @@ import { auth } from '@/lib/auth/config';
 import { requireMobileUser } from '../../../_lib/middleware/mobileAuth';
 import { toFreshDirectLink } from '@/lib/mediafire';
 import logger from '../../../_lib/utils/logger';
+import { getMyraDownloadAccess } from '../../../_lib/services/myraDownloadAccess';
 
 export const OPTIONS = handleOptions(['GET']);
 
@@ -60,6 +61,19 @@ export const GET = withApi(
     const isWebsiteDownload = req.nextUrl.searchParams.get('mode') === 'url';
 
     await connectMongo();
+
+    // Website downloads are paid: enforce the same rule as the /download button here, so the APK
+    // can't be fetched by calling this URL directly. (The Android app's in-app updater — no
+    // mode=url — is unchanged: it serves people who already have the app.)
+    if (isWebsiteDownload) {
+      const session = await auth();
+      const email = session?.user?.email;
+      if (!email) throw ApiError.unauthorized('Login required to download.', 'AUTH_REQUIRED');
+      const { hasAccess } = await getMyraDownloadAccess(email);
+      if (!hasAccess) {
+        throw new ApiError(402, 'Buy MYRA for ₹999 to download the app.', 'PAYMENT_REQUIRED');
+      }
+    }
     const release = await AppRelease.findById(APP_RELEASE_ID)
       .select('versionName apkAssetUrl publicVersionName publicApkAssetUrl')
       .lean();

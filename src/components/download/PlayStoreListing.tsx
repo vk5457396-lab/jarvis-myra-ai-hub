@@ -25,6 +25,8 @@ export interface ListingProps {
   tags: string[];
   updatedOn?: string | null;
   whatsNew?: string | null;
+  /** Ratings & reviews section, rendered after "What's new". */
+  reviews?: ReactNode;
   sidebar?: ReactNode;
 }
 
@@ -218,6 +220,8 @@ export default function PlayStoreListing(p: ListingProps) {
               <p className="mt-4 max-w-2xl whitespace-pre-line text-sm leading-6 text-[#c4c7c5]">{p.whatsNew}</p>
             </section>
           )}
+
+          {p.reviews}
         </div>
 
         {p.sidebar && <aside className="min-w-0 lg:pt-2">{p.sidebar}</aside>}

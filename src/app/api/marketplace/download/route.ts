@@ -12,6 +12,7 @@ import { connectMongo } from '@/lib/db/mongoose';
 import { MarketplaceProduct, MarketplaceDownload } from '@/lib/db/models';
 import { auth } from '@/lib/auth/config';
 import { creditReferralCommission } from '../../_lib/services/referralService';
+import { getMyraDownloadAccess } from '../../_lib/services/myraDownloadAccess';
 
 export const OPTIONS = handleOptions(['POST']);
 
@@ -46,6 +47,18 @@ export const POST = withApi(
 
     const session = await auth();
     const userId = session?.user?.id || null;
+
+    // The MYRA APK is sold as the ₹999 lifetime plan even though its marketplace listing is ₹0 —
+    // never hand its file out for free through this route.
+    if (product.slug === 'myra-android-apk') {
+      if (!session?.user?.email) {
+        return NextResponse.json({ error: 'Login required to download.' }, { status: 401 });
+      }
+      const { hasAccess } = await getMyraDownloadAccess(session.user.email);
+      if (!hasAccess) {
+        return NextResponse.json({ error: 'Buy MYRA for ₹999 to download the app.', error_code: 'PAYMENT_REQUIRED' }, { status: 402 });
+      }
+    }
 
     if (product.price > 0) {
       if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !RAZORPAY_KEY_SECRET) {

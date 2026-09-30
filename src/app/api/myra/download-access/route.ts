@@ -5,8 +5,8 @@ import { withApi, handleOptions } from '../../_lib/middleware/handler';
 import { success, ApiError } from '../../_lib/utils/response';
 import { auth } from '@/lib/auth/config';
 import { connectMongo } from '@/lib/db/mongoose';
-import { User, MyraProfile } from '@/lib/db/models';
-import { generateFirebaseAccessKeys, listFirebaseAccessKeysForEmail } from '../../_lib/services/myraAccessKeyFirestoreService';
+import { generateFirebaseAccessKeys } from '../../_lib/services/myraAccessKeyFirestoreService';
+import { getMyraDownloadAccess } from '../../_lib/services/myraDownloadAccess';
 import { MYRA_PLANS } from '../../_lib/services/myraService';
 
 export const OPTIONS = handleOptions(['GET']);
@@ -26,15 +26,8 @@ export const OPTIONS = handleOptions(['GET']);
 export const GET = withApi(async () => {
   const session = await auth();
   if (!session?.user?.email) throw ApiError.unauthorized('Login required.', 'AUTH_REQUIRED');
-  const email = session.user.email.toLowerCase();
-
   await connectMongo();
-  const user = await User.findOne({ email });
-  const profile = user ? await MyraProfile.findOne({ userId: user._id }) : null;
-  const hasPaidProfile = !!profile && !!profile.subscriptionType && profile.subscriptionType !== 'free';
-
-  const existingKeys = await listFirebaseAccessKeysForEmail(email);
-  const hasAccess = hasPaidProfile || existingKeys.length > 0;
+  const { email, profile, hasPaidProfile, existingKeys, hasAccess } = await getMyraDownloadAccess(session.user.email);
 
   let key = existingKeys[0]?.key ?? null;
   if (hasAccess && !key) {

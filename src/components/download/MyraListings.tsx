@@ -5,6 +5,7 @@ import PlayStoreListing, { MoreByDeveloper, playButtonClass, type Shot } from "@
 import { useMyraPurchase, MYRA_LIFETIME_PRICE } from "@/hooks/useMyraPurchase";
 import { usePcRelease } from "@/hooks/usePcRelease";
 import { openDownload } from "@/lib/appDownload";
+import RatingsAndReviews, { Stars, useReviews, type ReviewsState } from "@/components/download/RatingsAndReviews";
 
 const MYRA_ICON = "/assets/myra-app/icon.webp";
 const PC_ICON = "/assets/myra-pc/icon.webp";
@@ -38,11 +39,26 @@ function downloadsBucket(n: number): string {
 const formatDate = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : null;
 
+/** Play shows the rating first in the stat strip — only once there are real reviews. */
+function ratingStat(rv: ReviewsState) {
+  const s = rv.summary;
+  if (!s || s.count === 0) return null;
+  return {
+    value: (
+      <span className="inline-flex items-center gap-1">
+        {s.average.toFixed(1)} <Stars value={1} size={11} />
+      </span>
+    ),
+    label: `${s.count.toLocaleString("en-IN")} ${s.count === 1 ? "review" : "reviews"}`,
+  };
+}
+
 const Spinner = () => <Loader2 size={18} className="animate-spin" aria-hidden="true" />;
 
 export function MyraAndroidListing() {
   const m = useMyraPurchase();
   const r = m.release;
+  const rv = useReviews("myra-android");
 
   let action;
   if (m.loading || m.status === "loading" || (m.session?.user && m.hasAccess === null)) {
@@ -95,12 +111,13 @@ export function MyraAndroidListing() {
     );
 
   const stats = [
+    ratingStat(rv),
     r?.version_name ? { value: r.version_name, label: "Version" } : null,
     r?.file_size_mb ? { value: `${r.file_size_mb} MB`, label: "Size" } : null,
     r?.download_count ? { value: downloadsBucket(r.download_count), label: "Downloads" } : null,
     { value: "8.0+", label: "Android" },
     { value: `₹${MYRA_LIFETIME_PRICE}`, label: "Lifetime" },
-  ].filter(Boolean) as { value: string; label: string }[];
+  ].filter(Boolean) as { value: React.ReactNode; label: string }[];
 
   return (
     <PlayStoreListing
@@ -119,6 +136,15 @@ export function MyraAndroidListing() {
       tags={["Productivity", "AI assistant", "Voice control", "Automation"]}
       updatedOn={formatDate(r?.updated_at)}
       whatsNew={r?.release_notes}
+      reviews={
+        <RatingsAndReviews
+          app="myra-android"
+          appName="MYRA"
+          state={rv}
+          canReview={m.session?.user ? (m.hasAccess === null ? undefined : m.hasAccess) : undefined}
+          cannotReviewReason={`Buy MYRA for ₹${MYRA_LIFETIME_PRICE} to rate and review it.`}
+        />
+      }
       sidebar={
         <MoreByDeveloper
           items={[
@@ -133,6 +159,7 @@ export function MyraAndroidListing() {
 
 export function MyraPcListing() {
   const { release, loading } = usePcRelease();
+  const rv = useReviews("myra-pc");
 
   const action = loading ? (
     <button type="button" disabled className={playButtonClass} aria-busy="true">
@@ -153,11 +180,12 @@ export function MyraPcListing() {
   );
 
   const stats = [
+    ratingStat(rv),
     release?.version_name ? { value: release.version_name, label: "Version" } : null,
     release?.file_size_mb ? { value: `${release.file_size_mb} MB`, label: "Size" } : null,
     { value: "Free", label: "Price" },
     { value: "10 / 11", label: "Windows" },
-  ].filter(Boolean) as { value: string; label: string }[];
+  ].filter(Boolean) as { value: React.ReactNode; label: string }[];
 
   return (
     <PlayStoreListing
@@ -175,6 +203,7 @@ export function MyraPcListing() {
       }
       tags={["Tools", "Remote control", "Windows", "Free"]}
       updatedOn={formatDate(release?.updated_at)}
+      reviews={<RatingsAndReviews app="myra-pc" appName="MYRA PC Controller" state={rv} canReview />}
       sidebar={
         <MoreByDeveloper
           items={[
