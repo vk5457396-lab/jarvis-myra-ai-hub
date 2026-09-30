@@ -13,6 +13,8 @@ const appReviewSchema = new Schema(
     rating: { type: Number, required: true, min: 1, max: 5 },
     text: { type: String, default: '' },
     verified: { type: Boolean, default: false },
+    // Admin moderation: hidden reviews stay in the DB but are left out of the public list and average.
+    hidden: { type: Boolean, default: false },
   },
   { timestamps: true, collection: 'app_reviews' }
 );

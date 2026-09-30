@@ -28,7 +28,7 @@ function displayNameFor(profile: any): string {
 }
 
 async function summaryFor(app: string) {
-  const rows = await AppReview.aggregate([{ $match: { app } }, { $group: { _id: '$rating', n: { $sum: 1 } } }]);
+  const rows = await AppReview.aggregate([{ $match: { app, hidden: { $ne: true } } }, { $group: { _id: '$rating', n: { $sum: 1 } } }]);
   const distribution: Record<string, number> = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
   let count = 0;
   let total = 0;
@@ -60,7 +60,7 @@ export const GET = withApi(async (req) => {
   const offset = Math.max(0, Math.min(10_000, Number(req.nextUrl.searchParams.get('offset')) || 0));
   const [summary, reviews] = await Promise.all([
     summaryFor(app),
-    AppReview.find({ app }).sort({ createdAt: -1 }).skip(offset).limit(PAGE + 1).lean(),
+    AppReview.find({ app, hidden: { $ne: true } }).sort({ createdAt: -1 }).skip(offset).limit(PAGE + 1).lean(),
   ]);
 
   const res = success({
