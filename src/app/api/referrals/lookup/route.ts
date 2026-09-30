@@ -16,7 +16,10 @@ export const GET = withApi(async (req) => {
   await connectMongo();
   const referrer = await Profile.findOne({ referralCode: code }).select('fullName').lean();
 
-  return success({
+  const res = success({
     referrer: referrer ? { id: (referrer as any)._id.toString(), full_name: (referrer as any).fullName } : null,
   });
+  // Public and keyed by code in the URL — safe to serve from the edge cache.
+  res.headers.set('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600');
+  return res;
 });

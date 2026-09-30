@@ -14,12 +14,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
 
   return (
-    // refetchOnWindowFocus=false + a 5-minute refetchInterval instead of the next-auth
-    // defaults (focus-refetch on, no interval): the site's navbar/admin pages don't need
-    // session state to update the instant a tab regains focus, and focus events were the
-    // dominant source of /api/auth/session traffic. signIn()/signOut() still update the
-    // client session immediately regardless of these settings - login/logout is unaffected.
-    <SessionProvider refetchOnWindowFocus={false} refetchInterval={5 * 60}>
+    // Session is fetched once per page load — no focus refetch and no polling. The 5-minute
+    // interval made every open tab call /api/auth/session 12x an hour; it was the #1 function
+    // in production logs (2026-09-30). signIn()/signOut() still update the client session
+    // immediately, so login/logout is unaffected.
+    <SessionProvider refetchOnWindowFocus={false} refetchInterval={0}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />

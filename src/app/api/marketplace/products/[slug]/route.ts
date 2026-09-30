@@ -16,7 +16,7 @@ export const GET = withApi(async (req) => {
   const p = await MarketplaceProduct.findOne({ slug, isPublished: true }).lean();
   if (!p) throw ApiError.notFound('Product not found.', 'PRODUCT_NOT_FOUND');
 
-  return success({
+  const res = success({
     id: (p as any)._id.toString(),
     title: p.title,
     slug: p.slug,
@@ -32,4 +32,7 @@ export const GET = withApi(async (req) => {
     file_size: p.fileSize,
     download_count: p.downloadCount,
   });
+  // Public, non-personalized — edge-cached like the catalog route instead of a function per view.
+  res.headers.set('Cache-Control', 'public, max-age=0, s-maxage=120, stale-while-revalidate=600');
+  return res;
 });

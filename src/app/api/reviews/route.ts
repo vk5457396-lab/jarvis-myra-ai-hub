@@ -40,27 +40,36 @@ async function summaryFor(app: string) {
   return { count, average: count ? Math.round((total / count) * 10) / 10 : 0, distribution };
 }
 
-/** Public: rating summary + newest reviews (paged), plus the caller's own review if signed in. */
+/**
+ * GET ?app=… → public rating summary + newest reviews (paged), CDN-cached for a minute so page views
+ * don't each run a function. GET ?app=…&mine=1 → the signed-in caller's own review (private, uncached).
+ */
 export const GET = withApi(async (req) => {
   const app = validateEnum(req.nextUrl.searchParams.get('app'), 'app', [...REVIEW_APPS]);
-  const offset = Math.max(0, Math.min(10_000, Number(req.nextUrl.searchParams.get('offset')) || 0));
   await connectMongo();
 
-  const session = await auth();
-  const [summary, reviews, mine] = await Promise.all([
+  if (req.nextUrl.searchParams.get('mine') === '1') {
+    const session = await auth();
+    const mine =
+      session?.user?.id && mongoose.isValidObjectId(session.user.id)
+        ? await AppReview.findOne({ app, userId: session.user.id }).lean()
+        : null;
+    return success({ mine: mine ? toPublicReview(mine) : null });
+  }
+
+  const offset = Math.max(0, Math.min(10_000, Number(req.nextUrl.searchParams.get('offset')) || 0));
+  const [summary, reviews] = await Promise.all([
     summaryFor(app),
     AppReview.find({ app }).sort({ createdAt: -1 }).skip(offset).limit(PAGE + 1).lean(),
-    session?.user?.id && mongoose.isValidObjectId(session.user.id)
-      ? AppReview.findOne({ app, userId: session.user.id }).lean()
-      : null,
   ]);
 
-  return success({
+  const res = success({
     summary,
     reviews: reviews.slice(0, PAGE).map(toPublicReview),
     has_more: reviews.length > PAGE,
-    mine: mine ? toPublicReview(mine) : null,
   });
+  res.headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
+  return res;
 });
 
 /** Signed-in users post or update their review. MYRA for Android requires a purchase. */

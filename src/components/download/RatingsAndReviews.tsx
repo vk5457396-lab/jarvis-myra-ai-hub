@@ -12,20 +12,22 @@ type Summary = { count: number; average: number; distribution: Record<string, nu
 
 /** Loads the public rating summary + reviews for one app; shared by the stat strip and the section. */
 export function useReviews(app: ReviewApp) {
+  const { status } = useSession();
   const [summary, setSummary] = useState<Summary | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [mine, setMine] = useState<Review | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Public list is CDN-cached; `fresh` adds a cache-buster right after the user posts/deletes so
+  // their change shows immediately instead of after the cache window.
   const load = useCallback(
-    async (offset = 0) => {
+    async (offset = 0, fresh = false) => {
       try {
-        const res = await fetch(`/api/reviews?app=${app}&offset=${offset}`);
+        const res = await fetch(`/api/reviews?app=${app}&offset=${offset}${fresh ? `&v=${Date.now()}` : ""}`);
         const json = await res.json();
         if (!json.success) return;
         setSummary(json.data.summary);
-        setMine(json.data.mine);
         setHasMore(json.data.has_more);
         setReviews((prev) => (offset ? [...prev, ...json.data.reviews] : json.data.reviews));
       } finally {
@@ -35,11 +37,38 @@ export function useReviews(app: ReviewApp) {
     [app]
   );
 
+  // The caller's own review is private — only fetched when signed in.
+  const loadMine = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/reviews?app=${app}&mine=1`);
+      const json = await res.json();
+      if (json.success) setMine(json.data.mine);
+    } catch {
+      // non-essential
+    }
+  }, [app]);
+
   useEffect(() => {
     load(0);
   }, [load]);
 
-  return { summary, reviews, mine, hasMore, loading, reload: () => load(0), loadMore: () => load(reviews.length), setSummary };
+  useEffect(() => {
+    if (status === "authenticated") loadMine();
+    else if (status === "unauthenticated") setMine(null);
+  }, [status, loadMine]);
+
+  return {
+    summary,
+    reviews,
+    mine,
+    hasMore,
+    loading,
+    reload: async () => {
+      await Promise.all([load(0, true), loadMine()]);
+    },
+    loadMore: () => load(reviews.length),
+    setSummary,
+  };
 }
 
 export type ReviewsState = ReturnType<typeof useReviews>;

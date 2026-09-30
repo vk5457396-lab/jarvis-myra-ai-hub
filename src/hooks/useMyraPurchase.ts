@@ -48,7 +48,33 @@ export function useMyraPurchase() {
   const [buying, setBuying] = useState(false);
   const [issuedKey, setIssuedKey] = useState<string | null>(null);
 
+  // Remembered per browser session for 10 minutes: every MYRA surface on every page used to call
+  // /api/myra/download-access (a Firestore read). Safe to cache client-side because the APK
+  // endpoint re-checks access server-side on every download.
+  const cacheKey = session?.user?.email ? `myra-access:${session.user.email.toLowerCase()}` : null;
+  const ACCESS_TTL_MS = 10 * 60_000;
+  const remember = (has: boolean, key: string | null) => {
+    if (!cacheKey) return;
+    try {
+      sessionStorage.setItem(cacheKey, JSON.stringify({ has, key, at: Date.now() }));
+    } catch {
+      // storage blocked — just refetch next time
+    }
+  };
+
   const checkAccess = async () => {
+    if (cacheKey) {
+      try {
+        const cached = JSON.parse(sessionStorage.getItem(cacheKey) || "null");
+        if (cached && Date.now() - cached.at < ACCESS_TTL_MS) {
+          setHasAccess(!!cached.has);
+          setIssuedKey(cached.key ?? null);
+          return;
+        }
+      } catch {
+        // fall through to the network
+      }
+    }
     setCheckingAccess(true);
     try {
       const res = await fetch("/api/myra/download-access");
@@ -56,6 +82,7 @@ export function useMyraPurchase() {
       if (res.ok && json.success) {
         setHasAccess(!!json.data.has_access);
         setIssuedKey(json.data.key ?? null);
+        remember(!!json.data.has_access, json.data.key ?? null);
       }
     } catch {
       // Leave hasAccess null - the buy button stays the safe default until this succeeds.
@@ -121,6 +148,7 @@ export function useMyraPurchase() {
           });
           setHasAccess(true);
           setIssuedKey(verifyJson.data.key);
+          remember(true, verifyJson.data.key);
         },
         modal: { ondismiss: () => setBuying(false) },
       });

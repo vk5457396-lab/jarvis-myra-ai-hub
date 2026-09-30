@@ -14,7 +14,7 @@ import { getStoredReferralCode } from "@/lib/referral";
  */
 const ReferralBanner = () => {
   const searchParams = useSearchParams();
-  const { status } = useSession();
+  const { status, data: session } = useSession();
   const reduceMotion = useReducedMotion();
   const [referrerName, setReferrerName] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState(false);
@@ -35,6 +35,18 @@ const ReferralBanner = () => {
     if (status === "loading") return;
     let cancelled = false;
     const code = getStoredReferralCode();
+    // Remembered for the browser session so every page view doesn't call the API again. The key
+    // changes with the account and the ref code, so a new link or login still refetches.
+    const cacheKey = `ref-banner:${session?.user?.email || "anon"}:${code || ""}`;
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached !== null) {
+        setReferrerName(cached || null);
+        return;
+      }
+    } catch {
+      // storage blocked — fetch below
+    }
 
     const load = async () => {
       try {
@@ -50,7 +62,13 @@ const ReferralBanner = () => {
           res = await fetch(`/api/referrals/lookup?code=${encodeURIComponent(code)}`);
         }
         const json = await res.json();
-        if (!cancelled) setReferrerName(json.success ? json.data.referrer?.full_name || null : null);
+        const name: string | null = json.success ? json.data.referrer?.full_name || null : null;
+        try {
+          if (json.success) sessionStorage.setItem(cacheKey, name || "");
+        } catch {
+          // ignore
+        }
+        if (!cancelled) setReferrerName(name);
       } catch {
         // banner is non-essential — fail silently
       }
@@ -60,7 +78,7 @@ const ReferralBanner = () => {
     return () => {
       cancelled = true;
     };
-  }, [status, refCode]);
+  }, [status, refCode, session?.user?.email]);
 
   const visible = Boolean(referrerName) && !dismissed;
 

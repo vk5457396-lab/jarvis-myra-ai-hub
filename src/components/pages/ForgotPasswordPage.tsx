@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,12 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+
+  // Prefilled from the login page's "Reset my password" link (?email=…).
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get("email");
+    if (fromUrl) setEmail(fromUrl);
+  }, []);
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();

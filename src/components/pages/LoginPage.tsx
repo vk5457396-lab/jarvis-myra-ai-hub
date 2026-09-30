@@ -17,6 +17,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
   const router = useRouter();
   const searchParams = useSearchParams();
   const isMyraLogin = searchParams.get("redirect") === "myra://auth";
@@ -41,8 +42,12 @@ const Login = () => {
     const result = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
     if (result?.code === "rate_limited") {
+      setFailedAttempts((n) => n + 1);
       toast.error("Too many sign-in attempts. Please wait a few minutes and try again.");
     } else if (result?.error) {
+      // Most failed sign-ins in production are real people retrying a forgotten password —
+      // point them at the fix instead of letting them keep guessing.
+      setFailedAttempts((n) => n + 1);
       toast.error("Invalid email or password");
     } else {
       toast.success("Welcome back!");
@@ -124,6 +129,31 @@ const Login = () => {
                     <div className="text-right">
                       <Link href="/forgot-password" className="text-xs text-primary hover:underline">Forgot password?</Link>
                     </div>
+
+                    {failedAttempts > 0 && (
+                      <div role="alert" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-sm text-amber-100">
+                        {failedAttempts >= 3 ? (
+                          <>
+                            <p className="font-semibold">Still can&apos;t sign in?</p>
+                            <p className="mt-1 text-amber-100/80">
+                              Reset your password — it takes a minute and you won&apos;t be locked out.
+                            </p>
+                            <Link
+                              href={`/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`}
+                              className="mt-2.5 inline-flex min-h-10 items-center rounded-lg bg-amber-400 px-4 font-semibold text-black hover:bg-amber-300"
+                            >
+                              Reset my password
+                            </Link>
+                          </>
+                        ) : (
+                          <p>
+                            Wrong password? Use{" "}
+                            <Link href="/forgot-password" className="font-semibold underline underline-offset-2">Forgot password</Link>
+                            {" "}— or <span className="font-semibold">Continue with Google</span> below if you signed up with Google.
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                       <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-secondary font-display font-black text-white relative overflow-hidden group">

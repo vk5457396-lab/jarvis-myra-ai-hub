@@ -49,6 +49,14 @@ async function fetchProductForMetadata(slug: string): Promise<MarketProductMeta 
   };
 }
 
+// Rendered once and cached for 5 minutes (ISR) instead of a Mongo read + function on every view.
+export const revalidate = 300;
+
+/** No slugs prebuilt at deploy — each product page is generated on first visit, then cached (ISR). */
+export async function generateStaticParams() {
+  return [];
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const product = await fetchProductForMetadata(slug);
