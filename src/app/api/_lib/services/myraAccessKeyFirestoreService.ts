@@ -214,6 +214,28 @@ export async function listFirebaseAccessKeysForEmail(email: string) {
   return docs.map(toPublic);
 }
 
+/** Number of MYRA website purchases ever verified — one payment lock per paid Razorpay order. */
+export async function countWebsitePurchases(): Promise<number> {
+  const snap = await db().collection('myra_payment_locks').count().get();
+  return snap.data().count;
+}
+
+/** Records which key a payment produced, so a retried verify returns the same key. */
+export async function recordKeyForPayment(paymentId: string, key: string): Promise<void> {
+  await db().collection('myra_payment_locks').doc(paymentId).set({ key, keyIssuedAt: FieldValue.serverTimestamp() }, { merge: true });
+}
+
+/** The key already issued for this payment, if any (set by recordKeyForPayment). */
+export async function keyForPayment(paymentId: string): Promise<string | null> {
+  const snap = await db().collection('myra_payment_locks').doc(paymentId).get();
+  return (snap.exists && (snap.data()?.key as string | undefined)) || null;
+}
+
+/** Drops a payment lock after key issuance failed, so the buyer's retry can still get a key. */
+export async function releasePaymentLock(paymentId: string): Promise<void> {
+  await db().collection('myra_payment_locks').doc(paymentId).delete();
+}
+
 /**
  * Idempotency guard for payment webhooks/verify calls that can legitimately be retried
  * (network retry, double form-submit) - Firestore has no equivalent of Mongo's unique index, so
@@ -221,12 +243,6 @@ export async function listFirebaseAccessKeysForEmail(email: string) {
  * "has this payment already issued a key" lock. Returns false (caller should treat this as
  * "already handled, don't issue a second key") if the lock already existed.
  */
-/** Number of MYRA website purchases ever verified — one payment lock per paid Razorpay order. */
-export async function countWebsitePurchases(): Promise<number> {
-  const snap = await db().collection('myra_payment_locks').count().get();
-  return snap.data().count;
-}
-
 export async function claimPaymentOnce(paymentId: string): Promise<boolean> {
   try {
     await db()

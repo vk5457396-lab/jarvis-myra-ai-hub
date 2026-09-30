@@ -113,7 +113,11 @@ export function useMyraPurchase() {
             toast.error(verifyJson.message || "Payment succeeded but key issuance failed. Contact support.");
             return;
           }
-          toast.success(`Payment successful — your access key: ${verifyJson.data.key}`);
+          toast.success(`Payment successful — your access key: ${verifyJson.data.key}`, {
+            description: "It's saved on your dashboard too.",
+            duration: 12000,
+            action: { label: "Dashboard", onClick: () => router.push("/dashboard") },
+          });
           setHasAccess(true);
           setIssuedKey(verifyJson.data.key);
         },
@@ -129,7 +133,7 @@ export function useMyraPurchase() {
 
   const download = async () => {
     if (!session?.user) {
-      router.push("/login");
+      router.push(`/login?next=${encodeURIComponent("/download#myra-android")}`);
       return;
     }
     setDownloading(true);
@@ -156,6 +160,7 @@ export function useMyraPurchase() {
     fallbackUrl,
     buy,
     download,
-    login: () => router.push("/login"),
+    // Come back to the MYRA listing after signing in, ready to buy.
+    login: () => router.push(`/login?next=${encodeURIComponent("/download#myra-android")}`),
   };
 }

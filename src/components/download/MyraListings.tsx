@@ -1,11 +1,11 @@
 "use client";
 
-import { ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink, Loader2, Star } from "lucide-react";
 import PlayStoreListing, { MoreByDeveloper, playButtonClass, type Shot } from "@/components/download/PlayStoreListing";
 import { useMyraPurchase, MYRA_LIFETIME_PRICE } from "@/hooks/useMyraPurchase";
 import { usePcRelease } from "@/hooks/usePcRelease";
 import { openDownload } from "@/lib/appDownload";
-import RatingsAndReviews, { Stars, useReviews, type ReviewsState } from "@/components/download/RatingsAndReviews";
+import RatingsAndReviews, { useReviews, type ReviewsState } from "@/components/download/RatingsAndReviews";
 
 const MYRA_ICON = "/assets/myra-app/icon.webp";
 const PC_ICON = "/assets/myra-pc/icon.webp";
@@ -46,7 +46,7 @@ function ratingStat(rv: ReviewsState) {
   return {
     value: (
       <span className="inline-flex items-center gap-1">
-        {s.average.toFixed(1)} <Stars value={1} size={11} />
+        {s.average.toFixed(1)} <Star size={12} className="text-[#e3e3e3]" fill="currentColor" strokeWidth={0} aria-hidden="true" />
       </span>
     ),
     label: `${s.count.toLocaleString("en-IN")} ${s.count === 1 ? "review" : "reviews"}`,
@@ -88,7 +88,8 @@ export function MyraAndroidListing() {
         className={playButtonClass}
         aria-label={m.session?.user ? `Buy MYRA for ₹${MYRA_LIFETIME_PRICE}` : `Sign in to buy MYRA for ₹${MYRA_LIFETIME_PRICE}`}
       >
-        {m.buying ? <Spinner /> : null} {m.buying ? "Opening payment" : `₹${MYRA_LIFETIME_PRICE}`}
+        {m.buying ? <Spinner /> : null}{" "}
+        {m.buying ? "Opening payment" : m.session?.user ? `Buy for ₹${MYRA_LIFETIME_PRICE}` : "Sign in to buy"}
       </button>
     );
   }

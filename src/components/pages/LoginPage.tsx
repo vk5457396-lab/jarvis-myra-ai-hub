@@ -20,8 +20,16 @@ const Login = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isMyraLogin = searchParams.get("redirect") === "myra://auth";
-  const successUrl = isMyraLogin ? "/auth/myra" : "/dashboard";
-  const signupUrl = isMyraLogin ? "/signup?redirect=myra%3A%2F%2Fauth" : "/signup";
+  // ?next=/download#myra-android sends people back to what they were doing (e.g. buying MYRA).
+  // Only same-site paths are accepted, so this can't be used as an open redirect.
+  const nextParam = searchParams.get("next");
+  const next = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : null;
+  const successUrl = isMyraLogin ? "/auth/myra" : next || "/dashboard";
+  const signupUrl = isMyraLogin
+    ? "/signup?redirect=myra%3A%2F%2Fauth"
+    : next
+      ? `/signup?next=${encodeURIComponent(next)}`
+      : "/signup";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -29,8 +29,15 @@ const Signup = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const isMyraLogin = searchParams.get("redirect") === "myra://auth";
-  const successUrl = isMyraLogin ? "/auth/myra" : "/dashboard";
-  const loginUrl = isMyraLogin ? "/login?redirect=myra%3A%2F%2Fauth" : "/login";
+  // Same-site ?next= only (see LoginPage) — returns the buyer to MYRA after creating an account.
+  const nextParam = searchParams.get("next");
+  const next = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : null;
+  const successUrl = isMyraLogin ? "/auth/myra" : next || "/dashboard";
+  const loginUrl = isMyraLogin
+    ? "/login?redirect=myra%3A%2F%2Fauth"
+    : next
+      ? `/login?next=${encodeURIComponent(next)}`
+      : "/login";
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();

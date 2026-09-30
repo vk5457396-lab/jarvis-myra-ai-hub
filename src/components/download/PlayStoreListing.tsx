@@ -142,22 +142,23 @@ export default function PlayStoreListing(p: ListingProps) {
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0">
           {/* Header */}
-          <header className="flex flex-col-reverse gap-6 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0">
-              <h2 id={`${p.id}-title`} className="text-[2rem] font-medium leading-tight tracking-tight text-[#e3e3e3] sm:text-5xl">
-                {p.title}
-              </h2>
-              <p className="mt-3 text-base font-medium text-[#6dd58c]">{p.developer}</p>
-              {p.note && <p className="mt-1 text-xs text-[#c4c7c5]">{p.note}</p>}
-            </div>
+          {/* Icon on the left, title beside it — on phones and desktop alike (Play Store app layout) */}
+          <header className="flex items-center gap-4 sm:items-start sm:gap-6">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={p.icon}
               alt=""
-              width={96}
-              height={96}
-              className="h-[72px] w-[72px] shrink-0 rounded-[22%] shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] sm:h-24 sm:w-24"
+              width={112}
+              height={112}
+              className="h-[72px] w-[72px] shrink-0 rounded-[22%] shadow-[0_1px_3px_rgba(0,0,0,0.5),0_4px_12px_rgba(0,0,0,0.35)] sm:h-28 sm:w-28"
             />
+            <div className="min-w-0">
+              <h2 id={`${p.id}-title`} className="text-2xl font-medium leading-tight tracking-tight text-[#e3e3e3] sm:text-5xl">
+                {p.title}
+              </h2>
+              <p className="mt-1 text-sm font-medium text-[#6dd58c] sm:mt-3 sm:text-base">{p.developer}</p>
+              {p.note && <p className="mt-0.5 text-xs text-[#c4c7c5] sm:mt-1">{p.note}</p>}
+            </div>
           </header>
 
           {/* Stat strip */}
