@@ -17,6 +17,7 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getStoredReferralCode } from "@/lib/referral";
+import { showPaymentFailed } from "@/lib/paymentFailed";
 
 interface Profile {
   id: string;
@@ -156,6 +157,10 @@ const Dashboard = () => {
           loadMyraKeys();
         },
         modal: { ondismiss: () => setBuyingPlan(null) },
+      });
+      checkout.on("payment.failed", (response: any) => {
+        setBuyingPlan(null);
+        showPaymentFailed(response);
       });
       checkout.open();
     } catch {

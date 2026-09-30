@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import ContactFormModal from "@/components/ContactFormModal";
 import { openDownload } from "@/lib/appDownload";
 import { getStoredReferralCode } from "@/lib/referral";
+import { showPaymentFailed } from "@/lib/paymentFailed";
 import MyraAndroidDownload from "@/components/MyraAndroidDownload";
 import VideoThumbnail from "@/components/VideoThumbnail";
 
@@ -204,6 +205,7 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
         },
         modal: { ondismiss: () => toast.info("Payment cancelled") },
       });
+      rzp.on("payment.failed", (response: any) => showPaymentFailed(response));
       rzp.open();
     } finally {
       setBusy(false);

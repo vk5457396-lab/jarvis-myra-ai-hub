@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useAppRelease } from "@/hooks/useAppRelease";
 import { startAppDownload } from "@/lib/appDownload";
 import { getStoredReferralCode } from "@/lib/referral";
+import { showPaymentFailed } from "@/lib/paymentFailed";
 
 export const MYRA_LIFETIME_PLAN = "membership";
 export const MYRA_LIFETIME_PRICE = 999;
@@ -122,6 +123,10 @@ export function useMyraPurchase() {
           setIssuedKey(verifyJson.data.key);
         },
         modal: { ondismiss: () => setBuying(false) },
+      });
+      checkout.on("payment.failed", (response: any) => {
+        setBuying(false);
+        showPaymentFailed(response);
       });
       checkout.open();
     } catch {

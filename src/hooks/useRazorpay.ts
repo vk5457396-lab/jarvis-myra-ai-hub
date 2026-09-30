@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { invokeBackendFunction } from "@/lib/backend/invokeFunction";
 import { getStoredReferralCode } from "@/lib/referral";
+import { showPaymentFailed } from "@/lib/paymentFailed";
 
 declare global {
   interface Window {
@@ -149,9 +150,7 @@ export const useRazorpay = () => {
         };
 
         const razorpay = new window.Razorpay(options);
-        razorpay.on("payment.failed", function (response: any) {
-          toast.error(`Payment failed: ${response?.error?.description ?? "Please try again."}`);
-        });
+        razorpay.on("payment.failed", (response: any) => showPaymentFailed(response));
 
         razorpay.open();
       } catch {
