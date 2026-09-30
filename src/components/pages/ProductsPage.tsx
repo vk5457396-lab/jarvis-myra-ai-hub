@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Search, Package, Download, Tag, Sparkles } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -27,6 +28,7 @@ const MYRA_THUMB = "/assets/myra-app/promo-thumb.png";
 const MYRA_PRICE = 999;
 
 const Products = () => {
+  const router = useRouter();
   const [products, setProducts] = useState<MarketProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -137,7 +139,15 @@ const Products = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                 >
-                  <Link href={`/products/${p.slug}`} className="block group">
+                  {/* Prefetch on intent (hover/touch), not for every card on screen — on slow mobile
+                      data a grid of viewport prefetches queued ahead of the page the user tapped. */}
+                  <Link
+                    href={`/products/${p.slug}`}
+                    prefetch={false}
+                    onMouseEnter={() => router.prefetch(`/products/${p.slug}`)}
+                    onTouchStart={() => router.prefetch(`/products/${p.slug}`)}
+                    className="block group"
+                  >
                     <div className="relative rounded-2xl overflow-hidden h-full">
                       <div className="absolute inset-0 rounded-2xl p-px overflow-hidden">
                         <div className="absolute inset-[-200%] group-hover:animate-spin-slow" style={{ background: "conic-gradient(from 0deg, hsla(0,72%,51%,0.4), transparent 40%, hsla(350,65%,45%,0.4), transparent 80%, hsla(0,72%,51%,0.4))" }} />

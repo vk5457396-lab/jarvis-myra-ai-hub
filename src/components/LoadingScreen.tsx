@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
+import { canRunHeavyVisuals } from "@/lib/deviceCapability";
 
 // WebGL particles load as their own chunk (shared with the hero core's three.js); the CSS glow,
 // name and progress below paint immediately so the intro never waits on it.
@@ -12,6 +13,8 @@ const BRAND = "CODENINJAVIK".split("");
 
 /** Long enough for the waveform → core fold to play, never longer than MAX_MS (from navigation). */
 const MIN_MS = 1500;
+/** Light (CSS-only) intro on weak devices: shorter, since there's no particle fold to show. */
+const LIGHT_MIN_MS = 700;
 const MAX_MS = 3000;
 const BURST_MS = 450;
 
@@ -42,12 +45,18 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
   const [leaving, setLeaving] = useState(false);
   const [progress, setProgress] = useState(0);
   const [hydrated, setHydrated] = useState(false);
+  // Weak phones / slow data get the light CSS intro (no three.js download, no render loop).
+  const [heavy, setHeavy] = useState(false);
   const doneRef = useRef(false);
   // The intro waits for the particle core to finish forming (MAX_MS still caps it).
   const formedRef = useRef(false);
 
   useEffect(() => {
     setHydrated(true);
+    const capable = canRunHeavyVisuals();
+    setHeavy(capable);
+    if (!capable) formedRef.current = true; // nothing to wait for
+    const minMs = capable ? MIN_MS : LIGHT_MIN_MS;
     let loaded = document.readyState === "complete";
     const onLoad = () => {
       loaded = true;
@@ -59,7 +68,7 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
     let burstTimer: ReturnType<typeof setTimeout> | undefined;
     // performance.now() counts from navigation start, so the limits hold even on slow hydration.
     const tick = (now: number) => {
-      const ready = (loaded && now >= MIN_MS && formedRef.current) || now >= MAX_MS;
+      const ready = (loaded && now >= minMs && formedRef.current) || now >= MAX_MS;
       const target = ready ? 100 : Math.min(90, (now / MAX_MS) * 100 + 10);
       shown += (target - shown) * (ready ? 0.25 : 0.08);
       if (ready && shown > 99.5) shown = 100;
@@ -106,13 +115,15 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
               style={{ background: "radial-gradient(circle, hsl(0 72% 51% / 0.32) 0%, hsl(0 72% 51% / 0.1) 38%, transparent 66%)" }}
               aria-hidden="true"
             />
-            <LoaderParticles
-              leaving={leaving}
-              onFormed={() => {
-                formedRef.current = true;
-              }}
-              className="absolute inset-0"
-            />
+            {heavy && (
+              <LoaderParticles
+                leaving={leaving}
+                onFormed={() => {
+                  formedRef.current = true;
+                }}
+                className="absolute inset-0"
+              />
+            )}
           </div>
 
           {/* Brand — CSS keyframes so it flips in on first paint, before JavaScript */}

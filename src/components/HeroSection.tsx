@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import SalesSummary from "@/components/SalesSummary";
 import type { CorePhase } from "@/components/home/VoiceCore";
 import { INTRO_DONE_EVENT, isIntroDone } from "@/components/LoadingScreen";
+import { canRunHeavyVisuals } from "@/lib/deviceCapability";
 
 // WebGL is client-only and not needed for first paint — load it after the text is on screen.
 const VoiceCore = dynamic(() => import("@/components/home/VoiceCore"), { ssr: false, loading: () => null });
@@ -62,6 +63,11 @@ const HeroSection = () => {
   // Hold the WebGL core until the intro loader is gone: it would otherwise render hidden behind the
   // loader and compete with it for the GPU/CPU, making the intro stutter and last longer.
   const [introDone, setIntroDone] = useState(false);
+  // Weak phones / slow data keep the CSS core instead of downloading three.js.
+  const [heavy, setHeavy] = useState(false);
+  useEffect(() => {
+    setHeavy(canRunHeavyVisuals());
+  }, []);
   /** Entrance transition; instant under reduced motion (the start state must match SSR either way). */
   const enter = (t: Transition): Transition => (reduceMotion ? { duration: 0 } : t);
   useEffect(() => {
@@ -153,7 +159,7 @@ const HeroSection = () => {
             className="relative mx-auto aspect-square w-full max-w-[520px]"
           >
             <CoreFallback />
-            {introDone && !webglFailed && (
+            {introDone && heavy && !webglFailed && (
               <VoiceCore
                 className="absolute inset-0"
                 onUnsupported={() => setWebglFailed(true)}
