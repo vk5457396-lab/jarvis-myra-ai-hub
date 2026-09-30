@@ -1,9 +1,37 @@
-import NextAuth from 'next-auth';
+import NextAuth, { CredentialsSignin } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
+import { incrWithWindow } from '@/app/api/_lib/middleware/rateLimit';
 import Google from 'next-auth/providers/google';
 import { MongoDBAdapter } from '@auth/mongodb-adapter';
 import { getMongoClientPromise } from '@/lib/db/mongodbClient';
 import { authenticateCredentials, syncAdapterUser } from '@/lib/auth/users';
+
+/** Surfaced to the login page as `result.code === "rate_limited"`. */
+class LoginRateLimited extends CredentialsSignin {
+  code = 'rate_limited';
+}
+
+/**
+ * Brute-force guard for email/password sign-in: production logs showed ~20 failed credential
+ * logins a minute from automated traffic. Caps attempts per IP (10 / 5 min) and per email
+ * (6 / 15 min) before bcrypt ever runs. Fails open on a Redis error, like rateLimit().
+ */
+async function loginAllowed(email: string, request: Request | undefined): Promise<boolean> {
+  const fwd = request?.headers.get('x-forwarded-for') || '';
+  const ip = fwd.split(',')[0].trim() || 'unknown';
+  const now = Date.now();
+  const ipWin = 5 * 60_000;
+  const emailWin = 15 * 60_000;
+  try {
+    const [ipCount, emailCount] = await Promise.all([
+      incrWithWindow(`rl:login-ip:${ip}:${Math.floor(now / ipWin)}`, ipWin / 1000 + 5),
+      incrWithWindow(`rl:login-email:${email}:${Math.floor(now / emailWin)}`, emailWin / 1000 + 5),
+    ]);
+    return ipCount <= 10 && emailCount <= 6;
+  } catch {
+    return true;
+  }
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: MongoDBAdapter(getMongoClientPromise),
@@ -36,10 +64,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const email = String(credentials?.email || '').toLowerCase().trim();
         const password = String(credentials?.password || '');
         if (!email || !password) return null;
+        if (!(await loginAllowed(email, request))) throw new LoginRateLimited();
 
         const result = await authenticateCredentials(email, password);
         if (!result) return null;

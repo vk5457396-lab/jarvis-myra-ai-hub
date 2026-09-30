@@ -40,7 +40,9 @@ const Login = () => {
     setLoading(true);
     const result = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
-    if (result?.error) {
+    if (result?.code === "rate_limited") {
+      toast.error("Too many sign-in attempts. Please wait a few minutes and try again.");
+    } else if (result?.error) {
       toast.error("Invalid email or password");
     } else {
       toast.success("Welcome back!");

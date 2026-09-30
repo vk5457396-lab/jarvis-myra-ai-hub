@@ -71,32 +71,35 @@ export async function middleware(req: NextRequest) {
 export const config = {
   runtime: 'nodejs',
   /**
-   * Narrowed on 2026-08-29 from "everything except _next internals" to only the paths that
-   * actually need a daily-limit check, after Vercel usage data showed middleware alone was
-   * burning 43.1% (1h29m of 1h58m+1h29m total) of the account's Fluid Active CPU - because it
-   * ran a Mongo round-trip on literally every request: every static asset, sitemap.xml,
-   * robots.txt, unknown 404 paths, all of it, even though the Vercel Firewall Challenge rule
-   * already blocks the known bot-heavy public paths at the edge (pre-function, zero CPU cost)
-   * before middleware would ever run for them.
-   *
-   * Now middleware only runs for: every /api/* route (app-daily counting + auth exemption +
-   * dead-endpoint handling all still need this) and the exact same public-page list the Firewall
-   * Challenge rule covers (site-daily counting, as a second layer in case a page isn't currently
-   * in the Firewall list). Everything else - unmatched pages, static files, sitemap, robots.txt,
-   * favicons, etc. - now skips middleware entirely and can be served straight from Vercel's edge
-   * cache, which also cuts Function Invocations, not just Active CPU.
+   * Only the dead endpoints. With the global daily cap gone, blocking these is middleware's only
+   * job — running it on pages, /image.png (the favicon) and every /api route was costing a
+   * Function Invocation on ~60% of all requests (production logs, 2026-09-30) and kept
+   * CDN-cacheable responses like /api/app/release from being served straight from the edge.
+   * Must stay a literal list (Next.js reads it statically) — keep in sync with
+   * DEAD_ENDPOINTS_EXACT above.
    */
   matcher: [
-    '/api/:path*',
-    '/',
-    '/pricing',
-    '/signup',
-    '/image.png',
-    '/features',
-    '/products',
-    '/demos',
-    '/download',
-    '/login',
-    '/og-image.png',
+    '/api/myra/heartbeat',
+    '/api/myra/bootstrap',
+    '/api/myra/profile',
+    '/api/myra/banner/active',
+    '/api/myra/username/check',
+    '/api/myra/username',
+    '/api/myra/users/search',
+    '/api/myra/users/all',
+    '/api/myra/firebase-token',
+    '/api/myra/chat/notify',
+    '/api/myra/referrals/redeem',
+    '/api/myra/devices',
+    '/api/myra/settings',
+    '/api/myra/usage',
+    '/api/myra/subscription',
+    '/api/myra/subscription/order',
+    '/api/myra/subscription/verify',
+    '/api/myra/access-key/redeem',
+    '/api/myra/automation-error',
+    '/api/myra/telemetry-event',
+    '/api/connectors',
+    '/api/connectors/:path*',
   ],
 };
