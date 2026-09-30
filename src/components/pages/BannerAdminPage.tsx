@@ -55,6 +55,9 @@ const emptyForm = { title: "", message: "", image_url: "", cta_label: "", cta_ur
 const BannerAdminPage = () => {
   const router = useRouter();
   const { status } = useSession();
+  // Start loading data right away instead of waiting for the session round trip (the API itself
+  // returns 401 if not admin) - only a confirmed sign-out redirects.
+  const authGate = status === "unauthenticated" ? "out" : "in";
 
   const [loading, setLoading] = useState(true);
   const [banners, setBanners] = useState<BannerRow[]>([]);
@@ -84,14 +87,13 @@ const BannerAdminPage = () => {
   }, []);
 
   useEffect(() => {
-    if (status === "loading") return;
-    if (status === "unauthenticated") { router.push("/login"); return; }
+    if (authGate === "out") { router.push("/login"); return; }
     (async () => {
       await loadBanners();
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [authGate]);
 
   const createBanner = async () => {
     if (!form.title.trim() || !form.message.trim()) {

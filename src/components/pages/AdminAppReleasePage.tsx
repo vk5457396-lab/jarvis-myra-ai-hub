@@ -62,6 +62,9 @@ const EMPTY_PC: PcReleaseForm = {
 const AdminAppReleasePage = () => {
   const router = useRouter();
   const { status } = useSession();
+  // Start loading data right away instead of waiting for the session round trip (the API itself
+  // returns 401 if not admin) - only a confirmed sign-out redirects.
+  const authGate = status === "unauthenticated" ? "out" : "in";
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<ReleaseForm>(EMPTY);
@@ -76,8 +79,7 @@ const AdminAppReleasePage = () => {
   const [pcUpdatedAt, setPcUpdatedAt] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === "loading") return;
-    if (status === "unauthenticated") { router.push("/login"); return; }
+    if (authGate === "out") { router.push("/login"); return; }
 
     const init = async () => {
       const [otaRes, publicRes, pcRes] = await Promise.all([
@@ -127,7 +129,7 @@ const AdminAppReleasePage = () => {
       setLoading(false);
     };
     init();
-  }, [router, status]);
+  }, [router, authGate]);
 
   const handleSave = async () => {
     if (!form.apk_asset_url.trim()) { toast.error("Direct download URL daalo"); return; }

@@ -25,7 +25,23 @@ interface LoadingScreenProps {
 /** Fired once the intro has fully exited, so heavy visuals (the hero's WebGL core) start only then. */
 export const INTRO_DONE_EVENT = "cnv:intro-done";
 
+const SEEN_KEY = "cnv:intro-seen";
+
+/** The full intro plays once per browser session; later page loads only get a quick fade. */
+function introSeen(): boolean {
+  try {
+    return sessionStorage.getItem(SEEN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 function announceIntroDone() {
+  try {
+    sessionStorage.setItem(SEEN_KEY, "1");
+  } catch {
+    /* storage blocked - intro just replays next load */
+  }
   (window as unknown as { __cnvIntroDone?: boolean }).__cnvIntroDone = true;
   window.dispatchEvent(new Event(INTRO_DONE_EVENT));
 }
@@ -53,6 +69,11 @@ const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
 
   useEffect(() => {
     setHydrated(true);
+    if (introSeen()) {
+      doneRef.current = true;
+      setVisible(false);
+      return;
+    }
     const capable = canRunHeavyVisuals();
     setHeavy(capable);
     if (!capable) formedRef.current = true; // nothing to wait for

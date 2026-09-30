@@ -50,6 +50,9 @@ const STATE_COLOR: Record<string, string> = {
 export default function LiveDevicesPage() {
   const router = useRouter();
   const { status } = useSession();
+  // Start loading data right away instead of waiting for the session round trip (the API itself
+  // returns 401 if not admin) - only a confirmed sign-out redirects.
+  const authGate = status === "unauthenticated" ? "out" : "in";
   const [devices, setDevices] = useState<LiveDeviceRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -67,14 +70,13 @@ export default function LiveDevicesPage() {
   }, []);
 
   useEffect(() => {
-    if (status === "loading") return;
-    if (status === "unauthenticated") { router.push("/login"); return; }
+    if (authGate === "out") { router.push("/login"); return; }
     load();
     // Auto-refresh - this is a "what's happening right now" view, a stale table defeats the point.
     const interval = setInterval(() => load(true), 15_000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [authGate]);
 
   const onlineCount = devices.filter((d) => d.online).length;
 

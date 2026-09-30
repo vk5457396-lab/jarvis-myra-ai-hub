@@ -53,6 +53,9 @@ async function api(path: string) {
 const PerformancePage = () => {
   const router = useRouter();
   const { status } = useSession();
+  // Start loading data right away instead of waiting for the session round trip (the API itself
+  // returns 401 if not admin) - only a confirmed sign-out redirects.
+  const authGate = status === "unauthenticated" ? "out" : "in";
   const [data, setData] = useState<PerformanceSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -70,11 +73,10 @@ const PerformancePage = () => {
   }, []);
 
   useEffect(() => {
-    if (status === "loading") return;
-    if (status === "unauthenticated") { router.push("/login"); return; }
+    if (authGate === "out") { router.push("/login"); return; }
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [authGate]);
 
   if (loading || !data) {
     return (

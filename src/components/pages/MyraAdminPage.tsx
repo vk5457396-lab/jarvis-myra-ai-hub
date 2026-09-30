@@ -105,6 +105,9 @@ async function api(path: string, opts: RequestInit = {}) {
 const MyraAdminPage = () => {
   const router = useRouter();
   const { status } = useSession();
+  // Start loading data right away instead of waiting for the session round trip (the API itself
+  // returns 401 if not admin) - only a confirmed sign-out redirects.
+  const authGate = status === "unauthenticated" ? "out" : "in";
 
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -228,14 +231,13 @@ const MyraAdminPage = () => {
   }, []);
 
   useEffect(() => {
-    if (status === "loading") return;
-    if (status === "unauthenticated") { router.push("/login"); return; }
+    if (authGate === "out") { router.push("/login"); return; }
     (async () => {
       await Promise.all([loadUsers(""), loadKeys(), loadGlobalDiscount(), loadConnectors()]);
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [authGate]);
 
   const applyCredits = async () => {
     if (!selectedEmail) return;

@@ -71,6 +71,9 @@ const PayoutDetails = ({ w }: { w: WithdrawalRow }) =>
 
 const AdminDashboard = () => {
   const { status } = useSession();
+  // Start loading data right away instead of waiting for the session round trip (the API itself
+  // returns 401 if not admin) - only a confirmed sign-out redirects.
+  const authGate = status === "unauthenticated" ? "out" : "in";
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [allEarnings, setAllEarnings] = useState<Earning[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalRow[]>([]);
@@ -92,11 +95,10 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    if (status === "loading") return;
-    if (status === "unauthenticated") { router.push("/login"); return; }
+    if (authGate === "out") { router.push("/login"); return; }
     loadOverview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [authGate]);
 
   const processWithdrawal = async (id: string, status: "completed" | "rejected") => {
     setProcessing(id);

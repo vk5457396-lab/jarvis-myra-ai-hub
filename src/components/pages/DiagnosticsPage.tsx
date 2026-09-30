@@ -68,6 +68,9 @@ async function copyToClipboard(text: string, successMessage: string) {
 export default function DiagnosticsPage() {
   const router = useRouter();
   const { status } = useSession();
+  // Start loading data right away instead of waiting for the session round trip (the API itself
+  // returns 401 if not admin) - only a confirmed sign-out redirects.
+  const authGate = status === "unauthenticated" ? "out" : "in";
   const [errors, setErrors] = useState<AutomationErrorRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -89,11 +92,10 @@ export default function DiagnosticsPage() {
   }, [filter]);
 
   useEffect(() => {
-    if (status === "loading") return;
-    if (status === "unauthenticated") { router.push("/login"); return; }
+    if (authGate === "out") { router.push("/login"); return; }
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [authGate]);
 
   // Client-side, on top of the already-loaded (server-side failure_type-filtered) list - lets
   // "copy just this one user's errors" work without a round trip, since the list is small enough

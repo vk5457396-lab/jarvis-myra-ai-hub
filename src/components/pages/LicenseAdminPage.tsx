@@ -37,6 +37,9 @@ const DEFAULT_SETTINGS: LicenseSettingsValue = {
 const LicenseAdmin = () => {
   const router = useRouter();
   const { status } = useSession();
+  // Start loading data right away instead of waiting for the session round trip (the API itself
+  // returns 401 if not admin) - only a confirmed sign-out redirects.
+  const authGate = status === "unauthenticated" ? "out" : "in";
   const [section, setSection] = useState<Section>("dashboard");
   const [licenses, setLicenses] = useState<LicenseRow[]>([]);
   const [settings, setSettings] = useState<LicenseSettingsValue>(DEFAULT_SETTINGS);
@@ -59,14 +62,13 @@ const LicenseAdmin = () => {
   }, [router]);
 
   useEffect(() => {
-    if (status === "loading") return;
-    if (status === "unauthenticated") { router.push("/login"); return; }
+    if (authGate === "out") { router.push("/login"); return; }
     const init = async () => {
       await loadData();
       setLoading(false);
     };
     init();
-  }, [router, loadData, status]);
+  }, [router, loadData, authGate]);
 
   if (loading) {
     return (
