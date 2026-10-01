@@ -30,7 +30,7 @@ export const GET = withApi(async (req) => {
     average: shown.length ? Math.round((total / shown.length) * 10) / 10 : 0,
     distribution,
   };
-  const override = await AppReviewSetting.findOne({ app }).lean();
+  const override = (await AppReviewSetting.findOne({ app }).lean()) as any;
   const summary = {
     ...baseSummary,
     count: override?.countOverride != null ? Math.max(0, Number(override.countOverride)) : baseSummary.count,

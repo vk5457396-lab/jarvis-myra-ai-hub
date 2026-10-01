@@ -39,7 +39,7 @@ async function summaryFor(app: string) {
   }
 
   const base = { count, average: count ? Math.round((total / count) * 10) / 10 : 0, distribution };
-  const override = await AppReviewSetting.findOne({ app }).lean();
+  const override = (await AppReviewSetting.findOne({ app }).lean()) as any;
 
   if (override?.countOverride != null) {
     base.count = Math.max(0, Number(override.countOverride));
