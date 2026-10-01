@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { CheckCircle, Send, ArrowLeft, MessageCircle, Phone, Mail, Shield, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import Link from "@/components/IntentLink";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useState, useEffect } from "react";

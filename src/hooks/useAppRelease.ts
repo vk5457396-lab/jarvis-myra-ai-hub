@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { cachedJson } from "@/lib/cachedJson";
 
 export interface ReleaseInfo {
   version_name: string;
@@ -19,8 +20,7 @@ export function useAppRelease() {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/app/release")
-      .then((res) => res.json())
+    cachedJson("/api/app/release", 10 * 60_000)
       .then((body) => {
         if (active && body?.success) setRelease(body.data as ReleaseInfo);
       })

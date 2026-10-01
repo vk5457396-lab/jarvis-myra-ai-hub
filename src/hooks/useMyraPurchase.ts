@@ -28,6 +28,9 @@ const loadRazorpayScript = () =>
     document.body.appendChild(s);
   });
 
+/** In-flight /api/myra/download-access request shared by every mounted copy of the hook. */
+let accessRequest: Promise<{ ok: boolean; json: any }> | null = null;
+
 /**
  * The one copy of MYRA for Android's buy → access key → APK download flow, shared by every surface
  * that sells or downloads the app (the classic download card and the Play-Store-style listing), so
@@ -77,9 +80,14 @@ export function useMyraPurchase() {
     }
     setCheckingAccess(true);
     try {
-      const res = await fetch("/api/myra/download-access");
-      const json = await res.json();
-      if (res.ok && json.success) {
+      // Several MYRA surfaces can mount on one page; share one request between them.
+      accessRequest ??= fetch("/api/myra/download-access")
+        .then(async (res) => ({ ok: res.ok, json: await res.json() }))
+        .finally(() => {
+          accessRequest = null;
+        });
+      const { ok, json } = await accessRequest;
+      if (ok && json.success) {
         setHasAccess(!!json.data.has_access);
         setIssuedKey(json.data.key ?? null);
         remember(!!json.data.has_access, json.data.key ?? null);

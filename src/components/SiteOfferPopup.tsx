@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/IntentLink";
 import { usePathname } from "next/navigation";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
+import { cachedJson } from "@/lib/cachedJson";
 
 export interface SiteOffer {
   id: string;
@@ -108,8 +109,7 @@ const SiteOfferPopup = ({ ready }: { ready: boolean }) => {
   useEffect(() => {
     if (!ready || onAdminPage) return;
     let cancelled = false;
-    fetch("/api/site-banner/active")
-      .then((r) => r.json())
+    cachedJson("/api/site-banner/active", 5 * 60_000)
       .then((json) => {
         const o: SiteOffer | null = json?.success ? json.data.banner : null;
         if (cancelled || !o) return;

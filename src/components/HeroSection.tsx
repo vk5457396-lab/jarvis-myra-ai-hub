@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
+import Link from "@/components/IntentLink";
 import { AnimatePresence, motion, useReducedMotion, type Transition } from "framer-motion";
 import { Check, ChevronRight, Mic, ShieldCheck, Infinity as InfinityIcon, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";

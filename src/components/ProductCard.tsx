@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Check, Users, ArrowRight, Cpu, Zap, Heart, Sparkles, Crown, Flame, Shield, Smartphone, DownloadCloud } from "lucide-react";
-import Link from "next/link";
+import Link from "@/components/IntentLink";
 import { Button } from "@/components/ui/button";
 import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 import ContactFormModal from "@/components/ContactFormModal";

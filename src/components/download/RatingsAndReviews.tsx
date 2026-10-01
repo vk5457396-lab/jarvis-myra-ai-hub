@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, BadgeCheck, Loader2, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { cachedJson, forgetCachedJson } from "@/lib/cachedJson";
 
 export type ReviewApp = "myra-android" | "myra-pc";
 type Review = { id: string; name: string; rating: number; text: string; verified: boolean; created_at: string };
@@ -24,8 +25,14 @@ export function useReviews(app: ReviewApp) {
   const load = useCallback(
     async (offset = 0, fresh = false) => {
       try {
-        const res = await fetch(`/api/reviews?app=${app}&offset=${offset}${fresh ? `&v=${Date.now()}` : ""}`);
-        const json = await res.json();
+        const url = `/api/reviews?app=${app}&offset=${offset}`;
+        let json;
+        if (fresh) {
+          forgetCachedJson(url);
+          json = await (await fetch(`${url}&v=${Date.now()}`)).json();
+        } else {
+          json = await cachedJson(url, 5 * 60_000);
+        }
         if (!json.success) return;
         setSummary(json.data.summary);
         setHasMore(json.data.has_more);

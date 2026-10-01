@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import FeatureCard from "@/components/FeatureCard";
 import MyraFeaturesShowcase from "@/components/MyraFeaturesShowcase";
 import { features } from "@/data/features";
-import Link from "next/link";
+import Link from "@/components/IntentLink";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 

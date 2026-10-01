@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/IntentLink";
 import { usePathname } from "next/navigation";
 import {
   Shield, KeyRound, Sparkles, Radio, AlertTriangle, BarChart3, Timer, Smartphone, Megaphone, Star,

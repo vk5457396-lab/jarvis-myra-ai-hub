@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/IntentLink";
 import { motion } from "framer-motion";
 import { ArrowLeft, Download, Package, ShieldCheck, Loader2, Tag } from "lucide-react";
 import Navbar from "@/components/Navbar";

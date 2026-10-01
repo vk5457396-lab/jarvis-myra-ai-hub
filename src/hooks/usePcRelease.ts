@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { cachedJson } from "@/lib/cachedJson";
 
 export interface PcReleaseInfo {
   download_url: string;
@@ -16,8 +17,7 @@ export function usePcRelease() {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/pc/release")
-      .then((res) => res.json())
+    cachedJson("/api/pc/release", 10 * 60_000)
       .then((body) => {
         if (active && body?.success) setRelease(body.data as PcReleaseInfo);
       })

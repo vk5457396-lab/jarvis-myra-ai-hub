@@ -7,6 +7,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import AppChrome from "./app-chrome";
+import { installAuthHintFetch } from "@/lib/authHint";
+
+// Before SessionProvider's first session fetch: signed-out visitors skip /api/auth/session.
+installAuthHintFetch();
 
 export function Providers({ children }: { children: React.ReactNode }) {
   // Created in useState (not module scope) so each session gets its own

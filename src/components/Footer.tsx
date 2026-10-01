@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/IntentLink";
 import { motion } from "framer-motion";
 import { Mail, MessageCircle, Github, Twitter, Heart, LogIn, UserPlus, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";

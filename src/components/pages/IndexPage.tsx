@@ -14,7 +14,7 @@ import MyraAndroidDownload from "@/components/MyraAndroidDownload";
 import MyraPcControllerDownload from "@/components/MyraPcControllerDownload";
 import { features, jarvisFeatures, myraFeatures } from "@/data/features";
 import { ChevronRight, Shield, Zap, Clock } from "lucide-react";
-import Link from "next/link";
+import Link from "@/components/IntentLink";
 import { Button } from "@/components/ui/button";
 
 // Dynamic pricing and naming based on date
