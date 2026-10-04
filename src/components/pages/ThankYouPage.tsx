@@ -37,7 +37,7 @@ const ThankYou = () => {
   
   const [copied, setCopied] = useState(false);
 
-  const telegramUsername = "codeninjavik1";
+  const telegramUsername = "codeninjavik_official";
   
   // Create verification message for Telegram
   const verificationMessage = encodeURIComponent(
@@ -187,7 +187,11 @@ const ThankYou = () => {
                     Send Payment Details to Admin
                   </Button>
                 </a>
-                
+
+                <p className="text-sm text-muted-foreground">
+                  Telegram: <span className="font-mono text-primary">@{telegramUsername}</span>
+                </p>
+
                 <div className="flex items-center gap-4 justify-center text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Phone className="w-4 h-4" /> Quick Response
