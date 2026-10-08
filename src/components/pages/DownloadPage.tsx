@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import VideoThumbnail from "@/components/VideoThumbnail";
+import { MYRA_SETUP_VIDEOS } from "@/data/myraSetupVideos";
 import { MyraAndroidListing, MyraPcListing } from "@/components/download/MyraListings";
 
 const steps = [
@@ -12,18 +13,7 @@ const steps = [
   { title: "Allow the install", desc: "Open the downloaded file and tap \"Allow from this source\" if Android asks." },
 ];
 
-const setupVideos = [
-  {
-    id: "nyUVa692EIs",
-    title: "MYRA Full Setup Video",
-    description: "Full end-to-end setup walkthrough for MYRA, from install to first use.",
-  },
-  {
-    id: "A_4LBZHH8nE",
-    title: "API Setup Video",
-    description: "How to get and configure your own API keys for MYRA's AI providers.",
-  },
-];
+const setupVideos = MYRA_SETUP_VIDEOS;
 
 const DownloadPage = () => {
   return (

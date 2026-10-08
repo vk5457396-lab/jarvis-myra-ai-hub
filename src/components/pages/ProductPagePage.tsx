@@ -15,6 +15,7 @@ import { getStoredReferralCode } from "@/lib/referral";
 import { showPaymentFailed } from "@/lib/paymentFailed";
 import MyraAndroidDownload from "@/components/MyraAndroidDownload";
 import VideoThumbnail from "@/components/VideoThumbnail";
+import { MYRA_SETUP_VIDEOS } from "@/data/myraSetupVideos";
 
 interface MarketProduct {
   id: string;
@@ -48,18 +49,6 @@ const MYRA_GALLERY = {
   banner: "/assets/myra-app/promo-banner.png",
   screenshots: ["/assets/myra-app/screens-app.png", "/assets/myra-app/screens-auth.png"],
 };
-const MYRA_SETUP_VIDEOS = [
-  {
-    id: "nyUVa692EIs",
-    title: "MYRA Full Setup Video",
-    description: "Full end-to-end setup walkthrough for MYRA, from install to first use.",
-  },
-  {
-    id: "A_4LBZHH8nE",
-    title: "API Setup Video",
-    description: "How to get and configure your own API keys for MYRA's AI providers.",
-  },
-];
 
 const formatSize = (bytes?: number | null) => {
   if (!bytes) return "—";
@@ -404,7 +393,7 @@ const ProductPagePage = ({ slug }: { slug: string }) => {
           {product.slug === MYRA_SLUG && (
             <div className="max-w-6xl mx-auto mt-10">
               <h2 className="font-display text-xl font-bold text-foreground mb-4">Setup Videos</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {MYRA_SETUP_VIDEOS.map((video) => (
                   <div key={video.id}>
                     <VideoThumbnail videoId={video.id} title={video.title} variant="myra" />

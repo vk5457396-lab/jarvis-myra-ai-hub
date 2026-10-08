@@ -1,7 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CheckCircle, Send, ArrowLeft, MessageCircle, Phone, Mail, Shield, Copy, Check } from "lucide-react";
+import { CheckCircle, Send, ArrowLeft, MessageCircle, Phone, Mail, Shield, Copy, Check, PlayCircle } from "lucide-react";
+import VideoThumbnail from "@/components/VideoThumbnail";
+import { MYRA_SETUP_VIDEOS } from "@/data/myraSetupVideos";
 import { Button } from "@/components/ui/button";
 import Link from "@/components/IntentLink";
 import Navbar from "@/components/Navbar";
@@ -32,6 +34,7 @@ const ThankYou = () => {
   }, []);
 
   const { product, paymentId, amount, phone } = details;
+  const isMyra = /myra/i.test(product) && !/source/i.test(product);
 
 
   
@@ -202,6 +205,40 @@ const ThankYou = () => {
                 </div>
               </div>
             </motion.div>
+
+            {/* MYRA setup videos - shown right after a MYRA purchase */}
+            {isMyra && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.65 }}
+                className="glass-card rounded-2xl p-6 md:p-8 mb-8 border border-primary/20 text-left"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <PlayCircle className="w-7 h-7 text-primary" />
+                  <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">
+                    Set up MYRA on your phone
+                  </h2>
+                </div>
+                <p className="text-muted-foreground text-sm mb-6">
+                  Watch these videos in order: first set up your API keys, then install MYRA, grant all permissions and enable every tool.
+                </p>
+                <div className="space-y-6">
+                  {MYRA_SETUP_VIDEOS.slice(0, 2).map((video, index) => (
+                    <div key={video.id}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="w-6 h-6 rounded-full bg-primary/20 text-primary text-sm flex items-center justify-center font-bold">
+                          {index + 1}
+                        </span>
+                        <h3 className="font-display text-base font-semibold text-foreground">{video.title}</h3>
+                      </div>
+                      <VideoThumbnail videoId={video.id} title={video.title} variant="myra" />
+                      <p className="text-muted-foreground text-sm mt-2">{video.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
 
             {/* What happens next */}
             <motion.div
