@@ -10,6 +10,8 @@ import ContactFormModal from "@/components/ContactFormModal";
 import { usePurchaseCounts } from "@/hooks/usePurchaseCounts";
 import { useCurrency } from "@/hooks/useCurrency";
 import CurrencySelector from "@/components/CurrencySelector";
+import { usePricing } from "@/hooks/usePricing";
+import { MANAGED_PRODUCTS } from "@/lib/offers";
 
 interface ProductCardProps {
   name: string;
@@ -90,6 +92,12 @@ const ProductCard = ({ name, tagline, price, features, variant, delay = 0, thumb
   const [customerInfo, setCustomerInfo] = useState({ name: "", email: "", phone: "" });
   const { data: purchaseCounts } = usePurchaseCounts();
   const { formatPrice, currency, countryCode, setSelectedCountry } = useCurrency();
+  const pricing = usePricing();
+  // Managed products take their price (and any live offer) from the admin price manager; the
+  // `price` prop is only the fallback for a card whose product the manager does not know.
+  const eff = MANAGED_PRODUCTS.some((p) => p.id === s.productId)
+    ? pricing.price(s.productId)
+    : { price: price ?? 0, base: price ?? 0, discounted: false, percent: 0 };
   const cardRef = useRef<HTMLDivElement>(null);
 
   const mouseX = useMotionValue(0.5);
@@ -232,11 +240,19 @@ const ProductCard = ({ name, tagline, price, features, variant, delay = 0, thumb
             ) : (
               <>
                 <div className="mb-2">
+                  {eff.discounted && (
+                    <p className="mb-1 flex items-center gap-2 text-sm text-muted-foreground">
+                      <span className="line-through">{formatPrice(eff.base)}</span>
+                      <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-[10px] font-display font-black text-amber-300">
+                        {eff.percent}% OFF
+                      </span>
+                    </p>
+                  )}
                   <motion.span
                     className={`font-display text-5xl md:text-6xl font-black bg-gradient-to-r ${s.priceGradient} bg-clip-text text-transparent tracking-tighter`}
                     style={{ textShadow: `0 0 60px hsla(${hsl}, 0.25)` }}
                   >
-                    {formatPrice(price ?? 0)}
+                    {formatPrice(eff.price)}
                   </motion.span>
                 </div>
                 <div className="flex items-center gap-2 mb-2">

@@ -4,7 +4,8 @@ export const maxDuration = 30;
 import { NextResponse } from 'next/server';
 import { withApi, handleOptions } from '../../_lib/middleware/handler';
 import logger from '../../_lib/utils/logger';
-import { PRODUCT_PRICES, INTERNATIONAL_PRICES } from '@/lib/pricing';
+import { PRODUCT_PRICES } from '@/lib/pricing';
+import { chargeFor, loadPricingConfig } from '../../_lib/services/pricingService';
 
 export const OPTIONS = handleOptions(['POST']);
 
@@ -23,8 +24,10 @@ export const POST = withApi(
       if (!product) throw new Error('Invalid product');
       if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) throw new Error('Payments are not configured.');
 
-      const amount =
-        is_international && INTERNATIONAL_PRICES[product_id] ? INTERNATIONAL_PRICES[product_id] : product.price;
+      // Admin-managed price with any live offer applied - always computed here, never from the client.
+      const charge = chargeFor(await loadPricingConfig(), product_id, { intl: !!is_international });
+      if (!charge) throw new Error('Invalid product');
+      const amount = charge.price;
 
       const orderData = {
         amount: amount * 100,
@@ -37,6 +40,8 @@ export const POST = withApi(
           customer_email: customer_email || '',
           customer_phone: customer_phone || '',
           server_price: String(amount),
+          list_price: String(charge.base),
+          discount_percent: String(charge.discountPercent),
         },
         partial_payment: false,
       };

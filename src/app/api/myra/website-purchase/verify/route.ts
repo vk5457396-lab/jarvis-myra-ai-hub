@@ -61,7 +61,14 @@ export const POST = withApi(
     }
     const order = await orderResponse.json();
     const planConfig = MYRA_PLANS[plan];
-    const expectedAmount = planConfig.price * 100;
+    // The order was created by our /order route with the price valid at that moment (an offer may
+    // have ended while the buyer was paying), so the order's own amount is the reference - bounded
+    // at one rupee.
+    const expectedAmount = Number(order.amount);
+    const paidInr = expectedAmount / 100;
+    if (!Number.isInteger(expectedAmount) || expectedAmount < 100) {
+      throw ApiError.badRequest('Payment details do not match the selected plan.', 'PAYMENT_MISMATCH');
+    }
     if (
       order.id !== orderId ||
       order.amount !== expectedAmount ||
@@ -110,7 +117,7 @@ export const POST = withApi(
     if (!claimed) {
       // Retry of an already-verified payment: hand back the same key instead of an error.
       const existing = await keyForPayment(paymentId);
-      if (existing) return success({ key: existing, plan, plan_price: planConfig.price }, 'Access key issued.');
+      if (existing) return success({ key: existing, plan, plan_price: paidInr }, 'Access key issued.');
       throw ApiError.conflict('This payment is still being processed. Refresh your dashboard in a moment.', 'PAYMENT_IN_PROGRESS');
     }
 
@@ -140,13 +147,13 @@ export const POST = withApi(
         referralCode: body.referral_code,
         buyerEmail: email,
         paymentId,
-        amount: planConfig.price,
+        amount: paidInr,
       });
     } catch (error) {
       logger.error('MYRA website purchase referral credit failed', { detail: (error as Error)?.message });
     }
 
-    return success({ key: record.key, plan, plan_price: planConfig.price }, 'Access key issued.');
+    return success({ key: record.key, plan, plan_price: paidInr }, 'Access key issued.');
   },
   { rateLimit: { scope: 'myra-website-purchase-verify', max: 20 } }
 );

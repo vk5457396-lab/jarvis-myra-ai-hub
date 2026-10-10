@@ -8,6 +8,8 @@ import { useAppRelease } from "@/hooks/useAppRelease";
 import { startAppDownload } from "@/lib/appDownload";
 import { getStoredReferralCode } from "@/lib/referral";
 import { showPaymentFailed } from "@/lib/paymentFailed";
+import { usePricing } from "@/hooks/usePricing";
+import { MYRA_ANDROID_ID } from "@/lib/offers";
 
 export const MYRA_LIFETIME_PLAN = "membership";
 export const MYRA_LIFETIME_PRICE = 999;
@@ -39,6 +41,7 @@ let accessRequest: Promise<{ ok: boolean; json: any }> | null = null;
 export function useMyraPurchase() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const lifetime = usePricing().price(MYRA_ANDROID_ID);
   const { release, loading } = useAppRelease();
   const [downloading, setDownloading] = useState(false);
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
@@ -199,6 +202,10 @@ export function useMyraPurchase() {
     buying,
     downloading,
     fallbackUrl,
+    /** Lifetime price right now (offer applied) and the list price before the offer. */
+    price: lifetime.price,
+    listPrice: lifetime.base,
+    discounted: lifetime.discounted,
     buy,
     download,
     // Come back to the MYRA listing after signing in, ready to buy.

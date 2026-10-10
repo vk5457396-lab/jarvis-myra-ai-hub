@@ -10,6 +10,7 @@ import ApiResourcesSection from "@/components/ApiResourcesSection";
 import WebsiteServiceCard from "@/components/WebsiteServiceCard";
 
 import MyraInstallSection from "@/components/MyraInstallSection";
+import OfferBanner from "@/components/OfferBanner";
 import MyraAndroidDownload from "@/components/MyraAndroidDownload";
 import MyraPcControllerDownload from "@/components/MyraPcControllerDownload";
 import { features, jarvisFeatures, myraFeatures } from "@/data/features";
@@ -30,6 +31,11 @@ const IndexPage = () => {
 
       {/* Hero Section */}
       <HeroSection />
+
+      {/* Scheduled sale (coming soon / live) - renders nothing outside the sale window */}
+      <div className="container mx-auto px-4 pt-6">
+        <OfferBanner />
+      </div>
 
       {/* MYRA Desktop Install - Featured at top */}
       <MyraInstallSection />

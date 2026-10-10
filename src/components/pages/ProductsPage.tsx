@@ -9,6 +9,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
 import MyraPcControllerDownload from "@/components/MyraPcControllerDownload";
+import { usePricing } from "@/hooks/usePricing";
+import { MYRA_ANDROID_ID } from "@/lib/offers";
 
 interface MarketProduct {
   id: string;
@@ -29,7 +31,20 @@ const MYRA_PRICE = 999;
 
 const Products = () => {
   const router = useRouter();
-  const [products, setProducts] = useState<MarketProduct[]>([]);
+  const [rawProducts, setProducts] = useState<MarketProduct[]>([]);
+  const { price: priceOf, storePrice } = usePricing();
+  // Live offer on top of each product's own list price; MYRA's APK uses the managed lifetime price.
+  const products = useMemo(
+    () =>
+      rawProducts.map((p) => {
+        const pr = p.slug === "myra-android-apk" ? priceOf(MYRA_ANDROID_ID) : storePrice(p.price);
+        if (p.slug === "myra-android-apk") {
+          return { ...p, price: pr.price, original_price: pr.discounted ? pr.base : p.original_price };
+        }
+        return pr.discounted ? { ...p, price: pr.price, original_price: pr.base } : p;
+      }),
+    [rawProducts, priceOf, storePrice]
+  );
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("all");

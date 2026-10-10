@@ -2,7 +2,9 @@
 
 import { ExternalLink, Loader2, Star } from "lucide-react";
 import PlayStoreListing, { MoreByDeveloper, playButtonClass, type Shot } from "@/components/download/PlayStoreListing";
-import { useMyraPurchase, MYRA_LIFETIME_PRICE } from "@/hooks/useMyraPurchase";
+import { useMyraPurchase } from "@/hooks/useMyraPurchase";
+import { usePricing } from "@/hooks/usePricing";
+import { MYRA_ANDROID_ID } from "@/lib/offers";
 import { usePcRelease } from "@/hooks/usePcRelease";
 import { openDownload } from "@/lib/appDownload";
 import RatingsAndReviews, { useReviews, type ReviewsState } from "@/components/download/RatingsAndReviews";
@@ -86,10 +88,10 @@ export function MyraAndroidListing() {
         onClick={m.session?.user ? m.buy : m.login}
         disabled={m.buying}
         className={playButtonClass}
-        aria-label={m.session?.user ? `Buy MYRA for ₹${MYRA_LIFETIME_PRICE}` : `Sign in to buy MYRA for ₹${MYRA_LIFETIME_PRICE}`}
+        aria-label={m.session?.user ? `Buy MYRA for ₹${m.price}` : `Sign in to buy MYRA for ₹${m.price}`}
       >
         {m.buying ? <Spinner /> : null}{" "}
-        {m.buying ? "Opening payment" : m.session?.user ? `Buy for ₹${MYRA_LIFETIME_PRICE}` : "Sign in to buy"}
+        {m.buying ? "Opening payment" : m.session?.user ? `Buy for ₹${m.price}` : "Sign in to buy"}
       </button>
     );
   }
@@ -124,7 +126,7 @@ export function MyraAndroidListing() {
     r?.file_size_mb ? { value: `${r.file_size_mb} MB`, label: "Size" } : null,
     r?.download_count ? { value: downloadsBucket(r.download_count), label: "Downloads" } : { value: "2K+", label: "Downloads" },
     { value: "8.0+", label: "Android" },
-    { value: `₹${MYRA_LIFETIME_PRICE}`, label: "Lifetime" },
+    { value: `₹${m.price}`, label: "Lifetime" },
   ].filter(Boolean) as { value: React.ReactNode; label: string }[];
 
   return (
@@ -150,7 +152,7 @@ export function MyraAndroidListing() {
           appName="MYRA"
           state={rv}
           canReview={m.session?.user ? (m.hasAccess === null ? undefined : m.hasAccess) : undefined}
-          cannotReviewReason={`Buy MYRA for ₹${MYRA_LIFETIME_PRICE} to rate and review it.`}
+          cannotReviewReason={`Buy MYRA for ₹${m.price} to rate and review it.`}
         />
       }
       sidebar={
@@ -166,6 +168,7 @@ export function MyraAndroidListing() {
 }
 
 export function MyraPcListing() {
+  const lifetimePrice = usePricing().price(MYRA_ANDROID_ID).price;
   const { release, loading } = usePcRelease();
   const rv = useReviews("myra-pc");
 
@@ -215,7 +218,7 @@ export function MyraPcListing() {
       sidebar={
         <MoreByDeveloper
           items={[
-            { href: "#myra-android", icon: MYRA_ICON, title: "MYRA: AI Voice Assistant", subtitle: `₹${MYRA_LIFETIME_PRICE} lifetime` },
+            { href: "#myra-android", icon: MYRA_ICON, title: "MYRA: AI Voice Assistant", subtitle: `₹${lifetimePrice} lifetime` },
             { href: "/pricing", icon: JARVIS_ICON, title: "Jarvis 2.0", subtitle: "AI assistant for Windows" },
           ]}
         />

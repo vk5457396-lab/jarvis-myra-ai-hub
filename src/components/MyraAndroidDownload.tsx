@@ -15,10 +15,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { openDownload } from "@/lib/appDownload";
-import { useMyraPurchase, MYRA_LIFETIME_PRICE } from "@/hooks/useMyraPurchase";
+import { useMyraPurchase } from "@/hooks/useMyraPurchase";
 import { myraAndroidFeatures } from "@/data/features";
 
-const LIFETIME_PRICE = MYRA_LIFETIME_PRICE;
 
 interface MyraAndroidDownloadProps {
   /** Section heading + badge. Turn off when the page already introduces the block. */
@@ -58,6 +57,7 @@ const MyraAndroidDownload = ({
     buying,
     downloading,
     fallbackUrl,
+    price: LIFETIME_PRICE,
     buy: handleBuyLifetime,
     download: handleDownload,
   } = useMyraPurchase();

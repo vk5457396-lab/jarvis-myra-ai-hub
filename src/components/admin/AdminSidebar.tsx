@@ -3,7 +3,7 @@
 import Link from "@/components/IntentLink";
 import { usePathname } from "next/navigation";
 import {
-  Shield, KeyRound, Sparkles, Radio, AlertTriangle, BarChart3, Timer, Smartphone, Megaphone, Star,
+  Shield, KeyRound, Sparkles, Radio, AlertTriangle, BarChart3, Timer, Smartphone, Megaphone, Star, Tag,
 } from "lucide-react";
 
 interface NavItem {
@@ -43,6 +43,7 @@ const SECTIONS: NavSection[] = [
       { href: "/admin/app-release", label: "App Release", icon: Smartphone },
       { href: "/admin/banners", label: "Banners", icon: Megaphone },
       { href: "/admin/reviews", label: "Ratings & Reviews", icon: Star },
+      { href: "/admin/pricing", label: "Prices & Offers", icon: Tag },
     ],
   },
 ];

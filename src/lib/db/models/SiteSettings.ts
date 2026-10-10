@@ -15,6 +15,12 @@ const siteSettingsSchema = new Schema(
       /** Real sales whose product isn't known — counted in the total only. */
       other: { type: Number, default: 0, min: 0 },
     },
+    /**
+     * Price manager (/admin/pricing): `overrides` maps productId -> { price?, intl? } over the code
+     * defaults in lib/pricing.ts, and `offer` is the scheduled site-wide discount (lib/offers.ts).
+     * Mixed because the product list is code-defined; null means "use the code defaults".
+     */
+    pricing: { type: Schema.Types.Mixed, default: null },
     updatedBy: { type: String, default: null },
   },
   { timestamps: true, collection: 'site_settings' }

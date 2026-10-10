@@ -19,6 +19,9 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FlashSaleBanner from "@/components/FlashSaleBanner";
+import OfferBanner from "@/components/OfferBanner";
+import { usePricing } from "@/hooks/usePricing";
+import { MYRA_ANDROID_ID } from "@/lib/offers";
 import BinancePaymentModal from "@/components/BinancePaymentModal";
 import ContactFormModal from "@/components/ContactFormModal";
 import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
@@ -27,10 +30,7 @@ import { Tilt3D, Layer } from "@/components/pricing/Tilt3D";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useCurrency, CURRENCIES } from "@/hooks/useCurrency";
 import { jarvisFeatures } from "@/data/features";
-import { chargedInr, PRODUCT_PRICES } from "@/lib/pricing";
-
-/** MYRA for Android is always charged ₹999 in INR by /api/myra/website-purchase (no international tier). */
-const MYRA_INR = 999;
+import { PRODUCT_PRICES } from "@/lib/pricing";
 
 type Product = {
   productId: string;
@@ -173,6 +173,7 @@ function LiveEdge({ hsl, animate }: { hsl: string; animate: boolean }) {
 function ProductCard3D({
   product,
   price,
+  was,
   priceNote,
   children,
   animateEdge,
@@ -180,6 +181,8 @@ function ProductCard3D({
 }: {
   product: Product;
   price: string;
+  /** List price shown struck through while a sale is live. */
+  was?: string;
   priceNote?: ReactNode;
   children: ReactNode;
   animateEdge: boolean;
@@ -260,6 +263,7 @@ function ProductCard3D({
           </Layer>
 
           <Layer depth={55} className="mt-auto pt-6">
+            {was && <p className="text-sm text-muted-foreground line-through tabular-nums">{was}</p>}
             <p className="font-display text-4xl font-extrabold tabular-nums tracking-tight text-foreground">{price}</p>
             <div className="mt-1 min-h-5 text-sm text-muted-foreground">{priceNote ?? "One-time payment"}</div>
           </Layer>
@@ -294,8 +298,15 @@ const Pricing = () => {
 
   const intl = !isIndia;
   const country = { value: countryCode, onChange: setSelectedCountry };
-  const inrFor = (id: string) => chargedInr(id, intl);
+  const pricing = usePricing();
+  // Same numbers the server charges (admin-managed price, sale applied while it is live).
+  const inrFor = (id: string) => pricing.price(id, intl).price;
   const priceFor = (id: string) => formatExact(inrFor(id));
+  const wasFor = (id: string) => {
+    const p = pricing.price(id, intl);
+    return p.discounted ? formatExact(p.base) : undefined;
+  };
+  const MYRA_INR = pricing.price(MYRA_ANDROID_ID).price;
   const approx = (id: string) => (intl ? `≈ estimate · charged as ₹${inrFor(id).toLocaleString("en-IN")}` : undefined);
   const bundleSaving = inrFor("source_jarvis") + inrFor("source_myra") - inrFor("source_bundle");
 
@@ -382,6 +393,7 @@ const Pricing = () => {
             <div className="mt-8 max-w-md">
               <FlashSaleBanner />
             </div>
+            <OfferBanner className="mt-8 max-w-xl" />
           </div>
 
           <Tilt3D max={6}>
@@ -401,7 +413,7 @@ const Pricing = () => {
             className="mt-8 grid gap-6 md:grid-cols-2 [perspective:1400px]"
           >
             <motion.div variants={item}>
-              <ProductCard3D product={JARVIS_EXE} price={priceFor("jarvis")} priceNote={approx("jarvis")} animateEdge={false} country={country}>
+              <ProductCard3D product={JARVIS_EXE} price={priceFor("jarvis")} was={wasFor("jarvis")} priceNote={approx("jarvis")} animateEdge={false} country={country}>
                 {actions(JARVIS_EXE)}
               </ProductCard3D>
             </motion.div>
@@ -445,6 +457,7 @@ const Pricing = () => {
                 <ProductCard3D
                   product={p}
                   price={priceFor(p.productId)}
+                  was={wasFor(p.productId)}
                   animateEdge={!reduceMotion}
                   country={country}
                   priceNote={

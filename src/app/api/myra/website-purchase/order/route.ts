@@ -6,6 +6,8 @@ import { success, ApiError } from '../../../_lib/utils/response';
 import { validateEnum } from '../../../_lib/utils/validation';
 import { auth } from '@/lib/auth/config';
 import { MYRA_PLANS } from '../../../_lib/services/myraService';
+import { chargeFor, loadPricingConfig } from '../../../_lib/services/pricingService';
+import { MYRA_ANDROID_ID } from '@/lib/offers';
 
 export const OPTIONS = handleOptions(['POST']);
 
@@ -30,8 +32,12 @@ export const POST = withApi(
       throw ApiError.internal('Payments are not configured.', 'PAYMENTS_NOT_CONFIGURED');
     }
 
+    // The lifetime plan ('membership') is the MYRA Android product the price manager controls.
+    const charge = plan === 'membership' ? chargeFor(await loadPricingConfig(), MYRA_ANDROID_ID) : null;
+    const price = charge ? charge.price : planConfig.price;
+
     const orderData = {
-      amount: planConfig.price * 100,
+      amount: price * 100,
       currency: 'INR',
       receipt: `myra_web_${plan}_${Date.now()}`.slice(0, 40),
       notes: {
@@ -58,7 +64,7 @@ export const POST = withApi(
       currency: order.currency,
       key_id: keyId,
       plan,
-      plan_price: planConfig.price,
+      plan_price: price,
     });
   },
   { rateLimit: { scope: 'myra-website-purchase-order', max: 20 } }

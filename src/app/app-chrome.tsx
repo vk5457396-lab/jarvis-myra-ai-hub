@@ -7,6 +7,7 @@ import ReferralBanner from "@/components/ReferralBanner";
 import ScrollProgressBar from "@/components/ScrollProgressBar";
 import SiteOfferPopup from "@/components/SiteOfferPopup";
 import NavigationProgress from "@/components/NavigationProgress";
+import DiwaliGarland from "@/components/DiwaliGarland";
 
 export default function AppChrome({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -20,6 +21,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
         <ReferralBanner />
       </Suspense>
       <SiteOfferPopup ready={!isLoading} />
+      <DiwaliGarland />
       <Suspense fallback={null}>
         <NavigationProgress />
       </Suspense>

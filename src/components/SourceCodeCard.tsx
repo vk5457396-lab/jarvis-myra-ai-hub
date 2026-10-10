@@ -8,6 +8,7 @@ import PaymentGatewaySelector from "@/components/PaymentGatewaySelector";
 import ContactFormModal from "@/components/ContactFormModal";
 import { useCurrency } from "@/hooks/useCurrency";
 import CurrencySelector from "@/components/CurrencySelector";
+import { usePricing } from "@/hooks/usePricing";
 
 interface SourceCodeCardProps {
   variant: "jarvis" | "myra" | "aria" | "bundle";
@@ -18,6 +19,7 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
   const [showContactForm, setShowContactForm] = useState(false);
   const [customerInfo, setCustomerInfo] = useState({ name: "", email: "", phone: "" });
   const { formatPrice, isIndia, currency, countryCode, setSelectedCountry } = useCurrency();
+  const pricing = usePricing();
   const cardRef = useRef<HTMLDivElement>(null);
 
   const mouseX = useMotionValue(0.5);
@@ -37,7 +39,11 @@ const SourceCodeCard = ({ variant }: SourceCodeCardProps) => {
     bundle: { productId: "source_bundle", name: `Jarvis 2.0 + ${myraName}`, price: isIndia ? 6999 : 5999, originalPrice: isIndia ? 7800 : 6998, savings: isIndia ? 801 : 999, gradient: "from-amber-400 via-orange-500 to-red-500", hsl: "38 92% 55%", badgeText: "BEST VALUE", features: ["Complete Jarvis 2.0 Source Code", `Complete ${myraName} Source Code`, "Python & Automation Scripts", "Full Documentation", "Customization Guide", "Future Code Updates", "Developer Support", "Commercial License"] },
   };
 
-  const c = config[variant];
+  const base = config[variant];
+  // Admin-managed price (and the live offer) over the card's marketing "was" price.
+  const pr = pricing.price(base.productId, !isIndia);
+  const originalPrice = pr.discounted ? pr.base : base.originalPrice > pr.price ? base.originalPrice : pr.price;
+  const c = { ...base, price: pr.price, originalPrice, savings: Math.max(0, originalPrice - pr.price) };
   const isFeatured = variant === "bundle";
 
   const handleMouseMove = (e: React.MouseEvent) => {

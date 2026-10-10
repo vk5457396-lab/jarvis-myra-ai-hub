@@ -6,6 +6,7 @@ import { withApi, handleOptions } from '../../_lib/middleware/handler';
 import logger from '../../_lib/utils/logger';
 import { connectMongo } from '@/lib/db/mongoose';
 import { MarketplaceProduct } from '@/lib/db/models';
+import { loadPricingConfig, storeChargeFor } from '../../_lib/services/pricingService';
 
 export const OPTIONS = handleOptions(['POST']);
 
@@ -25,7 +26,8 @@ export const POST = withApi(
       if (!product || !product.isPublished) throw new Error('Product not found');
       if (product.price <= 0) throw new Error('Product is free, no payment needed');
 
-      const amount = product.price;
+      const charge = storeChargeFor(await loadPricingConfig(), product.price);
+      const amount = charge.price;
       const orderData = {
         amount: amount * 100,
         currency: 'INR',
@@ -37,6 +39,8 @@ export const POST = withApi(
           customer_email: customer_email || '',
           customer_phone: customer_phone || '',
           server_price: String(amount),
+          list_price: String(charge.base),
+          discount_percent: String(charge.discountPercent),
         },
       };
 

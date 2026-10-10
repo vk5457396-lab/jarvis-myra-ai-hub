@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "@/components/IntentLink";
 import { motion } from "framer-motion";
@@ -14,6 +14,7 @@ import { openDownload } from "@/lib/appDownload";
 import { getStoredReferralCode } from "@/lib/referral";
 import { showPaymentFailed } from "@/lib/paymentFailed";
 import MyraAndroidDownload from "@/components/MyraAndroidDownload";
+import { usePricing } from "@/hooks/usePricing";
 import VideoThumbnail from "@/components/VideoThumbnail";
 import { MYRA_SETUP_VIDEOS } from "@/data/myraSetupVideos";
 
@@ -69,7 +70,14 @@ const loadRazorpay = () =>
 
 const ProductPagePage = ({ slug }: { slug: string }) => {
   const router = useRouter();
-  const [product, setProduct] = useState<MarketProduct | null>(null);
+  const [rawProduct, setProduct] = useState<MarketProduct | null>(null);
+  const { storePrice } = usePricing();
+  // Live offer on top of the product's own list price (the server applies the same one at checkout).
+  const product = useMemo(() => {
+    if (!rawProduct) return null;
+    const pr = storePrice(rawProduct.price);
+    return pr.discounted ? { ...rawProduct, price: pr.price, original_price: pr.base } : rawProduct;
+  }, [rawProduct, storePrice]);
   const [loading, setLoading] = useState(true);
   const [activeShot, setActiveShot] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
