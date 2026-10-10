@@ -46,7 +46,7 @@ const Features = () => {
       </section>
 
       {/* Features Grid */}
-      <section className="py-16 md:py-24">
+      <section className="py-16 md:py-24 overflow-x-clip">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => (
@@ -64,7 +64,7 @@ const Features = () => {
       </section>
 
       {/* Comparison Section */}
-      <section className="py-16 md:py-24">
+      <section className="py-16 md:py-24 overflow-x-clip">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

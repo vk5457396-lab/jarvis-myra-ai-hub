@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, MessageCircle, Send, MapPin, Loader2 } from "lucide-react";
+import { Mail, Send, MapPin, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { invokeBackendFunction } from "@/lib/backend/invokeFunction";
 
@@ -68,7 +68,7 @@ const Contact = () => {
       </section>
 
       {/* Contact Section */}
-      <section className="py-16 md:py-24">
+      <section className="py-16 md:py-24 overflow-x-clip">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
             {/* Contact Info */}
@@ -102,21 +102,6 @@ const Contact = () => {
                   </div>
                 </motion.a>
 
-                <motion.a
-                  href="https://wa.me/919999999999"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileHover={{ x: 5 }}
-                  className="flex items-center gap-4 p-4 glass-card rounded-xl group"
-                >
-                  <div className="w-12 h-12 rounded-lg bg-secondary/20 flex items-center justify-center group-hover:bg-secondary/30 transition-colors">
-                    <MessageCircle className="w-6 h-6 text-secondary" />
-                  </div>
-                  <div>
-                    <h3 className="font-display text-sm text-muted-foreground">WhatsApp</h3>
-                    <p className="text-foreground">+91 99999 99999</p>
-                  </div>
-                </motion.a>
 
                 <motion.a
                   href="https://t.me/codeninjavik1"

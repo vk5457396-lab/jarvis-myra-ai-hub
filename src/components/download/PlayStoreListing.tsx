@@ -243,7 +243,22 @@ export function MoreByDeveloper({ items }: { items: { href: string; icon: string
           <li key={it.href}>
             <a href={it.href} className="flex items-center gap-4 rounded-xl p-2 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6dd58c]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={it.icon} alt="" width={56} height={56} className="h-14 w-14 rounded-[22%]" loading="lazy" />
+              <img
+                src={it.icon}
+                alt=""
+                width={56}
+                height={56}
+                className="h-14 w-14 rounded-[22%] bg-white/5"
+                loading="lazy"
+                onError={(e) => {
+                  // One cache-busted retry: a dropped connection otherwise leaves a broken-image box.
+                  const img = e.currentTarget;
+                  if (!img.dataset.retried) {
+                    img.dataset.retried = "1";
+                    img.src = `${it.icon}${it.icon.includes("?") ? "&" : "?"}r=1`;
+                  }
+                }}
+              />
               <span className="min-w-0">
                 <span className="block truncate text-sm font-medium text-[#e3e3e3]">{it.title}</span>
                 <span className="block truncate text-xs text-[#c4c7c5]">{it.subtitle}</span>

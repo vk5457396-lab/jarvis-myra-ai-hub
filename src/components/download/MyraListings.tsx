@@ -11,7 +11,7 @@ import RatingsAndReviews, { useReviews, type ReviewsState } from "@/components/d
 
 const MYRA_ICON = "/assets/myra-app/icon.webp";
 const PC_ICON = "/assets/myra-pc/icon.webp";
-const JARVIS_ICON = "/assets/thumb-jarvis.png";
+const JARVIS_ICON = "/assets/thumb-jarvis-icon.png"; // 128px copy; the 512px original is 300KB for a 56px slot
 
 const MYRA_SHOTS: Shot[] = [
   { src: "/assets/myra-app/shots/01.webp", alt: "MYRA home screen with the voice orb and quick actions", ratio: 0.4089 },
